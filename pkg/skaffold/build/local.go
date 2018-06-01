@@ -115,7 +115,7 @@ func (l *LocalBuilder) Build(ctx context.Context, out io.Writer, tagger tag.Tagg
 		}
 		if !*l.LocalBuild.SkipPush {
 			if err := docker.RunPush(ctx, l.api, tag, out); err != nil {
-				return nil, errors.Wrap(err, "running push")
+				return nil, errors.Wrap(err, fmt.Sprintf("couldn't push %s", tag))
 			}
 		}
 
