@@ -1146,6 +1146,7 @@
     "cloud.google.com/go/storage",
     "github.com/blang/semver",
     "github.com/docker/cli/cli/config",
+    "github.com/docker/cli/cli/config/configfile",
     "github.com/docker/distribution/reference",
     "github.com/docker/docker/api",
     "github.com/docker/docker/api/types",

@@ -27,6 +27,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/google"
 	cloudbuild "google.golang.org/api/cloudbuild/v1"
+	"google.golang.org/api/cloudbuild/v1/generated"
 
 	"github.com/spf13/cobra"
 )
@@ -72,7 +73,7 @@ func installGCBGithubApp() error {
 	return nil
 }
 
-func getAvailableGithubRepose() error {
+func getAvailableGithubRepos() error {
 	ctx := context.Background()
 	client, err := google.DefaultClient(ctx, cloudbuild.CloudPlatformScope)
 	if err != nil {
@@ -83,7 +84,25 @@ func getAvailableGithubRepose() error {
 		return errors.Wrap(err, "getting builder")
 	}
 	cbclient.UserAgent = version.UserAgent()
-	cbclient.Projects.Builds.
+	return nil
+}
+
+func createBuildTrigger() error {
+	ctx := context.Background()
+	client, err := google.DefaultClient(ctx, cloudbuild.CloudPlatformScope)
+	if err != nil {
+		return errors.Wrap(err, "getting google client")
+	}
+	cbclient, err := cloudbuild.New(client)
+	if err != nil {
+		return errors.Wrap(err, "getting builder")
+	}
+	cbclient.UserAgent = version.UserAgent()
+
+	bt := &generated.BuildTrigger{
+		Github: &generated.GitHubEventsConfig{},
+	}
+	fmt.Println(bt)
 	return nil
 }
 
