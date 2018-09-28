@@ -1,0 +1,2109 @@
+syntax = "proto3";
+
+package google.devtools.cloudbuild.v1;
+
+option java_multiple_files = true;
+option java_package = "com.google.cloudbuild.v1";
+option objc_class_prefix = "GCB";
+
+import "google/longrunning/operations.proto";
+import "google/api/annotations.proto";
+import "google/api/httpbody.proto";
+import "google/api/policy.proto";
+import "google/api/visibility.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "google/cloud/audit/audit_log.proto";
+import "net/proto2/proto/descriptor.proto";
+
+// FieldRule defines custom extensions for fields in this proto.
+message FieldRule {
+  // Declares that the field should be ignored on input.
+  bool output_only = 1;
+}
+
+extend proto2.FieldOptions {
+  // This number is intended to be unique across all proto users. It is the
+  // original CL number of the change that added this field option.
+  FieldRule field_rule = 184626576;
+}
+
+// Creates and manages builds on Google Cloud Platform.
+//
+// The main concept used by this API is a `Build`, which describes the location
+// of the source to build, how to build the source, and where to store the
+// built artifacts, if any.
+//
+// A user can list previously-requested builds or get builds by their ID to
+// determine the status of the build.
+service CloudBuild {
+  // Starts a build with the specified configuration.
+  //
+  // This method returns a long-running `Operation`, which includes the build
+  // ID. Pass the build ID to `GetBuild` to determine the build status (such as
+  // `SUCCESS` or `FAILURE`).
+  rpc CreateBuild(CreateBuildRequest) returns (google.longrunning.Operation) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      post: "/v1/projects/{project_id}/builds"
+      body: "build"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Returns information about a previously requested build.
+  //
+  // The `Build` that is returned includes its status (such as `SUCCESS`,
+  // `FAILURE`, or `WORKING`), and timing information.
+  rpc GetBuild(GetBuildRequest) returns (Build) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      get: "/v1/projects/{project_id}/builds/{id}"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Lists previously requested builds.
+  //
+  // Previously requested builds may still be in-progress, or may have finished
+  // successfully or unsuccessfully.
+  rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      get: "/v1/projects/{project_id}/builds"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Cancels a build in progress.
+  rpc CancelBuild(CancelBuildRequest) returns (Build) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      post: "/v1/projects/{project_id}/builds/{id}:cancel"
+      body: "*"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  }
+
+  // Creates a new build based on the specified build.
+  //
+  // This method creates a new build using the original build request, which may
+  // or may not result in an identical build.
+  //
+  // For triggered builds:
+  //
+  // * Triggered builds resolve to a precise revision; therefore a retry of a
+  // triggered build will result in a build that uses the same revision.
+  //
+  // For non-triggered builds that specify `RepoSource`:
+  //
+  // * If the original build built from the tip of a branch, the retried build
+  // will build from the tip of that branch, which may not be the same revision
+  // as the original build.
+  // * If the original build specified a commit sha or revision ID, the retried
+  // build will use the identical source.
+  //
+  // For builds that specify `StorageSource`:
+  //
+  // * If the original build pulled source from Google Cloud Storage without
+  // specifying the generation of the object, the new build will use the current
+  // object, which may be different from the original build source.
+  // * If the original build pulled source from Cloud Storage and specified the
+  // generation of the object, the new build will attempt to use the same
+  // object, which may or may not be available depending on the bucket's
+  // lifecycle management settings.
+  rpc RetryBuild(RetryBuildRequest) returns (google.longrunning.Operation) {
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      post: "/v1/projects/{project_id}/builds/{id}:retry"
+      body: "*"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  }
+
+  // Creates a new `BuildTrigger`.
+  //
+  // This API is experimental.
+  rpc CreateBuildTrigger(CreateBuildTriggerRequest) returns (BuildTrigger) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      post: "/v1/projects/{project_id}/triggers"
+      body: "trigger"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Returns information about a `BuildTrigger`.
+  //
+  // This API is experimental.
+  rpc GetBuildTrigger(GetBuildTriggerRequest) returns (BuildTrigger) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      get: "/v1/projects/{project_id}/triggers/{trigger_id}"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Lists existing `BuildTrigger`s.
+  //
+  // This API is experimental.
+  rpc ListBuildTriggers(ListBuildTriggersRequest)
+      returns (ListBuildTriggersResponse) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      get: "/v1/projects/{project_id}/triggers"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Deletes a `BuildTrigger` by its project ID and trigger ID.
+  //
+  // This API is experimental.
+  rpc DeleteBuildTrigger(DeleteBuildTriggerRequest)
+      returns (google.protobuf.Empty) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      delete: "/v1/projects/{project_id}/triggers/{trigger_id}"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Updates a `BuildTrigger` by its project ID and trigger ID.
+  //
+  // This API is experimental.
+  rpc UpdateBuildTrigger(UpdateBuildTriggerRequest) returns (BuildTrigger) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      patch: "/v1/projects/{project_id}/triggers/{trigger_id}"
+      body: "trigger"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Runs a `BuildTrigger` at a particular source revision.
+  rpc RunBuildTrigger(RunBuildTriggerRequest)
+      returns (google.longrunning.Operation) {
+    // TODO(jasmuth): Stop using end_user_creds_requested. (b/26376396)
+    option end_user_creds_requested = true;
+    option (google.api.http) = {
+      post: "/v1/projects/{project_id}/triggers/{trigger_id}:run"
+      body: "source"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  }
+
+  // ReceiveWebhook is called when the API receives a GitLab webhook.
+  rpc ReceiveGitLabWebhook(WebhookRequest) returns (google.protobuf.Empty) {
+    option (google.api.method_visibility).restriction = "GITLAB_INTERNAL";
+    option (google.api.http) = {
+      post: "/v1/gitlabwebhook"
+      body: "body"
+    };
+    option (google.api.method_policy) = {};
+  }
+
+  // ReceiveWebhook is called when the API receives a GitHub webhook.
+  rpc ReceiveWebhook(WebhookRequest) returns (google.protobuf.Empty) {
+    option (google.api.method_visibility).restriction = "GITHUB_INTERNAL";
+    option (google.api.http) = {
+      post: "/v1/webhook"
+      body: "body"
+    };
+    option (google.api.method_policy) = {};
+  }
+
+  // Create an association between a GCP project and a GitHub installation.
+  //
+  // This API is experimental.
+  rpc CreateGitHubInstallation(CreateGitHubInstallationRequest)
+      returns (google.protobuf.Empty) {
+    option (google.api.method_visibility).restriction = "UI_RESTRICTED";
+    option (google.api.http) = {
+      post: "/v1/projects/{project_id}/installations"
+      body: "installation"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Update settings for a GCP project to GitHub installation mapping.
+  //
+  // This API is experimental.
+  rpc UpdateGitHubInstallation(UpdateGitHubInstallationRequest)
+      returns (google.protobuf.Empty) {
+    option (google.api.method_visibility).restriction =
+        "UI_RESTRICTED,GITHUB_APP_TRIGGER";
+    option (google.api.http) = {
+      patch: "/v1/projects/{project_id}/installations/{installation_id}"
+      body: "installation"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_id" resource_type: "RESOURCE" }
+    };
+  };
+
+  // List all repositories for GCB installations a user has access to.
+  //
+  // This API is experimental.
+  // (== suppress_warning http-rest-shadowed ==)
+  rpc ListGitHubRepositories(ListGitHubRepositoriesRequest)
+      returns (ListGitHubRepositoriesResponse) {
+    option (google.api.method_visibility).restriction = "UI_RESTRICTED";
+    option (google.api.http) = {
+      post: "/v1/projects/{project_number}/github/repos"
+      body: "*"
+      // (--GOOGLE_INTERNAL: TODO(b/111114937): Remove once Pantheon is no
+      // longer using these endpoints. --)
+      additional_bindings { post: "/v1/projects/github/repos" body: "*" }
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_number" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Creates a `WorkerPool` to run the builds, and returns the new worker pool.
+  //
+  // This API is experimental.
+  // (== suppress_warning versioning-http-version-prefix ==)
+  rpc CreateWorkerPool(CreateWorkerPoolRequest) returns (WorkerPool) {
+    option (google.api.method_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+    option (google.api.http) = {
+      post: "/v1alpha1/{parent=projects/*}/workerPools"
+      body: "worker_pool"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "parent" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Returns information about a `WorkerPool`.
+  //
+  // This API is experimental.
+  // (== suppress_warning versioning-http-version-prefix ==)
+  rpc GetWorkerPool(GetWorkerPoolRequest) returns (WorkerPool) {
+    option (google.api.method_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=projects/*/workerPools/*}"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "name" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Deletes a `WorkerPool` by its project ID and WorkerPool ID.
+  //
+  // This API is experimental.
+  // (== suppress_warning versioning-http-version-prefix ==)
+  rpc DeleteWorkerPool(DeleteWorkerPoolRequest)
+      returns (google.protobuf.Empty) {
+    option (google.api.method_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=projects/*/workerPools/*}"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "name" resource_type: "RESOURCE" }
+    };
+  };
+
+  // Update a `WorkerPool`.
+  //
+  // This API is experimental.
+  // (== suppress_warning versioning-http-version-prefix ==)
+  rpc UpdateWorkerPool(UpdateWorkerPoolRequest) returns (WorkerPool) {
+    option (google.api.method_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+    option (google.api.http) = {
+      patch: "/v1alpha1/{name=projects/*/workerPools/*}"
+      body: "worker_pool"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "name" resource_type: "RESOURCE" }
+    };
+  };
+
+  // List project's `WorkerPool`s.
+  //
+  // This API is experimental.
+  // (== suppress_warning versioning-http-version-prefix ==)
+  rpc ListWorkerPools(ListWorkerPoolsRequest) returns (ListWorkerPoolsResponse) {
+    option (google.api.method_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+    option (google.api.http) = {
+      get: "/v1alpha1/{parent=projects/*}/workerPools"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "parent" resource_type: "RESOURCE" }
+    };
+  };
+
+  // GenerateGitHubAccessToken fulfills the last leg of the OAuth dance with
+  // GitHub as defined by
+  // https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/#2-users-are-redirected-back-to-your-site-by-github
+  // (== suppress_warning http-rest-shadowed ==)
+  rpc GenerateGitHubAccessToken(GenerateGitHubAccessTokenRequest)
+      returns (google.protobuf.Empty) {
+    option (google.api.method_visibility).restriction = "UI_RESTRICTED";
+    option security_level = PRIVACY_AND_INTEGRITY;
+    option (google.api.http) = {
+      post: "/v1/projects/{project_number}/github/oauth"
+      body: "*"
+      // (--GOOGLE_INTERNAL: TODO(b/111114937): Remove once Pantheon is no
+      // longer using these endpoints. --)
+      additional_bindings {
+        post: "/v1/github/{project_number}/oauth"
+        body: "*"
+      }
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_number" resource_type: "RESOURCE" }
+    };
+  }
+
+  // List all refs for a GitHub repository belonging to a Trigger.
+  // This is used by the UI to determine possible refs to use for
+  // RunBuildTrigger. This is tied to triggers to ensure that a Trigger
+  // has been created by someone with sufficient permissions ahead of time
+  // so that we can use installation credentials for the call to GitHub.
+  //
+  // This API is experimental.
+  rpc ListGitHubRefs(ListGitHubRefsRequest) returns (ListGitHubRefsResponse) {
+    option (google.api.method_visibility).restriction = "UI_RESTRICTED";
+    option (google.api.http) = {
+      get: "/v1/projects/{project_number}/github/refs"
+    };
+    option (google.api.method_policy) = {
+      request_policies { selector: "project_number" resource_type: "RESOURCE" }
+    };
+  };
+}
+
+// Specifies a build to retry.
+message RetryBuildRequest {
+  // ID of the project.
+  string project_id = 1;
+
+  // Build ID of the original build.
+  string id = 2;
+}
+
+// Specifies a build trigger to run and the source to use.
+message RunBuildTriggerRequest {
+  // ID of the project.
+  string project_id = 1;
+
+  // ID of the trigger.
+  string trigger_id = 2;
+
+  // Source to build against this trigger.
+  RepoSource source = 3;
+}
+
+// Location of the source in an archive file in Google Cloud Storage.
+message StorageSource {
+  // Google Cloud Storage bucket containing the source (see
+  // [Bucket Name
+  // Requirements](https://cloud.google.com/storage/docs/bucket-naming#requirements)).
+  string bucket = 1;
+
+  // Google Cloud Storage object containing the source.
+  //
+  // This object must be a gzipped archive file (`.tar.gz`) containing source to
+  // build.
+  string object = 2;
+
+  // Google Cloud Storage generation for the object. If the generation is
+  // omitted, the latest generation will be used.
+  int64 generation = 3;
+}
+
+// Location of the source in any accessible Git repository.
+message GitSource {
+  // Location of the Git repo to build.
+  string url = 1;
+
+  // Directory, relative to the source root, in which to run the build.
+  //
+  // This must be a relative path. If a step's `dir` is specified and is an
+  // absolute path, this value is ignored for that step's execution.
+  string dir = 5;
+
+  // The revision to fetch from the Git repository such as a branch, a tag, a
+  // commit SHA, or any Git ref.
+  //
+  // Cloud Build uses `git fetch` to fetch the revision from the Git
+  // repository; therefore make sure that the string you provide for `revision`
+  // is parsable  by the command. For information on string values accepted by
+  // `git fetch`, see
+  // https://git-scm.com/docs/gitrevisions#_specifying_revisions. For
+  // information on `git fetch`, see https://git-scm.com/docs/git-fetch.
+  string revision = 6;
+
+  reserved 2, 3, 4;
+
+  // next ID: 7
+}
+
+// Location of the source in a Google Cloud Source Repository.
+message RepoSource {
+  // ID of the project that owns the Cloud Source Repository. If omitted, the
+  // project ID requesting the build is assumed.
+  string project_id = 1;
+
+  // Name of the Cloud Source Repository. If omitted, the name "default" is
+  // assumed.
+  string repo_name = 2;
+
+  // A revision within the Cloud Source Repository must be specified in
+  // one of these ways.
+  oneof revision {
+    // Name of the branch to build.
+    string branch_name = 3;
+
+    //  Name of the tag to build.
+    string tag_name = 4;
+
+    // Explicit commit SHA to build.
+    string commit_sha = 5;
+  }
+
+  // Directory, relative to the source root, in which to run the build.
+  //
+  // This must be a relative path. If a step's `dir` is specified and is an
+  // absolute path, this value is ignored for that step's execution.
+  string dir = 7;
+
+  reserved 6;
+
+  // next ID: 8
+}
+
+// Location of the source in a supported storage service.
+message Source {
+  // Location of source.
+  oneof source {
+    // If provided, get the source from this location in Google Cloud Storage.
+    StorageSource storage_source = 2;
+
+    // If provided, get the source from this location in a Cloud Source
+    // Repository.
+    RepoSource repo_source = 3;
+
+    // If provided, get the source from this Git repository.
+    GitSource git_source = 5
+        [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+  }
+
+  reserved 1, 4;
+
+  // next ID: 6
+}
+
+// An image built by the pipeline.
+message BuiltImage {
+  // Name used to push the container image to Google Container Registry, as
+  // presented to `docker push`.
+  string name = 1;
+
+  // Docker Registry 2.0 digest.
+  string digest = 3;
+
+  // Output only. Stores timing information for pushing the specified image.
+  TimeSpan push_timing = 4
+      [(field_rule).output_only = true];
+
+  // next id = 5
+}
+
+// A step in the build pipeline.
+message BuildStep {
+  // Required. The name of the container image that will run this particular
+  // build step.
+  //
+  // If the image is available in the host's Docker daemon's cache, it
+  // will be run directly. If not, the host will attempt to pull the image
+  // first, using the builder service account's credentials if necessary.
+  //
+  // The Docker daemon's cache will already have the latest versions of all of
+  // the officially supported build steps
+  // ([https://github.com/GoogleCloudPlatform/cloud-builders](https://github.com/GoogleCloudPlatform/cloud-builders)).
+  // The Docker daemon will also have cached many of the layers for some popular
+  // images, like "ubuntu", "debian", but they will be refreshed at the time you
+  // attempt to use them.
+  //
+  // If you built an image in a previous build step, it will be stored in the
+  // host's Docker daemon's cache and is available to use as the name for a
+  // later build step.
+  string name = 1;
+
+  // A list of environment variable definitions to be used when running a step.
+  //
+  // The elements are of the form "KEY=VALUE" for the environment variable "KEY"
+  // being given the value "VALUE".
+  repeated string env = 2;
+
+  // A list of arguments that will be presented to the step when it is started.
+  //
+  // If the image used to run the step's container has an entrypoint, the `args`
+  // are used as arguments to that entrypoint. If the image does not define
+  // an entrypoint, the first element in args is used as the entrypoint,
+  // and the remainder will be used as arguments.
+  repeated string args = 3;
+
+  // Working directory to use when running this step's container.
+  //
+  // If this value is a relative path, it is relative to the build's working
+  // directory. If this value is absolute, it may be outside the build's working
+  // directory, in which case the contents of the path may not be persisted
+  // across build step executions, unless a `volume` for that path is specified.
+  //
+  // If the build specifies a `RepoSource` with `dir` and a step with a `dir`,
+  // which specifies an absolute path, the `RepoSource` `dir` is ignored for
+  // the step's execution.
+  string dir = 4;
+
+  // Unique identifier for this build step, used in `wait_for` to
+  // reference this build step as a dependency.
+  string id = 5;
+
+  // The ID(s) of the step(s) that this build step depends on.
+  // This build step will not start until all the build steps in `wait_for`
+  // have completed successfully. If `wait_for` is empty, this build step will
+  // start when all previous build steps in the `Build.Steps` list have
+  // completed successfully.
+  repeated string wait_for = 6;
+
+  // Entrypoint to be used instead of the build step image's default entrypoint.
+  // If unset, the image's default entrypoint is used.
+  string entrypoint = 7;
+
+  // A list of environment variables which are encrypted using a Cloud Key
+  // Management Service crypto key. These values must be specified in the
+  // build's `Secret`.
+  repeated string secret_env = 8;
+
+  // List of volumes to mount into the build step.
+  //
+  // Each volume is created as an empty volume prior to execution of the
+  // build step. Upon completion of the build, volumes and their contents are
+  // discarded.
+  //
+  // Using a named volume in only one step is not valid as it is indicative
+  // of a build request with an incorrect configuration.
+  repeated Volume volumes = 9;
+
+  // Output only. Stores timing information for executing this build step.
+  TimeSpan timing = 10
+      [(field_rule).output_only = true];
+
+  // Output only. Stores timing information for pulling this build step's
+  // builder image only.
+  TimeSpan pull_timing = 13
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Time limit for executing this build step. If not defined, the step has no
+  // time limit and will be allowed to continue to run until either it completes
+  // or the build itself times out.
+  google.protobuf.Duration timeout = 11;
+
+  // Output only. Status of the build step. At this time, build step status is
+  // only updated on build completion; step status is not updated in real-time
+  // as the build progresses.
+  Build.Status status = 12;
+
+  // next id = 14
+}
+
+// Volume describes a Docker container volume which is mounted into build steps
+// in order to persist files across build step execution.
+message Volume {
+  // Name of the volume to mount.
+  //
+  // Volume names must be unique per build step and must be valid names for
+  // Docker volumes. Each named volume must be used by at least two build steps.
+  string name = 1;
+
+  // Path at which to mount the volume.
+  //
+  // Paths must be absolute and cannot conflict with other volume paths on the
+  // same build step or with certain reserved volume paths.
+  string path = 2;
+}
+
+// Artifacts created by the build pipeline.
+message Results {
+  // Container images that were built as a part of the build.
+  repeated BuiltImage images = 2;
+
+  // List of build step digests, in the order corresponding to build step
+  // indices.
+  repeated string build_step_images = 3;
+
+  // Path to the artifact manifest. Only populated when artifacts are uploaded.
+  string artifact_manifest = 4;
+
+  // Number of artifacts uploaded. Only populated when artifacts are uploaded.
+  int64 num_artifacts = 5;
+
+  // List of build step outputs, produced by builder images, in the order
+  // corresponding to build step indices.
+  //
+  // [Cloud Builders](https://cloud.google.com/cloud-build/docs/cloud-builders)
+  // can produce this output by writing to `$BUILDER_OUTPUT/output`.
+  // Only the first 4KB of data is stored.
+  repeated bytes build_step_outputs = 6;
+
+  // next_id = 7
+}
+
+// An artifact that was uploaded during a build. This
+// is a single record in the artifact manifest JSON file.
+message ArtifactResult {
+  // The path of an artifact in a Google Cloud Storage bucket, with the
+  // generation number. For example,
+  // `gs://mybucket/path/to/output.jar#generation`.
+  string location = 1;
+
+  // The file hash of the artifact.
+  repeated FileHashes file_hash = 2;
+
+  // next_id = 3
+}
+
+// A build resource in the Cloud Build API.
+//
+// At a high level, a `Build` describes where to find source code, how to build
+// it (for example, the builder image to run on the source), and where to store
+// the built artifacts.
+//
+// Fields can include the following variables, which will be expanded when the
+// build is created:
+//
+// - $PROJECT_ID: the project ID of the build.
+// - $BUILD_ID: the autogenerated ID of the build.
+// - $REPO_NAME: the source repository name specified by RepoSource.
+// - $BRANCH_NAME: the branch name specified by RepoSource.
+// - $TAG_NAME: the tag name specified by RepoSource.
+// - $REVISION_ID or $COMMIT_SHA: the commit SHA specified by RepoSource or
+//   resolved from the specified branch or tag.
+// - $SHORT_SHA: first 7 characters of $REVISION_ID or $COMMIT_SHA.
+message Build {
+  // Output only. Unique identifier of the build.
+  string id = 1
+      [(field_rule).output_only = true];
+
+  // Output only. ID of the project.
+  string project_id = 16
+      [(field_rule).output_only = true];
+
+  // Numerical ID of the project.
+  int64 project_num = 17
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Possible status of a build or build step.
+  enum Status {
+    // (--GOOGLE INTERNAL: Non-terminal statuses.
+    // If you add a new non-terminal status, you must also tell our clients
+    // (gcloud, rapid, documentation) how to recognize unfinished builds.  Also,
+    // consider adding a Done field to the build that can be definitively
+    // checked. --)
+
+    // Status of the build is unknown.
+    STATUS_UNKNOWN = 0;
+    // Build has been received and is being queued.
+    QUEUING = 8 [(google.api.value_visibility).restriction = "GOOGLE_INTERNAL"];
+    // Build or step is queued; work has not yet begun.
+    QUEUED = 1;
+    // Build or step is being executed.
+    WORKING = 2;
+
+    // (--GOOGLE INTERNAL: Terminal statuses.
+    // If you add a new terminal status, you must also tell our clients (gcloud,
+    // rapid, documentation) how to recognize finished builds. Also, consider
+    // adding a Done field to the build that can be definitively checked. --)
+
+    // Build or step finished successfully.
+    SUCCESS = 3;
+    // Build or step failed to complete successfully.
+    FAILURE = 4;
+    // Build or step failed due to an internal cause.
+    INTERNAL_ERROR = 5;
+    // Build or step took longer than was allowed.
+    TIMEOUT = 6;
+    // Build or step was canceled by a user.
+    CANCELLED = 7;
+
+    // next_id = 9
+  }
+  // Output only. Status of the build.
+  Status status = 2;
+
+  // Output only. Customer-readable message about the current status.
+  string status_detail = 24;
+
+  // The location of the source files to build.
+  Source source = 3;
+
+  // Required. The operations to be performed on the workspace.
+  repeated BuildStep steps = 11;
+
+  // Output only. Results of the build.
+  Results results = 10
+      [(field_rule).output_only = true];
+
+  // Output only. Time at which the request to create the build was received.
+  google.protobuf.Timestamp create_time = 6
+      [(field_rule).output_only = true];
+
+  // Output only. Time at which the build was stored or updated with
+  // build_receipt.queued_detail set to READY_TO_BUILD or CONCURRENCY_BLOCKED.
+  //
+  // The difference between stored_time and create_time is lag introduced
+  // by our system and will be reflected in the "queued time" SLI.
+  google.protobuf.Timestamp stored_time = 27
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Output only. Time at which the build was stored or updated to status QUEUED
+  // and build_receipt.queued_detail READY_TO_BUILD.
+  //
+  // The difference between ready_time and stored_time is how long a build
+  // was marked CONCURRENCY_BLOCKED, and is not reflected in the
+  // "queued time" SLI.
+  //
+  // The difference between start_time and ready_time is how long we delayed,
+  // perhaps due to capacity reasons, the execution of this build, and is
+  // reflected in the "queued time" SLI.
+  google.protobuf.Timestamp ready_time = 26
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Time at which a custom-sized VM is created.
+  //
+  // For builds on standard-sized VMs, worker_create_time is identical to
+  // start_time.
+  //
+  // The time between worker_create_time and start_time is not counted against
+  // "queued time" SLI. (For standard-sized VMs, this time is zero.)
+  google.protobuf.Timestamp worker_create_time = 38
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // TODO(philmod): remove worker_ready_time as it is the same as start_time.
+  // Time at which the worker was ready to receive the build.
+  //
+  // For builds on standard-sized VMs, worker_ready_time is identical to
+  // start_time.
+  //
+  // For builds on custom-sized VMs, worker_ready_time is the time at which the
+  // VM became ready to accept the build.
+  //
+  // The time between worker_ready_time and start_time is not counted against
+  // "queued time" SLI. (For standard-sized VMs, this time is zero.)
+  google.protobuf.Timestamp worker_ready_time = 34
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Output only. Time at which execution of the build was started.
+  google.protobuf.Timestamp start_time = 7
+      [(field_rule).output_only = true];
+
+  // Output only. Time at which execution of the build was finished.
+  //
+  // The difference between finish_time and start_time is the duration of the
+  // build's execution.
+  google.protobuf.Timestamp finish_time = 8
+      [(field_rule).output_only = true];
+
+  // End user who initiated this build.
+  int64 user_id = 9
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // End user who cancelled this build.
+  int64 canceller_id = 28
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Amount of time that this build should be allowed to run, to second
+  // granularity. If this amount of time elapses, work on the build will cease
+  // and the build status will be `TIMEOUT`.
+  //
+  // Default time is ten minutes.
+  google.protobuf.Duration timeout = 12;
+
+  // A list of images to be pushed upon the successful completion of all build
+  // steps.
+  //
+  // The images are pushed using the builder service account's credentials.
+  //
+  // The digests of the pushed images will be stored in the `Build` resource's
+  // results field.
+  //
+  // If any of the images fail to be pushed, the build status is marked
+  // `FAILURE`.
+  repeated string images = 13;
+
+  // Artifacts produced by the build that should be uploaded upon
+  // successful completion of all build steps.
+  Artifacts artifacts = 37;
+
+  // Details of build processing.
+  // TODO(b/110992543): UI_RESTRICTED is a short-term fix for making this field
+  // available to the UI. We should expose an api for UI clients to retrieve
+  // this information.
+  BuildReceipt build_receipt = 18
+      [(google.api.field_visibility).restriction = "UI_RESTRICTED"];
+
+  // Google Cloud Storage bucket where logs should be written (see
+  // [Bucket Name
+  // Requirements](https://cloud.google.com/storage/docs/bucket-naming#requirements)).
+  // Logs file names will be of the format `${logs_bucket}/log-${build_id}.txt`.
+  string logs_bucket = 19;
+
+  // Output only. A permanent fixed identifier for source.
+  SourceProvenance source_provenance = 21;
+
+  // Output only. The ID of the `BuildTrigger` that triggered this build, if it
+  // was triggered automatically.
+  string build_trigger_id = 22;
+
+  // Special options for this build.
+  BuildOptions options = 23;
+
+  // Output only. URL to logs for this build in Google Cloud Console.
+  string log_url = 25
+      [(field_rule).output_only = true];
+
+  // Substitutions data for `Build` resource.
+  map<string, string> substitutions = 29;
+
+  // Tags for annotation of a `Build`. These are not docker tags.
+  repeated string tags = 31;
+
+  // Secrets to decrypt using Cloud Key Management Service.
+  repeated Secret secrets = 32;
+
+  // Output only. Stores timing information for phases of the build. Valid keys
+  // are:
+  //
+  // * BUILD: time to execute all build steps
+  // * PUSH: time to push all specified images.
+  // * FETCHSOURCE: time to fetch source.
+  //
+  // If the build does not specify source or images,
+  // these keys will not be included.
+  map<string, TimeSpan> timing = 33
+      [(field_rule).output_only = true];
+
+  reserved 14, 15, 20, 30, 36;
+  // next ID: 39
+}
+
+// Artifacts produced by a build that should be uploaded upon
+// successful completion of all build steps.
+message Artifacts {
+  // A list of images to be pushed upon the successful completion of all build
+  // steps.
+  //
+  // The images will be pushed using the builder service account's credentials.
+  //
+  // The digests of the pushed images will be stored in the Build resource's
+  // results field.
+  //
+  // If any of the images fail to be pushed, the build is marked FAILURE.
+  repeated string images = 1;
+
+  // A list of objects to be uploaded to Cloud Storage upon successful
+  // completion of all build steps.
+  //
+  // Files in the workspace matching specified paths globs will be uploaded to
+  // the specified Cloud Storage location using the builder service account's
+  // credentials.
+  //
+  // The location and generation of the uploaded objects will be stored in the
+  // Build resource's results field.
+  //
+  // If any objects fail to be pushed, the build is marked FAILURE.
+  ArtifactObjects objects = 2;
+
+  // Files in the workspace to upload to Cloud Storage upon successful
+  // completion of all build steps.
+  message ArtifactObjects {
+    // Cloud Storage bucket and optional object path, in the form
+    // "gs://bucket/path/to/somewhere/". (see [Bucket Name
+    // Requirements](https://cloud.google.com/storage/docs/bucket-naming#requirements)).
+    //
+    // Files in the workspace matching any path pattern will be uploaded to
+    // Cloud Storage with this location as a prefix.
+    string location = 1;
+
+    // Path globs used to match files in the build's workspace.
+    repeated string paths = 2;
+
+    // Output only. Stores timing information for pushing all artifact objects.
+    TimeSpan timing = 3;
+
+    // next ID: 4
+  }
+}
+
+// Start and end times for a build execution phase.
+message TimeSpan {
+  // Start of time span.
+  google.protobuf.Timestamp start_time = 1;
+
+  // End of time span.
+  google.protobuf.Timestamp end_time = 2;
+
+  // next ID: 3
+}
+
+// Metadata for build operations.
+message BuildOperationMetadata {
+  // The build that the operation is tracking.
+  Build build = 1;
+}
+
+// Details of build processing.
+message BuildReceipt {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+
+  // The ID for the foreman that is running this build.
+  //
+  // If the build is UNPRIVILEGED, this field holds the Cluster Manager ID
+  // responsible for the build instead.
+  string foreman_id = 1
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // The ID for the worker that is running this build.
+  //
+  // If the build is UNPRIVILEGED, this field will not be set.
+  string worker_id = 2
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // The IP address for the worker that is running this build.
+  //
+  // If the build is UNPRIVILEGED, this field will not be set.
+  string worker_ip_address = 3
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // The details of a build's status.
+  enum StatusDetail {
+    option (google.api.enum_visibility).restriction = "GOOGLE_INTERNAL";
+    // This build has no status details.
+    NONE = 0;
+    // This build was cancelled due to abuse.
+    ABUSE = 1;
+
+    /* StatusDetails for builds in status INTERNAL_ERROR */
+    // Admin failed to publish build.
+    PUBSUB_FAILURE = 2;
+    // Foreman encountered a worker problem.
+    WORKER_ERROR = 3;
+    // Foreman had an issue speaking to / receiving info from admin.
+    ADMIN_ERROR = 4;
+    // Issue with auth.
+    AUTH_ERROR = 5;
+    // Issue with routing to another location.
+    ROUTING_ERROR = 6;
+    // Issue with talking to chemist.
+    CHEMIST_ERROR = 7;
+    // Issue with talking to DryDock.
+    DRYDOCK_ERROR = 8;
+    // Issue with Storage.
+    STORAGE_ERROR = 9;
+    /* END OF INTERNAL_ERROR StatusDetails */
+
+    // Build was forcibly set to CANCELLED by an administrator.
+    FORCE_CANCELLED = 10;
+
+    // Build was forcibly terminated by an administrator.
+    FORCE_TERMINATED = 11;
+  }
+
+  // Internal information for builds with status QUEUED.
+  enum QueuedDetail {
+    option (google.api.enum_visibility).restriction = "GOOGLE_INTERNAL";
+    // This build has no queued details.
+    QUEUED_NONE = 0;
+    // This build can be picked up by a foreman immediately.
+    READY_TO_BUILD = 1;
+    // Build is waiting for a pipeline to free up.
+    CONCURRENCY_BLOCKED = 2;
+  }
+
+  // NONE or empty indicates that the build has no additional details on its
+  // status.  Requests to cancel a build by a user, for example, will have no
+  // associated status_detail.  However, builds that needed cancellation due
+  // to abuse will have a status_detail of ABUSE.
+  StatusDetail status_detail = 4
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Internal information for builds with status QUEUED.
+  QueuedDetail queued_detail = 7
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Project number of the project that generated the credentials making the
+  // request. This helps identify client applications using the API.
+  uint64 client_id = 5
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Information about the client used to create this build.
+  ClientOrigin client_origin = 6
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Details for Cloud Audit Logging.
+  AuditInfo audit_info = 10
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Queue used for picking workers pool.
+  string queue = 11
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // GitHub CheckSuite webhook invocation.
+  GitHubCheckSuiteEvent github_checksuite_invocation = 13;
+
+  // Region where the cluster running this build is located.
+  string cluster_region = 15
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // ID of the Proctor invocation that triggered this build.
+  //
+  // Proctor will set this ID when it creates a build, and use it to check that
+  // the invocation created one and only one build.
+  //
+  // This is expected to be a unique value for all builds in a project, but this
+  // is not currently enforced by Argo.
+  string build_invocation_id = 16
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  reserved 12, 14;
+  // next id = 17
+}
+
+// Details for Cloud Audit Logging.
+message AuditInfo {
+  option (google.api.message_visibility).restriction = "GOOGLE_INTERNAL";
+
+  // Audit log authentication details
+  google.cloud.audit.AuthenticationInfo authentication_info = 1;
+
+  // Audit log authorization details
+  repeated google.cloud.audit.AuthorizationInfo authorization_info = 2;
+}
+
+// Information about the client used to create a build.
+message ClientOrigin {
+  option (google.api.message_visibility).restriction = "GOOGLE_INTERNAL";
+
+  // Information from a gcloud invocation.
+  GCloudInfo gcloud_info = 1;
+
+  // Version of curl used.
+  string curl_version = 2;
+
+  // Borg user name of caller.
+  string borg_user = 3;
+
+  // If the build client was the autobuild service.
+  bool autobuild = 4;
+
+  // Known clients that use cloudbuild.
+  enum ClientProduct {
+    // Do not reuse deleted tags.
+    reserved 3, 4;
+    // Not known.
+    UNKNOWN = 0;
+    // If the build is for a GCF customer.
+    GCF = 1;
+    // If the build is from GCF probes or tests.
+    GCF_TEST = 2;
+    // If the build is a Proctor customer.
+    PROCTOR = 5;
+    // If the build is a Proctor probe or test.
+    PROCTOR_TEST = 6;
+    // If the build is from our GitHub app.
+    GITHUB_APP = 7;
+
+    // next id = 8
+  }
+
+  // The product used to create this build.
+  ClientProduct product = 5;
+
+  // String descriptor of the source of the build, captured from
+  // origin.buildSourceEnv for use in product-related queries.
+  string build_source = 6;
+
+  // String descriptor of the build environment, captured from
+  // origin.buildSourceEnv for use in product-related queries.
+  string build_environment = 7;
+
+  // If the build was created with jenkins plugin.
+  bool jenkins_plugin = 8;
+
+  // next id = 9
+}
+
+// Information about gcloud commands and versions.
+message GCloudInfo {
+  // Version of gcloud.
+  string version = 1;
+  // The .-joined command name.
+  string command = 2;
+  // The id for this invocation (will be sent to all RPCs made for correlation).
+  string invocation_id = 3;
+  // Whether this gcloud invocation was interactive (instead of part of a
+  // script).
+  bool interactive = 4;
+  // Version of python used.
+  string python = 5;
+  // Value of the gcloud metrics/environment property.
+  string environment = 6;
+  // Value of the gcloud metrics/environment_version property.
+  string environment_version = 7;
+}
+
+// Provenance of the source. Ways to find the original source, or verify that
+// some source was used for this build.
+message SourceProvenance {
+  // A copy of the build's `source.storage_source`, if exists, with any
+  // generations resolved.
+  StorageSource resolved_storage_source = 3;
+
+  // A copy of the build's `source.repo_source`, if exists, with any
+  // revisions resolved.
+  RepoSource resolved_repo_source = 6;
+
+  // Output only. Hash(es) of the build source, which can be used to verify that
+  // the originalsource integrity was maintained in the build. Note that
+  // `FileHashes` willonly be populated if `BuildOptions` has requested a
+  // `SourceProvenanceHash`.
+  //
+  // The keys to this map are file paths used as build source and the values
+  // contain the hash values for those files.
+  //
+  // If the build source came in a single package such as a gzipped tarfile
+  // (`.tar.gz`), the `FileHash` will be for the single path to that file.
+  map<string, FileHashes> file_hashes = 4
+      [(field_rule).output_only = true];
+
+  reserved 1, 2, 5, 7;
+  // next ID: 8
+}
+
+// Container message for hashes of byte content of files, used in
+// SourceProvenance messages to verify integrity of source input to the build.
+message FileHashes {
+  // Collection of file hashes.
+  repeated Hash file_hash = 1;
+}
+
+// Container message for hash values.
+message Hash {
+  // Specifies the hash algorithm, if any.
+  enum HashType {
+    // No hash requested.
+    NONE = 0;
+    // Use a sha256 hash.
+    SHA256 = 1;
+    // Use a md5 hash.
+    MD5 = 2;
+  }
+
+  // The type of hash that was performed.
+  HashType type = 1;
+  // The hash value.
+  bytes value = 2;
+}
+
+// Pairs a set of secret environment variables containing encrypted
+// values with the Cloud KMS key to use to decrypt the value.
+message Secret {
+  // Cloud KMS key name to use to decrypt these envs.
+  string kms_key_name = 1;
+
+  // Map of environment variable name to its encrypted value.
+  //
+  // Secret environment variables must be unique across all of a build's
+  // secrets, and must be used by at least one build step. Values can be at most
+  // 2 KB in size. There can be at most ten secret values across all of a
+  // build's secrets.
+  map<string, bytes> secret_env = 3;
+
+  reserved 2;
+  // Next ID: 4
+}
+
+// Request to create a new build.
+message CreateBuildRequest {
+  // ID of the project.
+  string project_id = 1;
+
+  // Build resource to create.
+  Build build = 2;
+}
+
+// Request to get a build.
+message GetBuildRequest {
+  // ID of the project.
+  string project_id = 1;
+
+  // ID of the build.
+  string id = 2;
+
+  reserved 3;
+  // next ID: 4
+}
+
+// Request to list builds.
+message ListBuildsRequest {
+  // ID of the project.
+  string project_id = 1;
+
+  // Number of results to return in the list.
+  int32 page_size = 2;
+
+  // Token to provide to skip to a particular spot in the list.
+  string page_token = 3;
+
+  // The raw filter text to constrain the results.
+  string filter = 8;
+
+  reserved 4, 5, 6, 7;
+  // next ID: 9
+
+  // TODO(jasonhall): Order by start_time, finish_time, etc. (b/26379983)
+}
+
+// Response including listed builds.
+message ListBuildsResponse {
+  // Builds will be sorted by `create_time`, descending.
+  repeated Build builds = 1;
+
+  // Token to receive the next page of results.
+  string next_page_token = 2;
+}
+
+// Request to cancel an ongoing build.
+message CancelBuildRequest {
+  // ID of the project.
+  string project_id = 1;
+
+  // ID of the build.
+  string id = 2;
+
+  reserved 3;
+  // next ID: 4
+}
+
+// Configuration for an automated build in response to source repository
+// changes.
+message BuildTrigger {
+  // Output only. Unique identifier of the trigger.
+  string id = 1
+      [(field_rule).output_only = true];
+
+  // Human-readable description of this trigger.
+  string description = 10;
+
+  // Template describing the types of source changes to trigger a build.
+  //
+  // Branch and tag names in trigger templates are interpreted as regular
+  // expressions. Any branch or tag change that matches that regular expression
+  // will trigger a build.
+  RepoSource trigger_template = 7;
+
+  // Criteria for triggering a build when a base image changes.
+  BaseImage base_image = 12
+      [(google.api.field_visibility).restriction = "UI_RESTRICTED"];
+
+  // GitHubEventsConfig describes the configuration of a trigger that creates
+  // a build whenever a GitHub event is received.
+  GitHubEventsConfig github = 13;
+
+  // Template describing the Build request to make when the trigger is matched.
+  oneof build_template {
+    // Contents of the build template.
+    Build build = 4;
+    // Path, from the source root, to a file whose contents is used for the
+    // template.
+    string filename = 8;
+  };
+
+  // Output only. Time when the trigger was created.
+  google.protobuf.Timestamp create_time = 5
+      [(field_rule).output_only = true];
+
+  // If true, the trigger will never result in a build.
+  bool disabled = 9;
+
+  // Substitutions data for Build resource.
+  map<string, string> substitutions = 11;
+
+  // Directory, relative to the source root, in which to run the build.
+  //
+  // This must be a relative path. If a step's `dir` is specified and is an
+  // absolute path, this value is ignored for that step's execution.
+  string dir = 14 [(google.api.field_visibility).restriction = "UI_RESTRICTED"];
+
+  // ignored_files and included_files are file glob matches using
+  // http://godoc/pkg/path/filepath#Match extended with support for "**".
+  //
+  // If ignored_files and changed files are both empty, then they are
+  // not used to determine whether or not to trigger a build.
+  //
+  // If ignored_files is not empty, then we ignore any files that match
+  // any of the ignored_file globs. If the change has no files that are
+  // outside of the ignored_files globs, then we do not trigger a build.
+  repeated string ignored_files = 15;
+
+  // If any of the files altered in the commit pass the ignored_files
+  // filter and included_files is empty, then as far as this filter is
+  // concerned, we should trigger the build.
+  //
+  // If any of the files altered in the commit pass the ignored_files
+  // filter and included_files is not empty, then we make sure that at
+  // least one of those files matches a included_files glob. If not,
+  // then we do not trigger a build.
+  repeated string included_files = 16;
+
+  reserved 2, 3, 6;
+  // Next ID: 17
+}
+
+// GitHubEventsConfig describes the configuration of a trigger that creates a
+// build whenever a GitHub event is received.
+message GitHubEventsConfig {
+  // option (google.api.message_visibility).restriction =
+  //     "UI_RESTRICTED,GITHUB_APP_TRIGGER";
+
+  // The installationID that emmits the GitHub event.
+  int64 installation_id = 1;
+  // URL of the GitHub repository to watch.
+  string url = 2;
+
+  // Filter describing the types of events to trigger a build.
+  // Currently supported event types: push, pull_request.
+  oneof event {
+    // filter CheckSuite GitHub Events
+    CheckSuiteFilter check_suite = 3 [deprecated = true];
+    // filter to match changes in pull requests.
+    PullRequestFilter pull_request = 4;
+    // filter to match changes in refs like branches, tags.
+    PushFilter push = 5;
+  }
+}
+
+// A CheckSuiteFilter is a filter that matches CheckSuite events.
+message CheckSuiteFilter {
+  // option (google.api.message_visibility).restriction =
+  //     "UI_RESTRICTED,GITHUB_APP_TRIGGER";
+  // Filter to match the CheckSuite event.
+  oneof filter {
+    // filter to match changes in pull requests.
+    PullRequestFilter pull_request = 1;
+    // filter to match changes in refs like branches, tags.
+    PushFilter push = 2;
+  }
+
+  // ignored_files and included_files are file glob matches using
+  // http://godoc/pkg/path/filepath#Match extended with support for "**".
+  //
+  // If ignored_files and changed files are both empty, then they are
+  // not used to determine whether or not to trigger a build.
+  //
+  // If ignored_files is not empty, then we ignore any files that match
+  // any of the ignored_file globs. If the change has no files that are
+  // outside of the ignored_files globs, then we do not trigger a build.
+  repeated string ignored_files = 3;
+
+  // If any of the files altered in the commit pass the ignored_files
+  // filter and included_files is empty, then as far as this filter is
+  // concerned, we should trigger the build.
+  //
+  // If any of the files altered in the commit pass the ignored_files
+  // filter and included_files is not empty, then we make sure that at
+  // least one of those files matches a included_files glob. If not,
+  // then we do not trigger a build.
+  repeated string included_files = 4;
+}
+
+// PullRequestFilter contains filter properties for matching GitHub Pull
+// Requests.
+message PullRequestFilter {
+  // option (google.api.message_visibility).restriction =
+  //     "UI_RESTRICTED,GITHUB_APP_TRIGGER";
+
+  // Target refs to match.
+  // A target ref is the git reference where the pull request will be applied.
+  oneof git_ref {
+    // Glob of refs to match.
+    // The pattern matching syntax is: http://godoc/pkg/path/filepath#Match
+    string ref = 1 [deprecated = true];
+    // Regex of branches to match.
+    //
+    // The syntax of the regular expressions accepted is the syntax accepted by
+    // RE2 and described at https://github.com/google/re2/wiki/Syntax
+    string branch = 2;
+    // Regex of tags or tags to match.
+    //
+    // The syntax of the regular expressions accepted is the syntax accepted by
+    // RE2 and described at https://github.com/google/re2/wiki/Syntax
+    string tag = 3 [deprecated = true];
+  }
+}
+
+// Push contains filter properties for matching GitHub git pushes.
+message PushFilter {
+  // option (google.api.message_visibility).restriction =
+  //     "UI_RESTRICTED,GITHUB_APP_TRIGGER";
+
+  // Modified refs to match.
+  // A modified refs are the refs modified by a git push operation.
+  oneof git_ref {
+    // Glob of refs to match.
+    // The pattern matching syntax is: http://godoc/pkg/path/filepath#Match
+    string ref = 1 [deprecated = true];
+    // Regexes of branches to match.
+    //
+    // The syntax of the regular expressions accepted is the syntax accepted by
+    // RE2 and described at https://github.com/google/re2/wiki/Syntax
+    string branch = 2;
+    // Regexes of tags to match.
+    //
+    // The syntax of the regular expressions accepted is the syntax accepted by
+    // RE2 and described at https://github.com/google/re2/wiki/Syntax
+    string tag = 3;
+  }
+}
+
+// Criteria for triggering a build when a base image changes.
+message BaseImage {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+
+  // Name of the image in Google Container Registry to watch for changes.
+  //
+  // Image name must include the tag. For example, `gcr.io/project/image:tag`.
+  string image_name = 1;
+}
+
+// Request to create a new `BuildTrigger`.
+message CreateBuildTriggerRequest {
+  // ID of the project for which to configure automatic builds.
+  string project_id = 1;
+
+  // `BuildTrigger` to create.
+  BuildTrigger trigger = 2;
+}
+
+// Returns the `BuildTrigger` with the specified ID.
+message GetBuildTriggerRequest {
+  // ID of the project that owns the trigger.
+  string project_id = 1;
+
+  // ID of the `BuildTrigger` to get.
+  string trigger_id = 2;
+}
+
+// Request to list existing `BuildTriggers`.
+message ListBuildTriggersRequest {
+  // ID of the project for which to list BuildTriggers.
+  string project_id = 1;
+}
+
+// Response containing existing `BuildTriggers`.
+message ListBuildTriggersResponse {
+  // `BuildTriggers` for the project, sorted by `create_time` descending.
+  repeated BuildTrigger triggers = 1;
+}
+
+// Request to delete a `BuildTrigger`.
+message DeleteBuildTriggerRequest {
+  // ID of the project that owns the trigger.
+  string project_id = 1;
+
+  // ID of the `BuildTrigger` to delete.
+  string trigger_id = 2;
+}
+
+// Request to update an existing `BuildTrigger`.
+message UpdateBuildTriggerRequest {
+  // ID of the project that owns the trigger.
+  string project_id = 1;
+
+  // ID of the `BuildTrigger` to update.
+  string trigger_id = 2;
+
+  // `BuildTrigger` to update.
+  BuildTrigger trigger = 3;
+}
+
+// Optional arguments to enable specific features of builds.
+message BuildOptions {
+  // Requested hash for SourceProvenance.
+  repeated Hash.HashType source_provenance_hash = 1 [packed = true];
+
+  // Specifies the manner in which the build should be verified, if at all.
+  enum VerifyOption {
+    // Not a verifiable build. (default)
+    NOT_VERIFIED = 0;
+    // Verified build.
+    VERIFIED = 1;
+    // Deprecated and unused.
+    DEPRECATED_AND_UNUSED = 2
+        [(google.api.value_visibility).restriction = "GOOGLE_INTERNAL"];
+  }
+
+  // Requested verifiability options.
+  VerifyOption requested_verify_option = 2;
+
+  // Supported VM sizes.
+  enum MachineType {
+    // Standard machine type.
+    UNSPECIFIED = 0;
+    // Highcpu machine with 8 CPUs.
+    N1_HIGHCPU_8 = 1;
+    // Highcpu machine with 32 CPUs.
+    N1_HIGHCPU_32 = 2;
+
+    reserved 3, 4;
+    // next_id = 5
+  }
+
+  // Compute Engine machine type on which to run the build.
+  MachineType machine_type = 3;
+
+  // Requested disk size for the VM that runs the build. Note that this is *NOT*
+  // "disk free"; some of the space will be used by the operating system and
+  // build utilities. Also note that this is the minimum disk size that will be
+  // allocated for the build -- the build may run with a larger disk than
+  // requested. At present, the maximum disk size is 1000GB; builds that request
+  // more than the maximum are rejected with an error.
+  int64 disk_size_gb = 6;
+
+  // Specifies the behavior when there is an error in the substitution checks.
+  enum SubstitutionOption {
+    // Fails the build if error in substitutions checks, like missing
+    // a substitution in the template or in the map.
+    MUST_MATCH = 0;
+    // Do not fail the build if error in substitutions checks.
+    ALLOW_LOOSE = 1;
+  }
+
+  // Option to specify behavior when there is an error in the substitution
+  // checks.
+  SubstitutionOption substitution_option = 4;
+
+  // Specifies the behavior when writing build logs to Google Cloud Storage.
+  enum LogStreamingOption {
+    // Service may automatically determine build log streaming behavior.
+    STREAM_DEFAULT = 0;
+
+    // Build logs should be streamed to Google Cloud Storage.
+    STREAM_ON = 1;
+
+    // Build logs should not be streamed to Google Cloud Storage; they will be
+    // written when the build is completed.
+    STREAM_OFF = 2;
+  }
+
+  // Option to define build log streaming behavior to Google Cloud
+  // Storage.
+  LogStreamingOption log_streaming_option = 5;
+
+  // Option to specify a `WorkerPool` for the build. User specifies the pool
+  // with the format "workerpool_project_id/workerpool_name".
+  string worker_pool = 7
+      [(google.api.field_visibility).restriction = "CUSTOM_WORKERS_ALPHA"];
+
+  // Option to specify whether the build requires privilege.
+  enum PrivilegeOption {
+    option (google.api.enum_visibility).restriction = "GOOGLE_INTERNAL";
+
+    // Service determines whether the build should be run with privilege or not.
+    PRIVILEGE_UNSPECIFIED = 0;
+
+    // Build requires privilege.
+    PRIVILEGE_REQUIRED = 1;
+
+    // Build does not require privilege.
+    UNPRIVILEGED = 2;
+  }
+
+  // Option to specify whether the build requires privilege.
+  PrivilegeOption privilege = 9
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Specifies the logging mode.
+  enum LoggingMode {
+    // The service determines the logging mode. The default is `LEGACY`
+    LOGGING_UNSPECIFIED = 0;
+
+    // Stackdriver logging and Cloud Storage logging are enabled.
+    LEGACY = 1;
+
+    // Only Cloud Storage logging is enabled.
+    GCS_ONLY = 2;
+  }
+
+  // Option to specify the logging mode, which determines where the logs are stored.
+  LoggingMode logging = 11;
+
+  // A list of global environment variable definitions that will exist for all
+  // build steps in this build. If a variable is defined in both globally and in
+  // a build step, the variable will use the build step value.
+  //
+  // The elements are of the form "KEY=VALUE" for the environment variable "KEY"
+  // being given the value "VALUE".
+  repeated string env = 12
+    [(google.api.field_visibility).restriction = "UI_RESTRICTED,GOOGLE_INTERNAL"];
+
+  // A list of global environment variables, which are encrypted using a Cloud
+  // Key Management Service crypto key. These values must be specified in the
+  // build's `Secret`. These variables will be available to all build steps
+  // in this build.
+  repeated string secret_env = 13
+    [(google.api.field_visibility).restriction = "UI_RESTRICTED,GOOGLE_INTERNAL"];
+
+  // Global list of volumes to mount for ALL build steps
+  //
+  // Each volume is created as an empty volume prior to starting the build
+  // process. Upon completion of the build, volumes and their contents are
+  // discarded. Global volume names and paths cannot conflict with the volumes
+  // defined a build step.
+  //
+  // Using a global volume in a build with only one step is not valid as
+  // it is indicative of a build request with an incorrect configuration.
+  repeated Volume volumes = 14
+      [(google.api.field_visibility).restriction = "UI_RESTRICTED,GOOGLE_INTERNAL"];
+
+  // Next ID: 15
+  reserved 10;
+}
+
+// RPC request object accepted by the ReceiveWebhook RPC method.
+message WebhookRequest {
+  // HTTP request body.
+  google.api.HttpBody body = 2;
+}
+
+// GitHubEvent contains information extracted from a GitHub event request.
+message GitHubEvent {
+  // option (google.api.message_visibility).restriction = "GOOGLE_INTERNAL";
+
+  oneof event {
+    // Information about a checksuite event.
+    GitHubCheckSuiteEvent check_suite = 2;
+
+    // next ID: 3
+  }
+}
+
+// Information about a GitHub CheckSuite event.
+message GitHubCheckSuiteEvent {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+
+  // CheckSuite ID, returned after creation.
+  int64 id = 1;
+  // Type of action taken on the Check Suite, e.g., "created" or "rerequested".
+  string action = 8;
+  // User or organization who owns the GitHub repo.
+  string user = 2;
+  // GitHub repository name.
+  string repo = 3;
+  // GitHub repository branch.
+  string branch = 4;
+  // The SHA at the head of the Pull Request branch.
+  string sha = 5;
+  // GitHub installation ID that sent this event.
+  int64 installation_id = 6;
+  // The ID of the CheckRun resulted from this CheckSuite.
+  int64 check_run_id = 7;
+  // config_file is the path of the file used for build config or Dockerfile.
+  string config_file = 9;
+  // whether proctor is handling notifying GitHub. If true, Argo workers
+  // should NOT send an updated check run.
+  // TODO(b/113277051): Remove this field once result_processor is notifying
+  // Github.
+  bool proctor_sends_updates = 10
+    [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // Next ID: 11
+}
+
+// Request to create a new project-installation association.
+message CreateGitHubInstallationRequest {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+
+  // ID of the project.
+  string project_id = 1;
+
+  // GitHub Installation resource.
+  Installation installation = 2;
+
+  // GitHub user code.
+  string user_oauth_code = 3;
+}
+
+// Request to update an existing project-installation association.
+message UpdateGitHubInstallationRequest {
+  option (google.api.message_visibility).restriction =
+      "UI_RESTRICTED,GITHUB_APP_TRIGGER";
+
+  // ID of the project.
+  string project_id = 1;
+
+  // Unique identifier of the GitHub installation.
+  int64 installation_id = 2;
+
+  // GitHub Installation resource.
+  Installation installation = 3;
+}
+
+// A GitHub-app installation.
+message Installation {
+  option (google.api.message_visibility).restriction =
+      "UI_RESTRICTED,GITHUB_APP_TRIGGER";
+
+  // Unique identifier of the GitHub installation. This field is immutable
+  // and cannot be updated.
+  int64 id = 1;
+
+  // Numerical ID of the project. This field is immutable and cannot be
+  // updated.
+  int64 project_num = 2;
+
+  // Time when the installation was associated with the project. This field is
+  // immutable and cannot be updated.
+  google.protobuf.Timestamp create_time = 3;
+
+  // Whether the project should respond to default check suite events.
+  bool default_check_suite_events = 4;
+}
+
+// A GitHub user.
+message GitHubUser {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+  // GitHub user or organization name.
+  string login = 1;
+
+  // URL pointing to the user/org GitHub page.
+  string html_url = 2;
+
+  // URL pointing to the user/org avatar image.
+  string avatar_url = 3;
+}
+
+// A GitHub Repository.
+message GitHubRepository {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+
+  // GitHub App installation id.
+  int64 installation_id = 1;
+
+  // URL pointing to the installation's GitHub page.
+  string installation_html_url = 8;
+
+  // GitHub user/org that owns the repository.
+  GitHubUser owner = 2;
+
+  // Name of the repository.
+  string name = 3;
+
+  // Full name of the repository, generally owner.login/name.
+  string full_name = 4;
+
+  // Description of the repository.
+  string description = 5;
+
+  // URL pointing to the repository's GitHub page.
+  string html_url = 6;
+
+  // Whether the repository is private.
+  bool private = 7;
+}
+
+// RPC request object accepted by the ListGitHubRepositories RPC method.
+message ListGitHubRepositoriesRequest {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+
+  // Cloud Project Number
+  int64 project_number = 1;
+
+  // TODO(wlynch): Add pagination.
+}
+
+// RPC request object returned by the ListGitHubRepositories RPC method.
+message ListGitHubRepositoriesResponse {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+
+  // List of GitHub repositories.
+  repeated GitHubRepository repos = 1;
+}
+
+// Configuration for a WorkerPool to run the builds.
+//
+// Workers are machines that Cloud Build uses to run your builds. By default,
+// all workers run in a project owned by Cloud Build. To have full control over
+// the workers that execute your builds -- such as enabling them to access
+// private resources on your private network -- you can request Cloud Build to
+// run the workers in your own project by creating a custom workers pool.
+message WorkerPool {
+  option (google.api.message_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+
+  // Unique identifier of the `WorkerPool`.
+  string id = 1 [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  // User-defined name of the `WorkerPool`.
+  string name = 14;
+
+  // The project ID of the GCP project in which the `WorkerPool` is created.
+  string project_id = 2;
+
+  // Output only. The service account used to manage the `WorkerPool`. The
+  // service account must have the Compute Instance Admin (Beta) permission at
+  // the project level.
+  string service_account_email = 3;
+
+  // Total number of workers to be created across all requested regions.
+  int64 worker_count = 4;
+
+  // Configuration to be used for a creating workers in the `WorkerPool`.
+  WorkerConfig worker_config = 16;
+
+  // Supported GCP regions to create the `WorkerPool`.
+  enum Region {
+    // no region
+    REGION_UNSPECIFIED = 0;
+    // us-central-1 region
+    US_CENTRAL_1 = 1;
+    // us-west-1 region
+    US_WEST_1 = 2;
+    // us-east-1 region
+    US_EAST_1 = 3;
+    // us-east-4 region
+    US_EAST_4 = 4;
+  }
+
+  // List of regions to create the `WorkerPool`. Regions can’t be empty.
+  // If Cloud Build adds a new GCP region in the future, the existing
+  // `WorkerPool` will not be enabled in the new region automatically;
+  // you must add the new region to the `regions` field to enable the
+  // `WorkerPool` in that region.
+  repeated Region regions = 9;
+
+  // Output only. Time at which the request to create the `WorkerPool` was
+  // received.
+  google.protobuf.Timestamp create_time = 11;
+
+  // Output only. Time at which the request to delete the `WorkerPool` was
+  // received.
+  google.protobuf.Timestamp delete_time = 12;
+
+  // `WorkerPool` status
+  enum Status {
+    // Status of the `WorkerPool` is unknown.
+    STATUS_UNSPECIFIED = 0;
+    // `WorkerPool` is being created.
+    CREATING = 1;
+    // `WorkerPool` is running.
+    RUNNING = 2;
+    // `WorkerPool` is being deleting: cancelling builds and draining workers.
+    DELETING = 3;
+    // `WorkerPool` is deleted.
+    DELETED = 4;
+  }
+
+  // Output only. WorkerPool Status.
+  Status status = 13;
+
+  // Origin of the builds going to this `WorkerPool`. Only for migration.
+  // http://shortn/_wMEM4vuELA
+  // TODO: remove this field when the migration of EAP Custom Workers is done,
+  // meaning they use the new build option.
+  repeated int64 origin_project_numbers = 15
+      [(google.api.field_visibility).restriction = "GOOGLE_INTERNAL"];
+
+  reserved 5, 6, 7, 8, 10;
+
+  // next ID: 17
+}
+
+// WorkerConfig defines the configuration to be used for a creating workers in
+// the pool.
+message WorkerConfig {
+  // Machine Type of the worker, such as n1-standard-1.
+  // See https://cloud.google.com/compute/docs/machine-types.
+  // If left blank, Cloud Build will use a standard unspecified machine to
+  // create the worker pool.
+  // `machine_type` is overridden if you specify a different machine type in
+  // `build_options`. In this case, the VM specified in the `build_options`
+  // will be created on demand at build time. For more information see
+  // https://cloud.google.com/cloud-build/docs/speeding-up-builds#using_custom_virtual_machine_sizes
+  string machine_type = 1;
+
+  // Size of the disk attached to the worker, in GB.
+  // See https://cloud.google.com/compute/docs/disks/
+  // If `0` is specified, Cloud Build will use a standard disk size.
+  // `disk_size` is overridden if you specify a different disk size in
+  // `build_options`. In this case, a VM with a disk size specified in the
+  // `build_options` will be created on demand at build time. For more
+  // information see
+  // https://cloud.google.com/cloud-build/docs/api/reference/rest/v1/projects.builds#buildoptions
+  int64 disk_size_gb = 2;
+
+  // The network definition used to create the worker.
+  // If this section is left empty, the workers will be created in
+  // WorkerPool.project_id on the default network.
+  Network network = 3;
+
+  // The tag applied to the worker, and the same tag used by the firewall rule.
+  // It is used to identify the Cloud Build workers among other VMs.
+  // The default value for tag is `worker`.
+  string tag = 4;
+}
+
+// Network describes the GCP network used to create workers in.
+message Network {
+  option (google.api.message_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+
+  // Project id containing the defined network and subnetwork. For a peered VPC,
+  // this will be the same as the project_id in which the workers are created.
+  // For a shared VPC, this will be the project sharing the network with the
+  // project_id project in which workers will be created. For custom workers
+  // with no VPC, this will be the same as project_id.
+  string project_id = 1;
+
+  // Network on which the workers are created.
+  // “default” network is used if empty.
+  string network = 2;
+
+  // Subnetwork on which the workers are created.
+  // “default” subnetwork is used if empty.
+  string subnetwork = 3;
+}
+
+// Request to create a new `WorkerPool`.
+message CreateWorkerPoolRequest {
+  option (google.api.message_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+
+  // ID of the parent project.
+  string parent = 1;
+
+  // `WorkerPool` resource to create.
+  WorkerPool worker_pool = 2;
+}
+
+// Request to get a `WorkerPool` with the specified name.
+message GetWorkerPoolRequest {
+  option (google.api.message_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+
+  // The field will contain name of the resource requested, for example:
+  // "projects/project-1/workerPools/workerpool-name"
+  string name = 1;
+}
+
+// Request to delete a `WorkerPool`.
+message DeleteWorkerPoolRequest {
+  option (google.api.message_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+
+  // The field will contain name of the resource requested, for example:
+  // "projects/project-1/workerPools/workerpool-name"
+  string name = 1;
+}
+
+// Request to update a `WorkerPool`.
+message UpdateWorkerPoolRequest {
+  option (google.api.message_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+
+  // ID of the parent project.
+  string parent = 1;
+
+  // The field will contain name of the resource requested, for example:
+  // "projects/project-1/workerPools/workerpool-name"
+  string name = 2;
+
+  // `WorkerPool` resource to update.
+  WorkerPool worker_pool = 3;
+}
+
+// Request to list `WorkerPool`s.
+message ListWorkerPoolsRequest {
+  option (google.api.message_visibility).restriction = "CUSTOM_WORKERS_ALPHA";
+
+  // ID of the parent project.
+  string parent = 1;
+}
+
+// Response containing existing `WorkerPools`.
+message ListWorkerPoolsResponse {
+  // `WorkerPools` for the project.
+  repeated WorkerPool worker_pools = 1;
+}
+
+// RPC request object accepted by the GenerateGitHubAccessToken RPC method.
+message GenerateGitHubAccessTokenRequest {
+  option (google.api.message_visibility).restriction = "UI_RESTRICTED";
+  // Cloud Project Number
+  int64 project_number = 1;
+
+  // GitHub temporary authorization code.
+  string code = 4;
+  // The URL where users are sent after authorization.
+  string redirect_uri = 5;
+  // GitHub OAuth nonce.
+  string state = 6;
+
+  reserved 2, 3;
+}
+
+// Request to get all refs for the GitHub repo associated with a given
+// trigger.
+message ListGitHubRefsRequest {
+  // Cloud Project Number. Required.
+  int64 project_number = 1;
+
+  // Trigger ID of a GitHub App trigger. Required.
+  string trigger_id = 2;
+
+  // Git subspace type. e.g. "tags" or "heads".
+  string type = 3;
+
+  // Page start.
+  int32 page = 4;
+
+  // Page size.
+  int32 page_size = 5;
+}
+
+// Response object for ListGitHubRefs.
+message ListGitHubRefsResponse {
+  // List of refs.
+  repeated string refs = 1;
+}

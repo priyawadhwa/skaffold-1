@@ -25,10 +25,11 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/skratchdot/open-golang/open"
+	"github.com/spf13/cobra"
 	"golang.org/x/oauth2/google"
 	cloudbuild "google.golang.org/api/cloudbuild/v1/generated"
-
-	"github.com/spf13/cobra"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 func NewCmdGCP(out io.Writer) *cobra.Command {
@@ -42,7 +43,15 @@ func NewCmdGCP(out io.Writer) *cobra.Command {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-
+			if _, err := requestGithubUsername(); err != nil {
+				fmt.Println(err)
+				return
+			}
+			if err := installGCBGithubApp(); err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println("DONE")
 		},
 		Args: cobra.NoArgs,
 	}
@@ -67,9 +76,14 @@ func retrieveCluster() error {
 	return nil
 }
 
+func checkIfGCBAppInstalled(org, project string) error {
+	return nil
+}
+
 func installGCBGithubApp() error {
 	// Open browser window to go through flow
-	return nil
+	fmt.Println("Please install the Google Cloud Build GitHub app on your repo\n Note: This will require giving Google Cloud Platform permissions to your account.")
+	return open.Run("https://github.com/apps/google-cloud-build")
 }
 
 func getAvailableGithubRepos() error {
@@ -105,6 +119,43 @@ func createBuildTrigger() error {
 	return nil
 }
 
-type Github struct {
-	Project string
+// requestGithubUsername requests the user to input their GitHub username
+func requestGithubUsername() (string, error) {
+	user := ""
+	correct := false
+
+	for {
+		if correct {
+			break
+		}
+		input := &survey.Input{
+			Message: "Please enter your GitHub username:",
+		}
+		if err := survey.AskOne(input, &user, nil); err != nil {
+			return "", err
+		}
+		confirm := &survey.Confirm{
+			Message: fmt.Sprintf("Is %s correct?", user),
+		}
+		if err := survey.AskOne(confirm, &correct, nil); err != nil {
+			return "", err
+		}
+	}
+
+	return user, nil
 }
+
+// func promptUserForGithubRepo() (string, error) {
+// 	var selectedDockerfile string
+// 	options := append(dockerfiles, NoDockerfile)
+// 	prompt := &survey.Select{
+// 		Message:  fmt.Sprintf("Choose the dockerfile to build image %s", image),
+// 		Options:  options,
+// 		PageSize: 15,
+// 	}
+// 	survey.AskOne(prompt, &selectedDockerfile, nil)
+// 	return nil, dockerfilePair{
+// 		Dockerfile: selectedDockerfile,
+// 		ImageName:  image,
+// 	}
+// }
