@@ -19,7 +19,7 @@ package gcb
 import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/docker"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/v1alpha3"
-	cloudbuild "google.golang.org/api/cloudbuild/v1"
+	cloudbuild "google.golang.org/api/cloudbuild/v1/generated"
 )
 
 func (b *Builder) buildDescription(artifact *v1alpha3.Artifact, bucket, object string) *cloudbuild.Build {

@@ -36,7 +36,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/google"
-	cloudbuild "google.golang.org/api/cloudbuild/v1"
+	cloudbuild "google.golang.org/api/cloudbuild/v1/generated"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 )

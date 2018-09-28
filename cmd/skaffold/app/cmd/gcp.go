@@ -26,8 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/google"
-	cloudbuild "google.golang.org/api/cloudbuild/v1"
-	"google.golang.org/api/cloudbuild/v1/generated"
+	cloudbuild "google.golang.org/api/cloudbuild/v1/generated"
 
 	"github.com/spf13/cobra"
 )
@@ -99,8 +98,8 @@ func createBuildTrigger() error {
 	}
 	cbclient.UserAgent = version.UserAgent()
 
-	bt := &generated.BuildTrigger{
-		Github: &generated.GitHubEventsConfig{},
+	bt := &cloudbuild.BuildTrigger{
+		Github: &cloudbuild.GitHubEventsConfig{},
 	}
 	fmt.Println(bt)
 	return nil
