@@ -17,11 +17,17 @@ limitations under the License.
 package v1alpha3
 
 import (
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/util"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
 const Version string = "skaffold/v1alpha3"
+
+// NewSkaffoldConfig creates a SkaffoldConfig
+func NewSkaffoldConfig() util.VersionedConfig {
+	return new(SkaffoldConfig)
+}
 
 type SkaffoldConfig struct {
 	APIVersion string `yaml:"apiVersion"`
@@ -98,7 +104,6 @@ type GoogleCloudBuild struct {
 // a kaniko build context
 type KanikoBuildContext struct {
 	GCSBucket string `yaml:"gcsBucket,omitempty" yamltags:"oneOf=buildContext"`
-	LocalDir  bool   `yaml:"localDir,omitempty" yamltags:"oneOf=buildContext"`
 }
 
 // KanikoBuild contains the fields needed to do a on-cluster build using
@@ -153,7 +158,7 @@ type KustomizeDeploy struct {
 type HelmRelease struct {
 	Name              string                 `yaml:"name"`
 	ChartPath         string                 `yaml:"chartPath"`
-	ValuesFilePath    string                 `yaml:"valuesFilePath"`
+	ValuesFiles       []string               `yaml:"valuesFiles"`
 	Values            map[string]string      `yaml:"values,omitempty"`
 	Namespace         string                 `yaml:"namespace"`
 	Version           string                 `yaml:"version"`
@@ -232,21 +237,10 @@ func (c *SkaffoldConfig) Parse(contents []byte, useDefaults bool) error {
 	}
 
 	if useDefaults {
-		if err := c.setDefaultValues(); err != nil {
+		if err := c.SetDefaultValues(); err != nil {
 			return errors.Wrap(err, "applying default values")
 		}
 	}
 
 	return nil
-}
-
-func NewConfig() (*SkaffoldConfig, error) {
-	cfg := &SkaffoldConfig{}
-	if err := cfg.setBaseDefaultValues(); err != nil {
-		return nil, err
-	}
-	if err := cfg.setDefaultValues(); err != nil {
-		return nil, err
-	}
-	return cfg, nil
 }
