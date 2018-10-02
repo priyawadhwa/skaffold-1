@@ -37,7 +37,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/docker"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	kubectx "github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes/context"
-	latest "github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/v1alpha4"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/watch"
 
 	"github.com/pkg/errors"
@@ -59,7 +59,7 @@ type SkaffoldRunner struct {
 }
 
 // NewForConfig returns a new SkaffoldRunner for a SkaffoldConfig
-func NewForConfig(opts *config.SkaffoldOptions, cfg *config.SkaffoldConfig) (*SkaffoldRunner, error) {
+func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldConfig) (*SkaffoldRunner, error) {
 	kubeContext, err := kubectx.CurrentContext()
 	if err != nil {
 		return nil, errors.Wrap(err, "getting current cluster context")
@@ -269,7 +269,7 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 
 		if err := watcher.Register(
 			func() ([]string, error) { return dependenciesForArtifact(artifact) },
-			func() { changed.Add(artifact) },
+			func(watch.Events) { changed.Add(artifact) },
 		); err != nil {
 			return nil, errors.Wrapf(err, "watching files for artifact %s", artifact.ImageName)
 		}
@@ -278,7 +278,7 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 	// Watch deployment configuration
 	if err := watcher.Register(
 		func() ([]string, error) { return r.Dependencies() },
-		func() { changed.needsRedeploy = true },
+		func(watch.Events) { changed.needsRedeploy = true },
 	); err != nil {
 		return nil, errors.Wrap(err, "watching files for deployer")
 	}
@@ -286,7 +286,7 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 	// Watch Skaffold configuration
 	if err := watcher.Register(
 		func() ([]string, error) { return []string{r.opts.ConfigurationFile}, nil },
-		func() { changed.needsReload = true },
+		func(watch.Events) { changed.needsReload = true },
 	); err != nil {
 		return nil, errors.Wrapf(err, "watching skaffold configuration %s", r.opts.ConfigurationFile)
 	}

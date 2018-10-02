@@ -14,14 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha4
+package latest
 
 import (
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/util"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
 const Version string = "skaffold/v1alpha4"
+
+// NewSkaffoldConfig creates a SkaffoldConfig
+func NewSkaffoldConfig() util.VersionedConfig {
+	return new(SkaffoldConfig)
+}
 
 type SkaffoldConfig struct {
 	APIVersion string `yaml:"apiVersion"`
@@ -147,7 +153,7 @@ type HelmDeploy struct {
 
 // KustomizeDeploy contains the configuration needed for deploying with kustomize.
 type KustomizeDeploy struct {
-	KustomizePath string       `yaml:"kustomizePath,omitempty"`
+	KustomizePath string       `yaml:"path,omitempty"`
 	Flags         KubectlFlags `yaml:"flags,omitempty"`
 }
 
@@ -197,8 +203,8 @@ type HelmConventionConfig struct {
 // Artifact represents items that need to be built, along with the context in which
 // they should be built.
 type Artifact struct {
-	ImageName    string `yaml:"imageName"`
-	Workspace    string `yaml:"workspace,omitempty"`
+	ImageName    string `yaml:"image"`
+	Workspace    string `yaml:"context,omitempty"`
 	ArtifactType `yaml:",inline"`
 }
 
@@ -215,13 +221,16 @@ type ArtifactType struct {
 	BazelArtifact  *BazelArtifact  `yaml:"bazel,omitempty" yamltags:"oneOf=artifact"`
 }
 
+// DockerArtifact describes an artifact built from a Dockerfile,
+// usually using `docker build`.
 type DockerArtifact struct {
-	DockerfilePath string             `yaml:"dockerfilePath,omitempty"`
+	DockerfilePath string             `yaml:"dockerfile,omitempty"`
 	BuildArgs      map[string]*string `yaml:"buildArgs,omitempty"`
 	CacheFrom      []string           `yaml:"cacheFrom,omitempty"`
 	Target         string             `yaml:"target,omitempty"`
 }
 
+// BazelArtifact describes an artifact built with Bazel.
 type BazelArtifact struct {
 	BuildTarget string `yaml:"target"`
 }
@@ -233,21 +242,10 @@ func (c *SkaffoldConfig) Parse(contents []byte, useDefaults bool) error {
 	}
 
 	if useDefaults {
-		if err := c.setDefaultValues(); err != nil {
+		if err := c.SetDefaultValues(); err != nil {
 			return errors.Wrap(err, "applying default values")
 		}
 	}
 
 	return nil
-}
-
-func NewConfig() (*SkaffoldConfig, error) {
-	cfg := &SkaffoldConfig{}
-	if err := cfg.setBaseDefaultValues(); err != nil {
-		return nil, err
-	}
-	if err := cfg.setDefaultValues(); err != nil {
-		return nil, err
-	}
-	return cfg, nil
 }
