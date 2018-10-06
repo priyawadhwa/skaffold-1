@@ -22,6 +22,8 @@ import (
 	"io"
 	"os/exec"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/pipeline/gcb"
+
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -61,9 +63,6 @@ func NewCmdGCB(out io.Writer) *cobra.Command {
 }
 
 func execute() error {
-	if _, err := requestGithubUsername(); err != nil {
-		return err
-	}
 	installed, err := isGitHubAppInstalled()
 	if err != nil {
 		return errors.Wrap(err, "checking if github app is installed")
@@ -71,6 +70,11 @@ func execute() error {
 	if !installed {
 		return installGCBGithubApp()
 	}
+	args, err := gcb.NewArgs()
+	if err != nil {
+		return err
+	}
+	fmt.Println(args)
 	// Now that the github app is definitely installed, we can go about generating the cloudbuild.yaml
 
 	// Then, create the build trigger
@@ -88,13 +92,13 @@ func meetsRequirements() error {
 	for tool, link := range requiredTools {
 		_, err := exec.LookPath(tool)
 		if err != nil {
-			return fmt.Errorf("%s must be installed for this command\n Installation instructions can be found here: %s", tool, link)
+			return fmt.Errorf("%s must be installed\n Installation instructions can be found here: %s", tool, link)
 		}
 	}
 	return nil
 }
 
-func retrieveCluster() error {
+func retrieveClusters() error {
 	// TODO: Make sure the cluster is correct, otherwise allow user to select alternative clusters from kubeconfig
 
 	// TODO: Give option of creating a new cluster
