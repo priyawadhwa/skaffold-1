@@ -27,11 +27,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type fileMap map[string]time.Time
+// FileMap is a map of filename to modification times.
+type FileMap map[string]time.Time
 
-// TODO(mrick): cached tree extension ala git
-func stat(deps func() ([]string, error)) (fileMap, error) {
-	state := fileMap{}
+// Stat returns the modification times for a list of files.
+func Stat(deps func() ([]string, error)) (FileMap, error) {
+	state := FileMap{}
 	paths, err := deps()
 	if err != nil {
 		return state, errors.Wrap(err, "listing files")
@@ -77,7 +78,7 @@ func (e *Events) String() string {
 	return sb.String()
 }
 
-func events(prev, curr fileMap) Events {
+func events(prev, curr FileMap) Events {
 	e := Events{}
 	for f, t := range prev {
 		modtime, ok := curr[f]
@@ -104,13 +105,25 @@ func events(prev, curr fileMap) Events {
 		}
 	}
 
-	sortEvt(e)
-	logrus.Debug(e.String())
+	sortEvents(e)
+	logEvents(e)
 	return e
 }
 
-func sortEvt(e Events) {
+func sortEvents(e Events) {
 	sort.Strings(e.Added)
 	sort.Strings(e.Modified)
 	sort.Strings(e.Deleted)
+}
+
+func logEvents(e Events) {
+	if e.Added != nil && len(e.Added) > 0 {
+		logrus.Infof("files added: %v", e.Added)
+	}
+	if e.Modified != nil && len(e.Modified) > 0 {
+		logrus.Infof("files modified: %v", e.Modified)
+	}
+	if e.Deleted != nil && len(e.Deleted) > 0 {
+		logrus.Infof("files deleted: %v", e.Deleted)
+	}
 }

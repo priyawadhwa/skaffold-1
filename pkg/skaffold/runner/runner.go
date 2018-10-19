@@ -24,19 +24,24 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/acr"
+
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/bazel"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/gcb"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/kaniko"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/local"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/tag"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/docker"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/jib"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	kubectx "github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes/context"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync/kubectl"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/test"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/watch"
 
@@ -61,8 +66,8 @@ type SkaffoldRunner struct {
 	builds       []build.Artifact
 }
 
-// NewForConfig returns a new SkaffoldRunner for a SkaffoldConfig
-func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldConfig) (*SkaffoldRunner, error) {
+// NewForConfig returns a new SkaffoldRunner for a SkaffoldPipeline
+func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldPipeline) (*SkaffoldRunner, error) {
 	kubeContext, err := kubectx.CurrentContext()
 	if err != nil {
 		return nil, errors.Wrap(err, "getting current cluster context")
@@ -106,7 +111,7 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldConfig) (*Sk
 		Deployer:     deployer,
 		Tagger:       tagger,
 		Trigger:      trigger,
-		Syncer:       &kubernetes.KubectlSyncer{},
+		Syncer:       &kubectl.Syncer{},
 		opts:         opts,
 		watchFactory: watch.NewWatcher,
 	}, nil
@@ -124,7 +129,11 @@ func getBuilder(cfg *latest.BuildConfig, kubeContext string) (build.Builder, err
 
 	case cfg.KanikoBuild != nil:
 		logrus.Debugf("Using builder: kaniko")
-		return kaniko.NewBuilder(cfg.KanikoBuild), nil
+		return kaniko.NewBuilder(cfg.KanikoBuild)
+
+	case cfg.AzureContainerBuild != nil:
+		logrus.Debugf("Using builder: acr")
+		return acr.NewBuilder(cfg.AzureContainerBuild), nil
 
 	default:
 		return nil, fmt.Errorf("Unknown builder for config %+v", cfg)
@@ -259,8 +268,7 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 			}
 			if s != nil {
 				changed.AddResync(s)
-			}
-			if s == nil {
+			} else {
 				changed.AddRebuild(a.artifact)
 			}
 		}
@@ -271,12 +279,12 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 			return ErrorConfigurationChanged
 		case len(changed.needsResync) > 0:
 			for _, s := range changed.needsResync {
-				if err := r.Syncer.Sync(s); err != nil {
+				color.Default.Fprintf(out, "Syncing %d files for %s\n", len(s.Copy)+len(s.Delete), s.Image)
+
+				if err := r.Syncer.Sync(ctx, s); err != nil {
 					logrus.Warnln("Skipping build and deploy due to sync error:", err)
 					return nil
 				}
-				logrus.Infof("Synced %d files for %s", len(s.Copy)+len(s.Delete), s.Image)
-				logrus.Debugf("Synced files for %s...\nCopied: %s\nDeleted: %s\n", s.Image, s.Copy, s.Delete)
 			}
 		case len(changed.needsRebuild) > 0:
 			bRes, err := r.Build(ctx, out, r.Tagger, changed.needsRebuild)
@@ -321,7 +329,7 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 		}
 
 		if err := watcher.Register(
-			func() ([]string, error) { return dependenciesForArtifact(artifact) },
+			func() ([]string, error) { return DependenciesForArtifact(ctx, artifact) },
 			func(e watch.Events) { changed.AddDirtyArtifact(artifact, e) },
 		); err != nil {
 			return nil, errors.Wrapf(err, "watching files for artifact %s", artifact.ImageName)
@@ -427,7 +435,8 @@ func mergeWithPreviousBuilds(builds, previous []build.Artifact) []build.Artifact
 	return merged
 }
 
-func dependenciesForArtifact(a *latest.Artifact) ([]string, error) {
+// DependenciesForArtifact lists the dependencies for a given artifact.
+func DependenciesForArtifact(ctx context.Context, a *latest.Artifact) ([]string, error) {
 	var (
 		paths []string
 		err   error
@@ -435,10 +444,16 @@ func dependenciesForArtifact(a *latest.Artifact) ([]string, error) {
 
 	switch {
 	case a.DockerArtifact != nil:
-		paths, err = docker.GetDependencies(a.Workspace, a.DockerArtifact)
+		paths, err = docker.GetDependencies(ctx, a.Workspace, a.DockerArtifact)
 
 	case a.BazelArtifact != nil:
-		paths, err = bazel.GetDependencies(a.Workspace, a.BazelArtifact)
+		paths, err = bazel.GetDependencies(ctx, a.Workspace, a.BazelArtifact)
+
+	case a.JibMavenArtifact != nil:
+		paths, err = jib.GetDependenciesMaven(ctx, a.Workspace, a.JibMavenArtifact)
+
+	case a.JibGradleArtifact != nil:
+		paths, err = jib.GetDependenciesGradle(ctx, a.Workspace, a.JibGradleArtifact)
 
 	default:
 		return nil, fmt.Errorf("undefined artifact type: %+v", a.ArtifactType)
@@ -450,7 +465,10 @@ func dependenciesForArtifact(a *latest.Artifact) ([]string, error) {
 
 	var p []string
 	for _, path := range paths {
-		p = append(p, filepath.Join(a.Workspace, path))
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(a.Workspace, path)
+		}
+		p = append(p, path)
 	}
 	return p, nil
 }

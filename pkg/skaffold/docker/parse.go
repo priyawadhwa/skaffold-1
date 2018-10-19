@@ -146,8 +146,10 @@ func onbuildInstructions(nodes []*parser.Node) ([]*parser.Node, error) {
 			continue
 		}
 
-		logrus.Debugf("Found ONBUILD triggers %v in image %s", img.Config.OnBuild, from.image)
-		instructions = append(instructions, img.Config.OnBuild...)
+		if len(img.Config.OnBuild) > 0 {
+			logrus.Debugf("Found ONBUILD triggers %v in image %s", img.Config.OnBuild, from.image)
+			instructions = append(instructions, img.Config.OnBuild...)
+		}
 	}
 
 	obRes, err := parser.Parse(strings.NewReader(strings.Join(instructions, "\n")))
@@ -249,14 +251,14 @@ func expandPaths(workspace string, copied [][]string) ([]string, error) {
 	for dep := range expandedPaths {
 		deps = append(deps, dep)
 	}
-	logrus.Infof("Found dependencies for dockerfile %s", deps)
+	logrus.Debugf("Found dependencies for dockerfile: %v", deps)
 
 	return deps, nil
 }
 
 // GetDependencies finds the sources dependencies for the given docker artifact.
 // All paths are relative to the workspace.
-func GetDependencies(workspace string, a *latest.DockerArtifact) ([]string, error) {
+func GetDependencies(ctx context.Context, workspace string, a *latest.DockerArtifact) ([]string, error) {
 	absDockerfilePath, err := NormalizeDockerfilePath(workspace, a.DockerfilePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "normalizing dockerfile path")
@@ -304,6 +306,10 @@ func GetDependencies(workspace string, a *latest.DockerArtifact) ([]string, erro
 			if err := godirwalk.Walk(absDep, &godirwalk.Options{
 				Unsorted: true,
 				Callback: func(fpath string, info *godirwalk.Dirent) error {
+					if fpath == absDep {
+						return nil
+					}
+
 					relPath, err := filepath.Rel(workspace, fpath)
 					if err != nil {
 						return err

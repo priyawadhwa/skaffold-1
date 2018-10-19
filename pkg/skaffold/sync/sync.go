@@ -17,19 +17,24 @@ limitations under the License.
 package sync
 
 import (
+	"context"
 	"fmt"
+	"os/exec"
 	"path"
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/watch"
 	"github.com/pkg/errors"
+	"k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Syncer interface {
-	Sync(s *Item) error
+	Sync(context.Context, *Item) error
 }
 
 type Item struct {
@@ -40,7 +45,7 @@ type Item struct {
 
 func NewItem(a *latest.Artifact, e watch.Events, builds []build.Artifact) (*Item, error) {
 	// If there are no changes, short circuit and don't sync anything
-	if !e.HasChanged() || a.Sync == nil || len(a.Sync) == 0 {
+	if !e.HasChanged() || len(a.Sync) == 0 {
 		return nil, nil
 	}
 
@@ -51,16 +56,17 @@ func NewItem(a *latest.Artifact, e watch.Events, builds []build.Artifact) (*Item
 
 	toDelete, err := intersect(a.Workspace, a.Sync, e.Deleted)
 	if err != nil {
-		return nil, errors.Wrap(err, "intersecting sync map and added, modified files")
+		return nil, errors.Wrap(err, "intersecting sync map and deleted files")
 	}
 
+	// Something went wrong, don't sync, rebuild.
 	if toCopy == nil || toDelete == nil {
 		return nil, nil
 	}
 
 	tag := latestTag(a.ImageName, builds)
 	if tag == "" {
-		return nil, fmt.Errorf("Could not find latest tag for image %s in builds: %s", a.ImageName, builds)
+		return nil, fmt.Errorf("could not find latest tag for image %s in builds: %v", a.ImageName, builds)
 	}
 
 	return &Item{
@@ -105,4 +111,45 @@ func intersect(context string, syncMap map[string]string, files []string) (map[s
 		}
 	}
 	return ret, nil
+}
+
+func Perform(ctx context.Context, image string, files map[string]string, cmdFn func(context.Context, v1.Pod, v1.Container, string, string) *exec.Cmd) error {
+	if len(files) == 0 {
+		return nil
+	}
+
+	client, err := kubernetes.Client()
+	if err != nil {
+		return errors.Wrap(err, "getting k8s client")
+	}
+
+	pods, err := client.CoreV1().Pods("").List(meta_v1.ListOptions{})
+	if err != nil {
+		return errors.Wrap(err, "getting pods")
+	}
+
+	synced := map[string]bool{}
+
+	for _, p := range pods.Items {
+		for _, c := range p.Spec.Containers {
+			if c.Image != image {
+				continue
+			}
+
+			for src, dst := range files {
+				cmd := cmdFn(ctx, p, c, src, dst)
+				if err := util.RunCmd(cmd); err != nil {
+					return err
+				}
+
+				synced[src] = true
+			}
+		}
+	}
+
+	if len(synced) != len(files) {
+		return errors.New("couldn't sync all the files")
+	}
+
+	return nil
 }

@@ -46,13 +46,21 @@ const (
 
 	DefaultKustomizationPath = "."
 
-	DefaultKanikoImage      = "gcr.io/kaniko-project/executor:v0.4.0@sha256:0bbaa4859eec9796d32ab45e6c1627562dbc7796e40450295b9604cd3f4197af"
-	DefaultKanikoSecretName = "kaniko-secret"
-	DefaultKanikoTimeout    = "20m"
+	DefaultKanikoImage             = "gcr.io/kaniko-project/executor:v0.4.0@sha256:0bbaa4859eec9796d32ab45e6c1627562dbc7796e40450295b9604cd3f4197af"
+	DefaultKanikoSecretName        = "kaniko-secret"
+	DefaultKanikoTimeout           = "20m"
+	DefaultKanikoContainerName     = "kaniko"
+	DefaultKanikoEmptyDirName      = "kaniko-emptydir"
+	DefaultKanikoEmptyDirMountPath = "/kaniko/buildcontext"
+
+	DefaultAlpineImage = "alpine"
 
 	UpdateCheckEnvironmentVariable = "SKAFFOLD_UPDATE_CHECK"
 
 	DefaultCloudBuildDockerImage = "gcr.io/cloud-builders/docker"
+
+	// A regex matching valid repository names (https://github.com/docker/distribution/blob/master/reference/reference.go)
+	RepositoryComponentRegex string = `^[a-z\d]+(?:(?:[_.]|__|-+)[a-z\d]+)*$`
 )
 
 var DefaultKubectlManifests = []string{"k8s/*.yaml"}
