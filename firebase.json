@@ -1,0 +1,19 @@
+{
+  "hosting": [
+    {
+      "public": "docs/firebase",
+      "target": "skaffold-latest",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "docs/firebase/index.html"
+        }
+      ]
+    }
+  ]
+}

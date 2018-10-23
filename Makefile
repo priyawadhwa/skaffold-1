@@ -120,6 +120,7 @@ release-build: cross docs
 	gsutil -m cp $(BUILD_DIR)/$(PROJECT)-* $(GSC_BUILD_PATH)/
 	gsutil -m cp -r $(DOCS_DIR)/* $(GSC_BUILD_PATH)/docs/
 	gsutil -m cp -r $(GSC_BUILD_PATH)/* $(GSC_BUILD_LATEST)
+	firebase deploy --only hosting:skaffold-latest
 
 .PHONY: release-build-in-docker
 release-build-in-docker:

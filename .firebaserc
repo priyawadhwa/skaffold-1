@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "k8s-skaffold"
+  },
+  "targets": {
+    "k8s-skaffold": {
+      "hosting": {
+        "skaffold-latest": [
+          "skaffold-latest"
+        ]
+      }
+    }
+  }
+}
