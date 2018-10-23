@@ -80,6 +80,7 @@ func NewSkaffoldCommand(out, err io.Writer) *cobra.Command {
 	rootCmd.AddCommand(NewCmdFix(out))
 	rootCmd.AddCommand(NewCmdConfig(out))
 	rootCmd.AddCommand(NewCmdInit(out))
+	rootCmd.AddCommand(NewCmdPipeline(out))
 	rootCmd.AddCommand(NewCmdDiagnose(out))
 
 	rootCmd.PersistentFlags().StringVarP(&v, "verbosity", "v", constants.DefaultLogLevel.String(), "Log level (debug, info, warn, error, fatal, panic)")
@@ -142,7 +143,6 @@ func AddRunDevFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&opts.Notification, "toot", false, "Emit a terminal beep after the deploy is complete")
 	cmd.Flags().StringArrayVarP(&opts.Profiles, "profile", "p", nil, "Activate profiles by name")
 	cmd.Flags().StringVarP(&opts.Namespace, "namespace", "n", "", "Run deployments in the specified namespace")
-	cmd.Flags().StringVarP(&opts.DefaultRepo, "default-repo", "d", "", "Default repository value (overrides global config)")
 }
 
 func SetUpLogs(out io.Writer, level string) error {
