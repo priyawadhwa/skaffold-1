@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.49.2" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://skaffold.dev/docs/how-tos/deployers/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/favicons/android-96x196.png" sizes="96x196">
+<link rel="icon" type="image/png" href="/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/favicons/android-192x192.png"sizes="192x192">
+
+<title>Using Deployers | Skaffold</title><meta property="og:title" content="Using Deployers" />
+<meta property="og:description" content="TechOS is containers revisited" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://skaffold.dev/docs/how-tos/deployers/" />
+<meta property="og:updated_time" content="2018-10-07T22:10:28-07:00"/><meta property="og:site_name" content="Skaffold" />
+
+<meta itemprop="name" content="Using Deployers">
+<meta itemprop="description" content="TechOS is containers revisited">
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Using Deployers"/>
+<meta name="twitter:description" content="TechOS is containers revisited"/>
+
+
+
+
+
+<link rel="preload" href="/scss/main.min.282ba2143466b2cd6a422fa69f2246ed65b295906560ff2eaa4060948dfc629b.css" as="style">
+<link href="/scss/main.min.282ba2143466b2cd6a422fa69f2246ed65b295906560ff2eaa4060948dfc629b.css" rel="stylesheet" integrity="">
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script src="https://skaffold.dev/javascripts/tabs.js"></script>
+<link rel="stylesheet" href="https://skaffold.dev/stylesheets/tabs.css">
+
+    <title>Using Deployers | Skaffold</title>
+  </head>
+  <body class="td-section" onload="initTabs()">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+	<a class="navbar-brand" href="/">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><g id="logo" fill="#fff"><path id="hull" d="M0 210H160L60 240z"/><path id="mainsail" d="M0 2e2l60-10V80z"/><path id="headsail" d="M70 190l90 10L70 0z"/></g></svg> <span class="text-uppercase font-weight-bold">Skaffold</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link" href="/about/"><span>About</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link active" href="/docs/"><span class="active">Documentation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link" href="/community/"><span>Community</span></a>
+			</li>
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+ <input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+</div>
+</nav>
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+ <input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Documentation</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/getting-started/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Getting Started</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-getting-started">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">How-to Guides</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/builders/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Builders</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-builders">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/deployers/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Using Deployers</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos-deployers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/taggers/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Taggers</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-taggers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/profiles/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Profiles</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-profiles">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/concepts/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Concepts</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-concepts">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/tutorials/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Tutorials</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-tutorials">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">References</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-references">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/cli/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">CLI References</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-references-cli">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/config/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">skaffold.yaml References</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-references-config">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/resources/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Resources</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-resources">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+<a href="https://github.com/GoogleContainerTools/skaffold/edit/master/content/en/docs/how-tos/deployers/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/skaffold/issues/new?title=Using%20Deployers" target="_blank"><i class="fab fa-github fa-fw"></i> Create issue</a>
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#deploying-with-kubectl">Deploying with kubectl</a></li>
+<li><a href="#deploying-with-helm">Deploying with Helm</a></li>
+<li><a href="#deploying-with-kustomize">Deploying with Kustomize</a></li>
+</ul></li>
+</ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://skaffold.dev/docs/">Documentation</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://skaffold.dev/docs/how-tos/">How-to Guides</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://skaffold.dev/docs/how-tos/deployers/">Using Deployers</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Using Deployers</h1>
+	
+	
+
+<p>This page discusses how to set up Skaffold to use the tool of your choice
+to deploy your app to a Kubernetes cluster.</p>
+
+<p>When skaffold deploys an application the following steps happen:
+* the skaffold deployer <em>renders</em> the final kubernetes manifests: skaffold replaces the image names in the kubernetes manifests with the final tagged image names.
+Also, in case of the more complicated deployers the rendering step involves expanding templates (in case of helm) or calculating overlays (in case of kustomize).
+* the skaffold deployer <em>deploys</em> the final kubernetes manifests to the cluster</p>
+
+<p>At this moment, Skaffold supports the following tools for deploying applications:</p>
+
+<ul>
+<li><a href="#deploying-with-kubectl"><code>kubectl</code></a></li>
+<li><a href="#deploying-with-helm">Helm</a></li>
+<li><a href="#deploying-with-kustomize">Kustomize</a></li>
+</ul>
+
+<p>The <code>deploy</code> section in the Skaffold configuration file, <code>skaffold.yaml</code>,
+controls how Skaffold builds artifacts. To use a specific tool for deploying
+artifacts, add the value representing the tool and options for using the tool
+to the <code>build</code> section. For a detailed discussion on Skaffold configuration,
+see <a href="/concepts/config">Skaffold Concepts: Configuration</a> and
+<a href="/references/config">Skaffold.yaml References</a>.</p>
+
+<h2 id="deploying-with-kubectl">Deploying with kubectl</h2>
+
+<p><a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/" target="_blank"><code>kubectl</code></a> is
+Kubernetes command-line tool for deploying and managing
+applications on Kubernetes clusters. Skaffold can work with <code>kubectl</code> to
+deploy artifacts on any Kubernetes cluster, including
+<a href="https://cloud.google.com/kubernetes-engine" target="_blank">Google Kubernetes Engine</a>
+clusters and local <a href="https://github.com/kubernetes/minikube" target="_blank">Minikube</a> clusters.</p>
+
+<p>To use <code>kubectl</code>, add deploy type <code>kubectl</code> to the <code>deploy</code> section of
+<code>skaffold.yaml</code>. The <code>kubectl</code> type offers the following options:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>manifests</code></td>
+            <td>
+                OPTIONAL
+                <p>A list of paths to Kubernetes Manifests.</p>
+                <p>Default value is <code>k8s/*.yaml</code>; Skaffold will ask <code>kubectl</code> to deploy all the YAML files under directory <code>k8s</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>remoteManifests</code></td>
+            <td>
+                OPTIONAL
+                <p>A list of paths to Kubernetes Manifests in remote clusters.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>flags</code></td>
+            <td>
+                OPTIONAL
+                <p>Additional flags to pass to <code>kubectl</code>.</p>
+                <p>You can specify three types of flags:</p>
+                <ul>
+                    <li><code>global</code>: flags that apply to every command.</li>
+                    <li><code>apply</code>: flags that apply to creation commands.</li>
+                    <li><code>delete</code>: flags that apply to deletion commands.</li>
+                <ul>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<p>The following <code>deploy</code> section, for example, instructs Skaffold to deploy
+artifacts using <code>kubectl</code>:</p>
+
+<pre><code>deploy:
+    kubectl:
+    manifests:
+        - k8s-*
+    # Uncomment the following lines to add remote manifests and flags
+    # remoteManifests:
+    #    - YOUR-REMOTE-MANIFESTS
+    # flags:
+    #    global:
+    #    - YOUR-GLOBAL-FLAGS
+    #    apply:
+    #    - YOUR-APPLY-FLAGS
+    #    delete:
+    #    - YOUR-DELETE-FLAGS
+</code></pre>
+
+<h2 id="deploying-with-helm">Deploying with Helm</h2>
+
+<p><a href="https://helm.sh/" target="_blank">Helm</a> is a package manager for Kubernetes that helps you
+manage Kubernetes applications. Skaffold can work with Helm by calling its
+command-line interface.</p>
+
+<p>To use Helm with Skaffold, add deploy type <code>helm</code> to the <code>deploy</code> section
+of <code>skaffold.yaml</code>. The <code>helm</code> type offers the following options:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>releases</code></td>
+            <td>
+                <b>Required</b>
+                <p>A list of Helm releases.</p>
+                <p>See the table below for the schema of <code>releases</code>.</p>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<p>Each release includes the following fields:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>name</code></td>
+            <td>
+                <b>Required</b>
+                <p>The name of the Helm release.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>chartPath</code></td>
+            <td>
+                <b>Required</b>
+                <p>The path to the Helm chart.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>valuesFilePath</code></td>
+            <td>
+                <p>The path to the Helm <code>values</code> file.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>values</code></td>
+            <td>
+                <p>A list of key-value pairs supplementing the Helm <code>values</code> file.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>namespace</code></td>
+            <td>
+                <p>The Kubernetes namespace.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>version</code></td>
+            <td>
+                <p>The version of the chart.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>setValues</code></td>
+            <td>
+                <p>A list of key-value pairs; if present, Skaffold will sent <code>&ndash;set</code> flag to Helm CLI and append all pairs after the flag.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>setValuesTemplates</code></td>
+            <td>
+                <p>A list of key-value pairs; if present, Skaffold will try to parse the value part of each key-value pair using environment variables in the system, then send <code>&ndash;set</code> flag to Helm CLI and append all parsed pairs after the flag.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>wait</code></td>
+            <td>
+                <p>A boolean value; if <code>true</code>, Skaffold will send <code>&ndash;wait</code> flag to Helm CLI.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>recreatePods</code></td>
+            <td>
+                <p>A boolean value; if <code>true</code>, Skaffold will send <code>&ndash;recreate-pods</code> flag to Helm CLI.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>overrides</code></td>
+            <td>
+                <p>A list of key-value pairs; if present, Skaffold will build a Helm <code>values</code> file that overrides the original and use it to call Helm CLI (<code>&ndash;f</code> flag).</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>packaged</code></td>
+            <td>
+                <p>Packages the chart (<code>helm package</code>)</p>
+                <p>Includes two fields:</p>
+                <ul>
+                    <li><code>version</code>: Version of the chart.</li>
+                    <li><code>appVersion</code>: Version of the app.</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td><code>imageStrategy</code></td>
+            <td>
+                <p>Add image configurations to the Helm <code>values</code> file.</p>
+                <p>Includes one of the two following fields:</p>
+                <ul>
+                    <li>
+                        <code>fqn</code>: The image configuration uses the syntax <code>IMAGE-NAME=IMAGE-REPOSITORY:IMAGE-TAG</code>.
+                    </li>
+                    <li><code>helm</code>: The image configuration uses the syntax <code>IMAGE-NAME.repository=IMAGE-REPOSITORY, IMAGE-NAME.tag=IMAGE-TAG</code>.</li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<p>The following <code>deploy</code> section, for example, instructs Skaffold to deploy
+artifacts using <code>helm</code>:</p>
+
+<pre><code>deploy:
+  helm:
+    releases:
+    - name: skaffold-helm
+      chartPath: skaffold-helm
+      values:
+        image: gcr.io/k8s-skaffold/skaffold-helm
+      # Uncomment the following lines to specify more parameters
+      # valuesFilePath: YOUR-VALUES-FILE-PATH
+      # namespace: YOUR-NAMESPACE
+      # version: YOUR-VERSION
+      # setValues:
+      #     SOME-KEY: SOME-VALUE
+      # setValues:
+      #     SOME-KEY: SOME-VALUE-TEMPLATE
+      # wait: true
+      # recreatePods: true
+      # overrides:
+      #     SOME-KEY: SOME-VALUE
+      #     SOME-MORE-KEY:
+      #         SOME-KEY: SOME-VALUE
+      # packaged:
+      #     version: YOUR-VERSION
+      #     appVersion: YOUR-APP-VERSION
+      # imageStrategy:
+      #     helm: {}
+      # OR
+      #     fqn: {}
+</code></pre>
+
+<h2 id="deploying-with-kustomize">Deploying with Kustomize</h2>
+
+<p><a href="https://github.com/kubernetes-sigs/kustomize" target="_blank">Kustomize</a> allows Kubernetes
+developers to customize raw, template-free YAML files for multiple purposes.
+Skaffold can work with Kustomize by calling its command-line interface.</p>
+
+<p>To use Kustomize with Skaffold, add deploy type <code>kustomize</code> to the <code>deploy</code>
+section of <code>skaffold.yaml</code>. The <code>kustomize</code> type offers the following options:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>kustomizePath</code></td>
+            <td>
+                <b>Optional</b>
+                <p>Path to Kustomization files..</p>
+                <p>The default value is <code>.</code> (current directory).</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>flags</code></td>
+            <td>
+                OPTIONAL
+                <p>Additional flags to pass to <code>kubectl</code>.</p>
+                <p>You can specify three types of flags:</p>
+                <ul>
+                    <li><code>global</code>: flags that apply to every command.</li>
+                    <li><code>apply</code>: flags that apply to creation commands.</li>
+                    <li><code>delete</code>: flags that apply to deletion commands.</li>
+                <ul>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<p>The following <code>deploy</code> section, for example, instructs Skaffold to deploy
+artifacts using Kustomize:</p>
+
+<pre><code>apiVersion: skaffold/v1alpha2
+   kind: Config
+   deploy:
+     kustomize:
+        kustomizePath: &quot;.&quot;
+# The deploy section above is equal to
+# apiVersion: skaffold/v1alpha2
+#    kind: Config
+#    deploy:
+#      kustomize: {}
+</code></pre>
+
+	<div class="text-muted mt-5 pt-3 border-top">Last modified October 7, 2018: <a  href="https://github.com/GoogleContainerTools/skaffold/commit/b5823f9ece3c16aad409285494cd0791ee8e0413">Migrated all contents; pending style updates. (b5823f9)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Mailing List">
+    <a class="text-white" target="_blank" href="https://example.org/mail">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Twitter">
+    <a class="text-white" target="_blank" href="https://example.org/twitter">
+      <i class="fab fa-twitter"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Stack Overflow">
+    <a class="text-white" target="_blank" href="https://example.org/stack">
+      <i class="fab fa-stack-overflow"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub">
+    <a class="text-white" target="_blank" href="https://example.org/github">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Slack">
+    <a class="text-white" target="_blank" href="https://example.org/slack">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Mailing List">
+    <a class="text-white" target="_blank" href="https://example.org/mail">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        
+        
+        <p class="mt-2"><a href="/about/">About TechOS</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+
+
+
+
+<script src="/js/main.min.ca3a12fc16d89ef3ae4b000d7c4c1409f566c7edab5706cf74a9fec89f81da64.js" integrity="sha256-yjoS/BbYnvOuSwANfEwUCfVmx&#43;2rVwbPdKn&#43;yJ&#43;B2mQ="></script>
+
+
+  </body>
+</html>

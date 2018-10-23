@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.49.2" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://skaffold.dev/docs/references/cli/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/favicons/android-96x196.png" sizes="96x196">
+<link rel="icon" type="image/png" href="/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/favicons/android-192x192.png"sizes="192x192">
+
+<title>CLI References | Skaffold</title><meta property="og:title" content="CLI References" />
+<meta property="og:description" content="TechOS is containers revisited" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://skaffold.dev/docs/references/cli/" />
+<meta property="og:updated_time" content="2018-10-07T22:10:28-07:00"/><meta property="og:site_name" content="Skaffold" />
+
+<meta itemprop="name" content="CLI References">
+<meta itemprop="description" content="TechOS is containers revisited">
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="CLI References"/>
+<meta name="twitter:description" content="TechOS is containers revisited"/>
+
+
+
+
+
+<link rel="preload" href="/scss/main.min.282ba2143466b2cd6a422fa69f2246ed65b295906560ff2eaa4060948dfc629b.css" as="style">
+<link href="/scss/main.min.282ba2143466b2cd6a422fa69f2246ed65b295906560ff2eaa4060948dfc629b.css" rel="stylesheet" integrity="">
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script src="https://skaffold.dev/javascripts/tabs.js"></script>
+<link rel="stylesheet" href="https://skaffold.dev/stylesheets/tabs.css">
+
+    <title>CLI References | Skaffold</title>
+  </head>
+  <body class="td-section" onload="initTabs()">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+	<a class="navbar-brand" href="/">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><g id="logo" fill="#fff"><path id="hull" d="M0 210H160L60 240z"/><path id="mainsail" d="M0 2e2l60-10V80z"/><path id="headsail" d="M70 190l90 10L70 0z"/></g></svg> <span class="text-uppercase font-weight-bold">Skaffold</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link" href="/about/"><span>About</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link active" href="/docs/"><span class="active">Documentation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link" href="/community/"><span>Community</span></a>
+			</li>
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+ <input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+</div>
+</nav>
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+ <input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Documentation</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/getting-started/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Getting Started</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-getting-started">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">How-to Guides</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/builders/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Builders</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-builders">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/deployers/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Deployers</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-deployers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/taggers/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Taggers</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-taggers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/profiles/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Profiles</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-profiles">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/concepts/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Concepts</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-concepts">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/tutorials/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Tutorials</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-tutorials">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">References</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-references">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/cli/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">CLI References</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-references-cli">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/config/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">skaffold.yaml References</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-references-config">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/resources/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Resources</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-resources">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+<a href="https://github.com/GoogleContainerTools/skaffold/edit/master/content/en/docs/references/cli/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/skaffold/issues/new?title=CLI%20References" target="_blank"><i class="fab fa-github fa-fw"></i> Create issue</a>
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#global-flags">Global flags</a></li>
+<li><a href="#skaffold-build"><code>skaffold build</code></a>
+<ul>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#flags">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-completion"><code>skaffold completion</code></a>
+<ul>
+<li><a href="#usage-1">Usage</a></li>
+<li><a href="#flags-1">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-config"><code>skaffold config</code></a>
+<ul>
+<li><a href="#usage-2">Usage</a></li>
+<li><a href="#flags-2">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-delete"><code>skaffold delete</code></a>
+<ul>
+<li><a href="#usage-3">Usage</a></li>
+<li><a href="#flags-3">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-dev"><code>skaffold dev</code></a>
+<ul>
+<li><a href="#usage-4">Usage</a></li>
+<li><a href="#flags-4">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-fix"><code>skaffold fix</code></a>
+<ul>
+<li><a href="#usage-5">Usage</a></li>
+<li><a href="#flags-5">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-help"><code>skaffold help</code></a>
+<ul>
+<li><a href="#usage-6">Usage</a></li>
+<li><a href="#flags-6">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-init"><code>skaffold init</code></a>
+<ul>
+<li><a href="#usage-7">Usage</a></li>
+<li><a href="#flags-7">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-run"><code>skaffold run</code></a>
+<ul>
+<li><a href="#usage-8">Usage</a></li>
+<li><a href="#flags-8">Flags</a></li>
+</ul></li>
+<li><a href="#skaffold-version"><code>skaffold version</code></a>
+<ul>
+<li><a href="#usage-9">Usage</a></li>
+<li><a href="#flags-9">Flags</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://skaffold.dev/docs/">Documentation</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://skaffold.dev/docs/references/">References</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://skaffold.dev/docs/references/cli/">CLI References</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>CLI References</h1>
+	
+	
+
+<p>Skaffold command-line interface provides the following commands:</p>
+
+<ul>
+<li><a href="#skaffold-run"><code>skaffold run</code></a> - to build &amp; deploy once</li>
+
+<li><p><a href="#skaffold-dev"><code>skaffold dev</code></a> - to trigger the watch loop build &amp; deploy workflow with cleanup on exit</p></li>
+
+<li><p><a href="#skaffold-build"><code>skaffold build</code></a> - to just build and tag your image(s)</p></li>
+
+<li><p><a href="#skaffold-deploy"><code>skaffold deploy</code></a> - to deploy the given image(s)</p></li>
+
+<li><p><a href="#skaffold-delete"><code>skaffold delete</code></a> - to cleanup the deployed artifacts</p></li>
+
+<li><p><a href="#skaffold-init"><code>skaffold init</code></a> - to bootstrap skaffold.yaml</p></li>
+
+<li><p><a href="#skaffold-fix"><code>skaffold fix</code></a> - to upgrade from</p></li>
+
+<li><p><a href="#skaffold-help"><code>skaffold help</code></a> - print help</p></li>
+
+<li><p><a href="#skaffold-version"><code>skaffold version</code></a> - get Skaffold version</p></li>
+
+<li><p><a href="#skaffold-completion"><code>skaffold completion</code></a> - setup tab completion for the CLI</p></li>
+
+<li><p><a href="#skaffold-config"><code>skaffold config</code></a> - manage context specific parameters</p></li>
+</ul>
+
+<h2 id="global-flags">Global flags</h2>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-h, &ndash;help</code></td>
+            <td>
+                Prints the HELP file for the current command.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-v, &ndash;verbosity LOG-LEVEL</code></td>
+            <td>
+                Uses a specific log level.
+                <p>Available log levels are <code>debug</code>, <code>info</code>, <code>warn</code>, <code>error</code>, <code>fatal</code>, and <code>panic</code>.</p>
+                <p>Default value is <code>warn</code>.</p>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<h2 id="skaffold-build"><code>skaffold build</code></h2>
+
+<p><code>skaffold build</code> builds the artifacts without deploying them.</p>
+
+<h3 id="usage">Usage</h3>
+
+<p><code>skaffold build [flags]</code></p>
+
+<h3 id="flags">Flags</h3>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-f, &ndash;filename PATH</code></td>
+            <td><code>SKAFFOLD_FILENAME</code></td>
+            <td>
+                PATH (Filename or URL) to the Skaffold configuration file, <code>skaffold.yaml</code>.
+                <p>Default value is <code>skaffold.yaml</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>-o, &ndash;output TEMPLATE</code></td>
+            <td><code>SKAFFOLD_OUTPUT</code></td>
+            <td>
+                Formats output with a Go template.
+                <p>Default value is <code>{{range .Builds}}{{.ImageName}} -&gt; {{.Tag}}{{end}}</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>-p, &ndash;profile PROFILE</code></td>
+            <td><code>SKAFFOLD_PROFILE</code></td>
+            <td>
+                Activates a Skaffold profile.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-q, &ndash;quiet</code></td>
+            <td><code>SKAFFOLD_PROFILE</code></td>
+            <td>
+                Enables quite mode. Skaffold will suppress outputs from the builing tool.
+            </td>
+        </tr>
+        <tr>
+            <td><code>&ndash;toot</code></td>
+            <td><code>SKAFFOLD_TOOT</code></td>
+            <td>
+                Beeps when the building is completed.
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<h2 id="skaffold-completion"><code>skaffold completion</code></h2>
+
+<p><code>skaffold completion</code> prints a <code>bash</code> script that, after running, enables
+shell completion for the <code>skaffold</code> command.</p>
+
+<p>You can run this script with <code>eval &quot;$(skaffold completion bash)&quot;</code>.</p>
+
+<p>Too run this script automatically at the time of startup for all of your
+sessions, add the following line to the end of <code>~/.bashrc</code> or <code>~/.bash_profile</code>:</p>
+
+<p><code>eval &quot;$(skaffold completion bash)&quot;</code></p>
+
+<h3 id="usage-1">Usage</h3>
+
+<p><code>skaffold completion</code></p>
+
+<h3 id="flags-1">Flags</h3>
+
+<p>No flags available.</p>
+
+<h2 id="skaffold-config"><code>skaffold config</code></h2>
+
+<p><code>skaffold config</code> helps you view and modify Kubernetes-related Skaffold
+configuration. It has two sub-commands: <code>list</code> and <code>set</code>.</p>
+
+
+<div class="alert alert-primary" role="alert">
+
+<p><strong>Note</strong></p>
+
+<p><strong>The Skaffold configuration specified here is different from the settings
+in the Skaffold configuration file, <code>skaffold.yaml</code></strong>.</p>
+
+<p>With <code>skaffold config</code>, you can control which Kubernetes context and default
+source repository Skaffold should use.</p>
+
+</div>
+
+<p><code>skaffold config list</code> list all values set in Kubernetes-related Skaffold
+configuration.</p>
+
+<p><code>skaffold config set</code> set a value in Kubernetes-related Skaffold
+configuration.</p>
+
+
+<div class="alert alert-primary" role="alert">
+
+<p><strong>Note</strong></p>
+
+<p>By default, <code>skaffold config</code> views and modifies Kubernetes-related Skaffold
+configuration <strong>in the global scale</strong>.</p>
+
+</div>
+
+<h3 id="usage-2">Usage</h3>
+
+<p><code>skaffold config list [flags]</code></p>
+
+<p><code>skaffold config set [flags] FIELD VALUE</code></p>
+
+<p>There are two fields to list and set:</p>
+
+<ul>
+<li><code>kube-context</code>: The Kubernetes context Skaffold uses.</li>
+<li><code>default-repo</code>: The default source repository.</li>
+</ul>
+
+<h3 id="flags-2">Flags</h3>
+
+<p>Below are flags for <code>skaffold config list</code>:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-a, &ndash;all</code></td>
+            <td><code>SKAFFOLD_ALL</code></td>
+            <td>
+                Show all available Kubernetes contexts.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-c, &ndash;config PATH</code></td>
+            <td><code>SKAFFOLD_CONFIG</code></td>
+            <td>
+                Path to Kuberentes-related Skaffold configuration.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-k, &ndash;kube-context CONTEXT</code></td>
+            <td><code>SKAFFOLD_KUBE_CONTEXT</code></td>
+            <td>
+                Lists Kubernetes-related Skaffold configuration in a specific Kuberentes context.
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<p>Below are flags for <code>skaffold config set</code>:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-g, -global</code></td>
+            <td><code>SKAFFOLD_KUBE_GLOBAL</code></td>
+            <td>
+                Show all available Kubernetes contexts.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-c, &ndash;config PATH</code></td>
+             <td><code>SKAFFOLD_CONFIG</code></td>
+            <td>
+                Path to Kuberentes-related Skaffold configuration.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-k, &ndash;kube-context CONTEXT</code></td>
+             <td><code>SKAFFOLD_KUBE_CONTEXT</code></td>
+            <td>
+                Sets Kubernetes-related Skaffold configuration in a specific Kuberentes context.
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<h2 id="skaffold-delete"><code>skaffold delete</code></h2>
+
+<p><code>skaffold delete</code> helps delete deployed resources.</p>
+
+<h3 id="usage-3">Usage</h3>
+
+<p><code>skaffold delete [flags]</code></p>
+
+<h3 id="flags-3">Flags</h3>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-f, &ndash;filename PATH</code></td>
+            <td><code>SKAFFOLD_FILENAME</code></td>
+            <td>
+                PATH (Filename or URL) to the Skaffold configuration file, <code>skaffold.yaml</code>.
+                <p>Default value is <code>skaffold.yaml</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>-p, &ndash;profile PROFILE</code></td>
+            <td><code>SKAFFOLD_PROFILE</code></td>
+            <td>
+                Activates a Skaffold profile.
+            </td>
+        </tr>
+        <tr>
+            <td><code>&ndash;toot</code></td>
+            <td><code>SKAFFOLD_TOOT</code></td>
+            <td>
+                Beeps when the building is completed.
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<h2 id="skaffold-dev"><code>skaffold dev</code></h2>
+
+<p><code>skaffold dev</code> starts Skaffold in continuous development mode.</p>
+
+<h3 id="usage-4">Usage</h3>
+
+<p><code>skaffold dev [flags]</code></p>
+
+<h3 id="flags-4">Flags</h3>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>&ndash;cleanup</code></td>
+            <td><code>SKAFFOLD_CLEANUP</code></td>
+            <td>
+                Deletes deployments if the workflow is interrupted.
+                <p>Default value is <code>true</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>-f, &ndash;filename PATH</code></td>
+            <td><code>SKAFFOLD_FILENAME</code></td>
+            <td>
+                PATH (Filename or URL) to the Skaffold configuration file, <code>skaffold.yaml</code>.
+                <p>Default value is <code>skaffold.yaml</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>-n, &ndash;namespace NAMESPACE</code></td>
+            <td><code>SKAFFOLD_NAMESPACE, SKAFFOLD_DEPLOY_NAMESPACE (deprecated) </code></td>
+            <td>
+                Run Helm deployments in the specified namespace.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-p, &ndash;profile PROFILE</code></td>
+            <td><code>SKAFFOLD_PROFILE</code></td>
+            <td>
+                Activates a Skaffold profile.
+            </td>
+        </tr>
+        <tr>
+            <td><code>&ndash;toot</code></td>
+            <td><code>SKAFFOLD_TOOT</code></td>
+            <td>
+                Beeps when the deployment is completed.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-w, &ndash;watch-image IMAGES</code></td>
+            <td><code>SKAFFOLD_WATCH_IMAGE</code></td>
+            <td>
+                Watches (monitors) the source code of specific artifacts.
+                <p>Use <code>=</code> as the delimiter. For example, <code>&ndash;watch-images=/web/Dockerfile.web=gcr.io/web-project/image</code>.</p>
+                <p>Default value is to watch (monitor) the source code of all artifacts.</p>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<h2 id="skaffold-fix"><code>skaffold fix</code></h2>
+
+<p><code>skaffold fix</code> converts old version of <code>skaffold</code> to the latest version.</p>
+
+<h3 id="usage-5">Usage</h3>
+
+<p><code>skaffold fix [flags]</code></p>
+
+<h3 id="flags-5">Flags</h3>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-f, &ndash;filename PATH</code></td>
+            <td><code>SKAFFOLD_FILENAME</code></td>
+            <td>
+                PATH (Filename or URL) to the Skaffold configuration file, <code>skaffold.yaml</code>.
+                <p>Default value is <code>skaffold.yaml</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>&ndash;overwrite</code></td>
+            <td><code>SKAFFOLD_OVERWRITE</code></td>
+            <td>
+                Overwrites the original file.
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<h2 id="skaffold-help"><code>skaffold help</code></h2>
+
+<p><code>skaffold help</code> prints the HELP file for <code>skaffold</code> commands.</p>
+
+<h3 id="usage-6">Usage</h3>
+
+<p><code>skaffold help COMMAND</code></p>
+
+<h3 id="flags-6">Flags</h3>
+
+<p>No flags available.</p>
+
+<h2 id="skaffold-init"><code>skaffold init</code></h2>
+
+<p><code>skaffold init</code> initializes Skaffold configuration.</p>
+
+<h3 id="usage-7">Usage</h3>
+
+<p><code>skaffold init [flags]</code></p>
+
+<h3 id="flags-7">Flags</h3>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-f, &ndash;file PATH/code&gt;</td>
+            <td><code>SKAFFOLD_PATH</code></td>
+            <td>
+                PATH to write the initialized Skaffold configuration.
+                <p>Default value is <code>skaffold.yaml</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>-a, &ndash;artifacts ARTIFACT-LIST</code></td>
+            <td><code>SKAFFOLD_ARTIFACTS</code></td>
+            <td>
+                Lists of artifacts to build.
+                <p>Use <code>=</code> as the delimiter. For example, <code>&ndash;artifact=/web/Dockerfile.web=gcr.io/web-project/image</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>&ndash;skip-build</code></td>
+            <td><code>SKAFFOLD_SKIP_BUILD</code></td>
+            <td>
+                Skips generating the list of artifacts.
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<h2 id="skaffold-run"><code>skaffold run</code></h2>
+
+<p><code>skaffold run</code> starts Skaffold in standard mode. Skaffold will build and deploy
+your application for exactly once.</p>
+
+<h3 id="usage-8">Usage</h3>
+
+<p><code>skaffold run</code></p>
+
+<h3 id="flags-8">Flags</h3>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-f, &ndash;filename PATH</code></td>
+            <td><code>SKAFFOLD_FILENAME</code></td>
+            <td>
+                PATH (Filename or URL) to the Skaffold configuration file, <code>skaffold.yaml</code>.
+                <p>Default value is <code>skaffold.yaml</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>-n, &ndash;namespace NAMESPACE</code></td><br />
+            <td><code>SKAFFOLD_NAMESPACE, SKAFFOLD_DEPLOY_NAMESPACE (deprecated) </code></td><br />
+            <td>
+                Run Helm deployments in the specified namespace.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-p, &ndash;profile PROFILE</code></td>
+              <td><code>SKAFFOLD_PROFILE</code></td>
+            <td>
+                Activates a Skaffold profile.
+            </td>
+        </tr>
+        <tr>
+            <td><code>&ndash;toot</code></td>
+            <td><code>SKAFFOLD_TOOT</code></td>
+            <td>
+                Beeps when the deployment is completed.
+            </td>
+        </tr>
+        <tr>
+            <td><code>&ndash;tail</code></td>
+            <td>
+                Streams logs from deployed targets.
+            </td>
+        </tr>
+        <tr>
+            <td><code>-t, &ndash;tag TAG</code></td>
+            <td>
+                Uses a custom tag that overrides the tag policy settings in the configuration file.
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<h2 id="skaffold-version"><code>skaffold version</code></h2>
+
+<p><code>skaffold version</code> prints the version number of Skaffold.</p>
+
+<h3 id="usage-9">Usage</h3>
+
+<p><code>skaffold version [flags]</code></p>
+
+<h3 id="flags-9">Flags</h3>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Flag</th>
+            <th>Environment variable</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>-o, &ndash;output TEMPLATE</code></td>
+            <td><code>SKAFFOLD_OUTPUT</code></td>
+            <td>
+                Formats output with a Go template.
+                <p>Default value is <code>{{.Version}}</code>.</p>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+	<div class="text-muted mt-5 pt-3 border-top">Last modified October 7, 2018: <a  href="https://github.com/GoogleContainerTools/skaffold/commit/b5823f9ece3c16aad409285494cd0791ee8e0413">Migrated all contents; pending style updates. (b5823f9)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Mailing List">
+    <a class="text-white" target="_blank" href="https://example.org/mail">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Twitter">
+    <a class="text-white" target="_blank" href="https://example.org/twitter">
+      <i class="fab fa-twitter"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Stack Overflow">
+    <a class="text-white" target="_blank" href="https://example.org/stack">
+      <i class="fab fa-stack-overflow"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub">
+    <a class="text-white" target="_blank" href="https://example.org/github">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Slack">
+    <a class="text-white" target="_blank" href="https://example.org/slack">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Mailing List">
+    <a class="text-white" target="_blank" href="https://example.org/mail">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        
+        
+        <p class="mt-2"><a href="/about/">About TechOS</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+
+
+
+
+<script src="/js/main.min.ca3a12fc16d89ef3ae4b000d7c4c1409f566c7edab5706cf74a9fec89f81da64.js" integrity="sha256-yjoS/BbYnvOuSwANfEwUCfVmx&#43;2rVwbPdKn&#43;yJ&#43;B2mQ="></script>
+
+
+  </body>
+</html>

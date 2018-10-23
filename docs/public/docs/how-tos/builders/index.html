@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.49.2" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://skaffold.dev/docs/how-tos/builders/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/favicons/android-96x196.png" sizes="96x196">
+<link rel="icon" type="image/png" href="/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/favicons/android-192x192.png"sizes="192x192">
+
+<title>Using Builders | Skaffold</title><meta property="og:title" content="Using Builders" />
+<meta property="og:description" content="TechOS is containers revisited" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://skaffold.dev/docs/how-tos/builders/" />
+<meta property="og:updated_time" content="2018-10-19T10:49:56-07:00"/><meta property="og:site_name" content="Skaffold" />
+
+<meta itemprop="name" content="Using Builders">
+<meta itemprop="description" content="TechOS is containers revisited">
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Using Builders"/>
+<meta name="twitter:description" content="TechOS is containers revisited"/>
+
+
+
+
+
+<link rel="preload" href="/scss/main.min.282ba2143466b2cd6a422fa69f2246ed65b295906560ff2eaa4060948dfc629b.css" as="style">
+<link href="/scss/main.min.282ba2143466b2cd6a422fa69f2246ed65b295906560ff2eaa4060948dfc629b.css" rel="stylesheet" integrity="">
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script src="https://skaffold.dev/javascripts/tabs.js"></script>
+<link rel="stylesheet" href="https://skaffold.dev/stylesheets/tabs.css">
+
+    <title>Using Builders | Skaffold</title>
+  </head>
+  <body class="td-section" onload="initTabs()">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+	<a class="navbar-brand" href="/">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><g id="logo" fill="#fff"><path id="hull" d="M0 210H160L60 240z"/><path id="mainsail" d="M0 2e2l60-10V80z"/><path id="headsail" d="M70 190l90 10L70 0z"/></g></svg> <span class="text-uppercase font-weight-bold">Skaffold</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link" href="/about/"><span>About</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link active" href="/docs/"><span class="active">Documentation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link" href="/community/"><span>Community</span></a>
+			</li>
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+ <input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+</div>
+</nav>
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+ <input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Documentation</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/getting-started/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Getting Started</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-getting-started">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">How-to Guides</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/builders/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Using Builders</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos-builders">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/deployers/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Deployers</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-deployers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/taggers/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Taggers</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-taggers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/profiles/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Using Profiles</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-how-tos-profiles">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/concepts/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Concepts</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-concepts">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/tutorials/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Tutorials</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-tutorials">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">References</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-references">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/cli/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">CLI References</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-references-cli">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/config/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">skaffold.yaml References</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-references-config">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/resources/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Resources</a>
+  </li>
+  <ul>
+    <li class="collapse " id="docs-resources">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+<a href="https://github.com/GoogleContainerTools/skaffold/edit/master/content/en/docs/how-tos/builders/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/skaffold/issues/new?title=Using%20Builders" target="_blank"><i class="fab fa-github fa-fw"></i> Create issue</a>
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#dockerfile-locally-with-docker">Dockerfile locally with Docker</a></li>
+<li><a href="#dockerfile-remotely-with-google-cloud-build">Dockerfile remotely with Google Cloud Build</a></li>
+<li><a href="#dockerfile-in-cluster-with-kaniko">Dockerfile in-cluster with Kaniko</a></li>
+<li><a href="#bazel-locally-with-bazel-and-docker-daemon">Bazel locally with bazel and Docker daemon</a></li>
+</ul></li>
+</ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://skaffold.dev/docs/">Documentation</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://skaffold.dev/docs/how-tos/">How-to Guides</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://skaffold.dev/docs/how-tos/builders/">Using Builders</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Using Builders</h1>
+	
+	
+
+<p>This page discusses how to set up Skaffold to use the tool of your choice
+to build Docker images.</p>
+
+<p>At this moment, Skaffold supports the following tools to build your image:</p>
+
+<ul>
+<li>Dockerfile locally with Docker</li>
+<li>Dockerfile remotely with Google Cloud Build</li>
+<li>Dockerfile in-cluster with Kaniko<br /></li>
+<li>Bazel locally with bazel and Docker daemon</li>
+<li>JIB Maven and Gradle projects locally<br />
+
+<br /></li>
+</ul>
+
+<p>The <code>build</code> section in the Skaffold configuration file, <code>skaffold.yaml</code>,
+controls how Skaffold builds artifacts. To use a specific tool for building
+artifacts, add the value representing the tool and options for using the tool
+to the <code>build</code> section. For a detailed discussion on Skaffold configuration,
+see <a href="/concepts/config">Skaffold Concepts: Configuration</a> and
+<a href="/references/config">skaffold.yaml References</a>.</p>
+
+<h2 id="dockerfile-locally-with-docker">Dockerfile locally with Docker</h2>
+
+<p>If you have <a href="https://www.docker.com/products/docker-desktop" target="_blank">Docker Desktop</a>
+installed on your machine, you can configure Skaffold to build artifacts with
+the local Docker daemon.</p>
+
+<p>By default, Skaffold connects to the local Docker daemon using
+<a href="https://docs.docker.com/develop/sdk/" target="_blank">Docker Engine APIs</a>. You can, however,
+ask Skaffold to use the <a href="https://docs.docker.com/engine/reference/commandline/cli/" target="_blank">command-line interface</a>
+instead. Additionally, Skaffold offers the option to build artifacts with
+<a href="https://github.com/moby/buildkit" target="_blank">BuildKit</a>. After the artifacts are
+successfully built, Skaffold will try pushing the Docker
+images to the remote registry. You can choose to skip this step.</p>
+
+<p>To use the local Docker daemon, add build type <code>local</code> to the <code>build</code> section
+of <code>skaffold.yaml</code>. The <code>local</code> type offers the following options:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>skipPush</code></td>
+            <td>
+                OPTIONAL
+                <p>Skips pushing images.</p>
+                <p>Default value is <code>false</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>useDockerCLI</code></td>
+            <td>
+                OPTIONAL
+                <p>Uses Docker command-line interface instead of Docker Engine APIs.</p>
+                <p>Default value is <code>false</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>useBuildkit</code></td>
+            <td>
+                OPTIONAL
+                <p>Uses BuildKit to build Docker images.</p>
+                <p>Default value is <code>false</code>.</p>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<p>The following <code>build</code> section, for example, instructs Skaffold to build a
+Docker image <code>gcr.io/k8s-skaffold/example</code> with the local Docker daemon:</p>
+
+<pre><code>build:
+    artifacts:
+    - imageName: gcr.io/k8s-skaffold/example
+    # Use local Docker daemon to build artifacts
+    local:
+        skipPush: false
+        useDockerCLI: false
+        useBuildkit: false
+# The build section above is equal to
+# build:
+#   artifacts:
+#   - imageName: gcr.io/k8s-skaffold/example
+#   local: {}
+</code></pre>
+
+<h2 id="dockerfile-remotely-with-google-cloud-build">Dockerfile remotely with Google Cloud Build</h2>
+
+<p><a href="https://cloud.google.com/cloud-build/" target="_blank">Google Cloud Build</a> is a
+<a href="https://cloud.google.com" target="_blank">Google Cloud Platform</a> service that executes
+your builds using Google infrastructure. To get started with Google
+Build, see <a href="https://cloud.google.com/cloud-build/docs/quickstart-docker" target="_blank">Cloud Build Quickstart</a>.</p>
+
+<p>Skaffold can automatically connect to Google Cloud Build, and run your builds
+with it. After Google Cloud Build finishes building your artifacts, they will
+be saved to the specified remote registry, such as
+<a href="https://cloud.google.com/container-registry/" target="_blank">Google Container Registry</a>.</p>
+
+<p>To use Google Cloud Build, add build type <code>googleCloudBuild</code> to the <code>build</code>
+section of <code>skaffold.yaml</code>. The <code>googleCloudBuild</code> type offers the following
+options:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>projectId</code></td>
+            <td>
+                <b>REQUIRED</b>
+                <p>The ID of your Google Cloud Platform Project.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>DiskSizeGb</code></td>
+            <td>
+                OPTIONAL
+                <p>The disk size of the VM that runs the build. See <a href="https://cloud.google.com/cloud-build/docs/api/reference/rest/v1/projects.builds#buildoptions">Cloud Build API Reference: Build Options</a> for more information.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>machineType</code></td>
+            <td>
+                OPTIONAL
+                <p>The type of the VM that runs the build. See <a href="https://cloud.google.com/cloud-build/docs/api/reference/rest/v1/projects.builds#buildoptions">Cloud Build API Reference: Build Options</a> for more information.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>timeOut</code></td>
+            <td>
+                OPTIONAL
+                <p>The amount of time (in seconds) that this build should be allowed to run. See <a href="https://cloud.google.com/cloud-build/docs/api/reference/rest/v1/projects.builds#resource-build">Cloud Build API Reference: Resource/Build</a> for more information.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>dockerImage</code></td>
+            <td>
+                OPTIONAL
+                <p>The name of the image that will run the build. See <a href="https://cloud.google.com/cloud-build/docs/api/reference/rest/v1/projects.builds#buildstep">Cloud Build API Reference: BuildStep</a> for more information.</p>
+                <p>Default value is <code>gcr.io/cloud-builders/docker</code>.</p>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<p>The following <code>build</code> section, for example, instructs Skaffold to build a
+Docker image <code>gcr.io/k8s-skaffold/example</code> with Google Cloud Build:</p>
+
+<pre><code>build:
+    artifacts:
+    - imageName: gcr.io/k8s-skaffold/example
+    # Use Google Cloud Build to build artifacts
+    googleCloudBuild:
+        projectId: YOUR-GCP-PROJECT
+</code></pre>
+
+<h2 id="dockerfile-in-cluster-with-kaniko">Dockerfile in-cluster with Kaniko</h2>
+
+<p><a href="https://github.com/GoogleContainerTools/kaniko" target="_blank">Kaniko</a> is a Google-developed
+open-source tool for building images from a Dockerfile inside a container or
+Kubernetes cluster. Kaniko enables building container images in environments
+that cannot easily or securely run a Docker daemon.</p>
+
+<p>Skaffold can help build artifacts in a Kubernetes cluster using the Kaninko
+image; after the artifacts are built, kaniko can push them to remote registries.
+To use Kaniko, add build type <code>kaniko</code> to the <code>build</code> section of
+<code>skaffold.yaml</code>. The <code>kaniko</code> type offers the following options:</p>
+
+<p><table>
+    <thead>
+        <tr>
+            <th>Option</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>buildContext</code></td>
+            <td>
+                OPTIONAL
+                <p>The Kaninko build context. See <a href="https://github.com/GoogleContainerTools/kaniko#using-kaniko">Kaniko Documentation: Using Kaniko</a> for more information.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>pullSecret</code></td>
+            <td>
+                OPTIONAL
+                <p>The path to the secret key file. See <a href="https://github.com/GoogleContainerTools/kaniko#running-kaniko-in-a-kubernetes-cluster">Kaniko Documentation: Running Kaniko in a Kubernetes cluster</a> for more information.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>pullSecretName</code></td>
+            <td>
+                OPTIONAL
+                <p>The name of the Kubernetes secret for pulling the files from the build context and pushing the final image. See <a href="https://github.com/GoogleContainerTools/kaniko#running-kaniko-in-a-kubernetes-cluster">Kaniko Documentation: Running Kaniko in a Kubernetes cluster</a> for more information.</p>
+                <p>Default value is <code>kaniko-secret</code>.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>namespace</code></td>
+            <td>
+                OPTIONAL
+                <p>The Kubernetes namespace.</p>
+                <p>Default value is the current namespace in Kubernetes configuration.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><code>timeout</code></td>
+            <td>
+                OPTIONAL
+                <p>The amount of time (in seconds) that this build should be allowed to run.</p>
+                <p>Default value is 20 minutes (<code>20m</code>).</p>
+            </td>
+        </tr>
+    </tbody>
+<table></p>
+
+<p>The following <code>build</code> section, for example, instructs Skaffold to build a
+Docker image <code>gcr.io/k8s-skaffold/example</code> with Kaniko:</p>
+
+<pre><code>build:
+    artifacts:
+    - imageName: gcr.io/k8s-skaffold/example
+    # Use Kaniko to build artifacts
+    kaniko:
+        buildContext: gs://YOUR-BUCKET/SOURCE-CODE.tar.gz
+</code></pre>
+
+<h2 id="bazel-locally-with-bazel-and-docker-daemon">Bazel locally with bazel and Docker daemon</h2>
+
+<p><a href="https://bazel.build/" target="_blank">Bazel</a> is a fast, scalable, multi-language, and
+extensible build system.</p>
+
+<p>Skaffold can help build artifacts using Bazel; after Bazel finishes building
+container images, they will be loaded into the local Docker daemon. To use
+Bazel, add <code>workspace</code> and <code>bazel</code> fields to each artifact you specify in the
+<code>artifacts</code> part of the <code>build</code> section, and use the build type <code>local</code>.
+<code>workspace</code> should be a path containing the bazel files
+(<code>WORKSPACE</code> and <code>BUILD</code>); The <code>bazel</code> field should have a <code>target</code>
+specification, which Skaffold will use to load the image to the Docker daemon.</p>
+
+<p>The following <code>build</code> section, for example, instructs Skaffold to build a
+Docker image <code>gcr.io/k8s-skaffold/example</code> with Bazel:</p>
+
+<pre><code>build:
+    artifacts:
+        - imageName: gcr.io/k8s-skaffold/example
+          workspace: .
+          bazel:
+            target: //:example.tar
+    local: {}
+</code></pre>
+
+	<div class="text-muted mt-5 pt-3 border-top">Last modified October 19, 2018: <a  href="https://github.com/GoogleContainerTools/skaffold/commit/201b77380507453f0e6d37ac016c56a851e28d55">adding autoprefixer as a dev module instead of core for docs (201b773)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Mailing List">
+    <a class="text-white" target="_blank" href="https://example.org/mail">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Twitter">
+    <a class="text-white" target="_blank" href="https://example.org/twitter">
+      <i class="fab fa-twitter"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Stack Overflow">
+    <a class="text-white" target="_blank" href="https://example.org/stack">
+      <i class="fab fa-stack-overflow"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub">
+    <a class="text-white" target="_blank" href="https://example.org/github">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Slack">
+    <a class="text-white" target="_blank" href="https://example.org/slack">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Mailing List">
+    <a class="text-white" target="_blank" href="https://example.org/mail">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        
+        
+        <p class="mt-2"><a href="/about/">About TechOS</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+
+
+
+
+<script src="/js/main.min.ca3a12fc16d89ef3ae4b000d7c4c1409f566c7edab5706cf74a9fec89f81da64.js" integrity="sha256-yjoS/BbYnvOuSwANfEwUCfVmx&#43;2rVwbPdKn&#43;yJ&#43;B2mQ="></script>
+
+
+  </body>
+</html>

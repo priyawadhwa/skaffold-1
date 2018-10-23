@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.49.2" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://skaffold.dev/docs/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/favicons/android-96x196.png" sizes="96x196">
+<link rel="icon" type="image/png" href="/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/favicons/android-192x192.png"sizes="192x192">
+
+<title>Skaffold Documentation | Skaffold</title><meta property="og:title" content="Skaffold Documentation" />
+<meta property="og:description" content="TechOS is containers revisited" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://skaffold.dev/docs/" />
+<meta property="og:updated_time" content="2018-10-07T22:10:28-07:00"/><meta property="og:site_name" content="Skaffold" />
+
+<meta itemprop="name" content="Skaffold Documentation">
+<meta itemprop="description" content="TechOS is containers revisited">
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Skaffold Documentation"/>
+<meta name="twitter:description" content="TechOS is containers revisited"/>
+
+
+
+
+
+<link rel="preload" href="/scss/main.min.282ba2143466b2cd6a422fa69f2246ed65b295906560ff2eaa4060948dfc629b.css" as="style">
+<link href="/scss/main.min.282ba2143466b2cd6a422fa69f2246ed65b295906560ff2eaa4060948dfc629b.css" rel="stylesheet" integrity="">
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script src="https://skaffold.dev/javascripts/tabs.js"></script>
+<link rel="stylesheet" href="https://skaffold.dev/stylesheets/tabs.css">
+
+    <title>Skaffold Documentation | Skaffold</title>
+  </head>
+  <body class="td-section" onload="initTabs()">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+	<a class="navbar-brand" href="/">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240"><g id="logo" fill="#fff"><path id="hull" d="M0 210H160L60 240z"/><path id="mainsail" d="M0 2e2l60-10V80z"/><path id="headsail" d="M70 190l90 10L70 0z"/></g></svg> <span class="text-uppercase font-weight-bold">Skaffold</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link" href="/about/"><span>About</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link active" href="/docs/"><span class="active">Documentation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				<a class="nav-link" href="/community/"><span>Community</span></a>
+			</li>
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+ <input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+</div>
+</nav>
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+ <input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Documentation</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/getting-started/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Getting Started</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-getting-started">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">How-to Guides</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/builders/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Using Builders</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos-builders">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/deployers/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Using Deployers</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos-deployers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/taggers/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Using Taggers</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos-taggers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/how-tos/profiles/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Using Profiles</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-how-tos-profiles">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/concepts/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Concepts</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-concepts">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/tutorials/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Tutorials</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-tutorials">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">References</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-references">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/cli/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">CLI References</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-references-cli">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/references/config/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">skaffold.yaml References</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-references-config">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/docs/resources/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Resources</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="docs-resources">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+<a href="https://github.com/GoogleContainerTools/skaffold/edit/master/content/en/docs/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/skaffold/issues/new?title=Skaffold%20Documentation" target="_blank"><i class="fab fa-github fa-fw"></i> Create issue</a>
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#features">Features</a></li>
+<li><a href="#a-glance-at-skaffold-workflow-and-architecture">A Glance at Skaffold Workflow and Architecture</a></li>
+</ul></li>
+</ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://skaffold.dev/docs/">Documentation</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Skaffold Documentation</h1>
+	
+	
+
+<p>Skaffold is a command line tool that facilitates continuous development for
+Kubernetes applications. You can iterate on your application source code
+locally then deploy to local or remote Kubernetes clusters. Skaffold handles
+the workflow for building, pushing and deploying your application. It can also
+provide building blocks and describe customizations for a CI/CD pipeline.</p>
+
+<h2 id="features">Features</h2>
+
+<ul>
+<li>Fast local Kubernetes Development
+
+<ul>
+<li><strong>optimized source-to-k8s</strong> - Skaffold detects changes in your source code and handles the pipeline to
+<strong>build</strong>, <strong>push</strong>, and <strong>deploy</strong> your application automatically with <strong>policy based image tagging</strong> and <strong>highly optimized, fast local workflows</strong></li>
+<li><strong>continuous feedback</strong> - Skaffold automatically manages logging and port-forwarding<br /></li>
+</ul></li>
+<li>Skaffold projects work everywhere
+
+<ul>
+<li><strong>share with other developers</strong> - Skaffold is the easiest way to <strong>share your project</strong> with the world: <code>git clone</code> and <code>skaffold run</code></li>
+<li><strong>context aware</strong> - use Skaffold profiles, user level config, environment variables and flags to describe differences in environments</li>
+<li><strong>CI/CD building blocks</strong> - use <code>skaffold run</code> end-to-end or just part of skaffold stages from build to deployment in your CI/CD system</li>
+</ul></li>
+<li>skaffold.yaml - a single pluggable, declarative configuration for your project<br />
+
+<ul>
+<li><strong>skaffold init</strong> - Skaffold discovers your files and generates its own config file</li>
+<li><strong>multi-component apps</strong> - Skaffold supports applications consisting of multiple components</li>
+<li><strong>bring your own tools</strong> - Skaffold has a pluggable architecture to allow for different implementations of the stages</li>
+</ul></li>
+<li>Lightweight
+
+<ul>
+<li><strong>client-side only</strong> - Skaffold does not require maintaining a cluster-side component, so there is no overhead or maintenance burden to
+your cluster.</li>
+<li><strong>minimal pipeline</strong> - Skaffold provides an opinionated, minimal pipeline to keep things simple<br /></li>
+</ul></li>
+</ul>
+
+<h2 id="a-glance-at-skaffold-workflow-and-architecture">A Glance at Skaffold Workflow and Architecture</h2>
+
+<p>Skaffold simplies your development workflow by organizing common development
+stages into one simple command. Every time you run <code>skaffold dev</code>, the system</p>
+
+<ol>
+<li>Collects and watches your source code for changes</li>
+<li>Builds artifacts from the source code</li>
+<li>Tags the artifacts</li>
+<li>Pushes the artifacts</li>
+<li>Deploys the artifacts</li>
+<li>Monitors the deployed artifacts</li>
+<li>Cleans up deployed artifacts on exit (Ctrl+C)</li>
+</ol>
+
+
+<div class="alert alert-primary" role="alert">
+
+<p><strong>Note</strong></p>
+
+<p>Skaffold also supports skipping stages if you want to.</p>
+
+</div>
+
+<p>What&rsquo;s more, the pluggable architecture is central to Skaffold&rsquo;s design, allowing you to use
+the tool you prefer in each stage. Also, skaffold&rsquo;s <code>profiles</code> feature grants
+you the freedom to switch tools as you see fit depending on the context.</p>
+
+<p>For example, if you are coding on a local machine, you can configure Skaffold to build artifacts
+with local Docker daemon and deploy them to minikube
+using <code>kubectl</code>, the Kubernetes command-line interface and when you finalize your
+design, you can switch to the production profile and start building with
+Google Cloud Build and deploy with Helm.</p>
+
+<p>At this moment, Skaffold supports the following tools:</p>
+
+<div class='code-tabs'>
+    <ul class="nav nav-tabs"></ul>
+    <div class="tab-content"><div class="tab-pane" title="IMAGE BUILDERS">
+    <ul>
+<li>Dockerfile to Local Docker Daemon</li>
+<li>Dockerfile to Registry using Kaniko</li>
+<li>Dockerfile to Registry using Google Cloud Build</li>
+<li>Bazel to Local Docker Daemon or Registry</li>
+</ul>
+
+</div>
+
+<div class="tab-pane" title="DEPLOYERS">
+    <ul>
+<li>Kubernetes Command-Line Interface (<code>kubectl</code>)</li>
+<li>Helm</li>
+<li>Kustomize</li>
+</ul>
+
+</div>
+
+<div class="tab-pane" title="TAG POLICIES">
+    <ul>
+<li>tag by git commit</li>
+<li>tag by current date&amp;time</li>
+<li>tag by environment variables based template</li>
+<li>tag by checksum of the source code</li>
+</ul>
+
+</div>
+
+<div class="tab-pane" title="PUSH STRATEGIES">
+    <ul>
+<li>don&rsquo;t push - keep the image on the local daemon</li>
+<li>push to registry</li>
+</ul>
+
+</div> 
+</div>
+</div>
+
+<p><img src="/images/architecture.png" alt="architecture" /></p>
+
+<p>Besides these skaffold also automatically manages the following utilities for you:</p>
+
+<ul>
+<li>forward container ports to your local machine using <code>kubectl port-forward</code></li>
+<li>aggregate all the logs from the deployed pods</li>
+</ul>
+
+	<div class="text-muted mt-5 pt-3 border-top">Last modified October 7, 2018: <a  href="https://github.com/GoogleContainerTools/skaffold/commit/b5823f9ece3c16aad409285494cd0791ee8e0413">Migrated all contents; pending style updates. (b5823f9)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Mailing List">
+    <a class="text-white" target="_blank" href="https://example.org/mail">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Twitter">
+    <a class="text-white" target="_blank" href="https://example.org/twitter">
+      <i class="fab fa-twitter"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Stack Overflow">
+    <a class="text-white" target="_blank" href="https://example.org/stack">
+      <i class="fab fa-stack-overflow"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub">
+    <a class="text-white" target="_blank" href="https://example.org/github">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Slack">
+    <a class="text-white" target="_blank" href="https://example.org/slack">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="Mailing List">
+    <a class="text-white" target="_blank" href="https://example.org/mail">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        
+        
+        <p class="mt-2"><a href="/about/">About TechOS</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+
+
+
+
+<script src="/js/main.min.ca3a12fc16d89ef3ae4b000d7c4c1409f566c7edab5706cf74a9fec89f81da64.js" integrity="sha256-yjoS/BbYnvOuSwANfEwUCfVmx&#43;2rVwbPdKn&#43;yJ&#43;B2mQ="></script>
+
+
+  </body>
+</html>
