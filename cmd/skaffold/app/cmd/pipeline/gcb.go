@@ -21,6 +21,8 @@ import (
 	"io"
 	"os/exec"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/pipeline/gcb"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -55,7 +57,17 @@ func NewCmdGCB(out io.Writer) *cobra.Command {
 }
 
 func execute() error {
-	// TODO (priyawadhwa@): Fill this in
+	client, err := gcb.NewClient()
+	if err != nil {
+		return errors.Wrap(err, "getting new gcb client")
+	}
+	if err := client.SetProject(); err != nil {
+		return errors.Wrap(err, "setting gcp project")
+	}
+	fmt.Println(client)
+	if err := gcb.EnableRequiredCloudAPIs(); err != nil {
+		return errors.Wrap(err, "enabling cloud APIs")
+	}
 	return nil
 }
 
