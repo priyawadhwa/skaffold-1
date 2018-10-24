@@ -18,6 +18,7 @@ package input
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/pipeline/constants"
 	"github.com/pkg/errors"
@@ -37,7 +38,7 @@ func UserSelectedList(object string, list []string) (string, error) {
 	if selection == constants.Other {
 		return queryAndConfirmUserInput(fmt.Sprintf("Please enter the desired %s:", object))
 	}
-	return selection, nil
+	return strings.Trim(selection, "\n"), nil
 }
 
 // Password makes a user request which requires hidden user input

@@ -17,11 +17,21 @@ limitations under the License.
 package gcb
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os/exec"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/pipeline/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	url = "https://cloudbuild.googleapis.com/"
 )
 
 var requiredCloudAPIs = []string{
@@ -39,4 +49,51 @@ func EnableRequiredCloudAPIs() error {
 		}
 	}
 	return nil
+}
+
+type ListGithubRepositoriesResponse struct {
+	Repos []Repo `json:"repos"`
+}
+
+// Repo represents github repos available to cloud build
+type Repo struct {
+	InstallationID string `json:"installationId"`
+	Name           string `json:"name"`
+	FullName       string `json:"fullName"`
+}
+
+// ListGithubRepositories returns list of github repos the gcp project has access to
+func (c *Client) ListGithubRepositories() (*ListGithubRepositoriesResponse, error) {
+	tail := fmt.Sprintf("v1/projects/%s/github/repos", c.GCPPRoject.ID)
+	r, err := c.Request(constants.POST, tail, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting github repos")
+	}
+	var resp ListGithubRepositoriesResponse
+	err = json.Unmarshal(r, &resp)
+	return &resp, err
+}
+
+// Request creates a request for interacting with the CloudBuild API
+func (c *Client) Request(method, tail string, body io.Reader) ([]byte, error) {
+	url := url + tail
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, errors.Wrap(err, "generating http request")
+	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.Token))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-goog-api-key", "AIzaSyAuhux0xzlQoi2Oq2QeYgQ0KyTBYiNSQw0")
+	req.Header.Set("x-google-project-override", "apikey")
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, errors.Errorf("invalid status code %d", resp.StatusCode)
+	}
+	return ioutil.ReadAll(resp.Body)
 }

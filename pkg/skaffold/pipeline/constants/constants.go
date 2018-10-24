@@ -19,4 +19,8 @@ package constants
 const (
 	// Other is included in lists shown to users to give them the option to enter a default value
 	Other = "Other"
+
+	// HTTP REST
+	POST = "POST"
+	GET  = "GET"
 )

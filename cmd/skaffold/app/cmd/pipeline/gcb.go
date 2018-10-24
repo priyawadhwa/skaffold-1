@@ -64,16 +64,23 @@ func execute() error {
 	if err := client.SetProject(); err != nil {
 		return errors.Wrap(err, "setting gcp project")
 	}
-	fmt.Println(client)
 	if err := gcb.EnableRequiredCloudAPIs(); err != nil {
 		return errors.Wrap(err, "enabling cloud APIs")
 	}
+	// get github repositories
+	repos, err := client.ListGithubRepositories()
+	if err != nil {
+		return err
+	}
+	fmt.Println(repos)
+
 	return nil
 }
 
 func meetsRequirements() error {
 	requiredTools := map[string]string{
 		"gcloud": "https://cloud.google.com/sdk/install",
+		"git":    "https://help.github.com/articles/set-up-git/",
 	}
 	for tool, link := range requiredTools {
 		_, err := exec.LookPath(tool)

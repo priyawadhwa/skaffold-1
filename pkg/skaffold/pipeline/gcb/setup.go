@@ -31,15 +31,23 @@ import (
 
 // Client holds necessary information for executing the pipeline command
 type Client struct {
-	Project string
-	Key     string
-	Cluster Cluster
+	APIKey        string
+	Token         string
+	GithubProject GithubProject
+	GCPPRoject    GCPPRoject
+	Cluster       Cluster
 }
 
 // Cluster holds the necessary information for specifying a GKE cluster
 type Cluster struct {
 	Name string
 	Zone string
+}
+
+// GCPPRoject holds info around the GCP project
+type GCPPRoject struct {
+	Name string `json:"projectId"`
+	ID   string `json:"projectNumber"`
 }
 
 // NewClient returns a client with the name of a GCP project
@@ -49,6 +57,10 @@ func NewClient() (*Client, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "retrieving client")
 	}
+	gcp, err := retrieveGCPPRoject(project)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting gcp project")
+	}
 	key, err := retrieveAPIKey(project)
 	if err != nil {
 		return nil, errors.Wrap(err, "retrieving API Key")
@@ -57,16 +69,26 @@ func NewClient() (*Client, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "retrieving cluster")
 	}
+	token, err := retrieveToken()
+	if err != nil {
+		return nil, errors.Wrap(err, "retrieving token")
+	}
+	github, err := NewGithubProject()
+	if err != nil {
+		return nil, errors.Wrap(err, "retrieving github project")
+	}
 	return &Client{
-		Project: project,
-		Key:     key,
-		Cluster: *cluster,
+		GCPPRoject:    *gcp,
+		APIKey:        key,
+		Token:         token,
+		Cluster:       *cluster,
+		GithubProject: *github,
 	}, nil
 }
 
 // SetProject sets the gcloud project
 func (c *Client) SetProject() error {
-	cmd := exec.Command("gcloud", "config", "set", "project", c.Project)
+	cmd := exec.Command("gcloud", "config", "set", "project", c.GCPPRoject.Name)
 	return util.RunCmd(cmd)
 }
 
@@ -166,4 +188,23 @@ func listClusters() ([]*Cluster, error) {
 		return nil, errors.Wrap(err, "unmarshalling data")
 	}
 	return clusters, nil
+}
+
+func retrieveToken() (string, error) {
+	cmd := exec.Command("gcloud", "auth", "print-access-token")
+	token, err := util.RunCmdOut(cmd)
+	return strings.Trim(string(token), "\n"), err
+}
+
+func retrieveGCPPRoject(project string) (*GCPPRoject, error) {
+	cmd := exec.Command("gcloud", "projects", "describe", project, "--format=\"json\"")
+	data, err := util.RunCmdOut(cmd)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting gcp project info")
+	}
+	var gcp GCPPRoject
+	if err := json.Unmarshal(data, &gcp); err != nil {
+		return nil, errors.Wrap(err, "unmarshalling gcp project")
+	}
+	return &gcp, nil
 }
