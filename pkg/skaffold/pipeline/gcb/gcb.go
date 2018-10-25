@@ -51,6 +51,15 @@ func EnableRequiredCloudAPIs() error {
 	return nil
 }
 
+// SetServiceAccountPermissions gives the cloudbuild service account access to GKE clusters
+func (c *Client) SetServiceAccountPermissions() error {
+	account := fmt.Sprintf("%s@cloudbuild.gserviceaccount.com", c.GCPPRoject.ID)
+	cmd := exec.Command("gcloud", "projects", "add-iam-policy-binding", c.GCPPRoject.Name,
+		"--member", fmt.Sprintf("serviceAccount:%s", account),
+		"--role=roles/container.admin")
+	return cmd.Run()
+}
+
 type ListGithubRepositoriesResponse struct {
 	Repos []Repo `json:"repos"`
 }

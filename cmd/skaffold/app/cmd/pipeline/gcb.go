@@ -67,6 +67,9 @@ func execute() error {
 	if err := gcb.EnableRequiredCloudAPIs(); err != nil {
 		return errors.Wrap(err, "enabling cloud APIs")
 	}
+	if err := client.SetServiceAccountPermissions(); err != nil {
+		return errors.Wrap(err, "setting service account permissions")
+	}
 	// get github repositories
 	repos, err := client.ListGithubRepositories()
 	if err != nil {
