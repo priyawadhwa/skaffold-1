@@ -19,8 +19,10 @@ package pipeline
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/pipeline/gcb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -71,12 +73,17 @@ func execute() error {
 		return errors.Wrap(err, "setting service account permissions")
 	}
 	// get github repositories
-	repos, err := client.ListGithubRepositories()
-	if err != nil {
-		return err
+	if err := client.BuildTriggerAuth(); err != nil {
+		return errors.Wrap(err, "setting up build trigger auth")
 	}
-	fmt.Println(repos)
-
+	color.Default.Fprintln(os.Stdout, "Creating build trigger in %s\n", client.GCPPRoject.Name)
+	if err := client.CreateBuildTrigger(); err != nil {
+		return errors.Wrap(err, "creating build trigger")
+	}
+	if err := client.WriteCloudbuildYaml(); err != nil {
+		return errors.Wrap(err, "writing cloudbuild.yaml")
+	}
+	color.Green.Fprintln(os.Stdout, "Setup complete! Please commit and merge the generated cloudbuild.yaml to complete setup of your CI/CD system.")
 	return nil
 }
 

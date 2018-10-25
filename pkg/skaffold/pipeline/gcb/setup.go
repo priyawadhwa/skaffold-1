@@ -159,6 +159,11 @@ func retrieveCluster() (*Cluster, error) {
 		}
 	}
 
+	if len(zones) == 1 {
+		chosen.Zone = zones[0]
+		return &chosen, nil
+	}
+
 	zoneQ := []*survey.Question{
 		{
 			Name: "zone",

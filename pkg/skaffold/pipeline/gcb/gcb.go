@@ -22,12 +22,16 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
+	"time"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/pipeline/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (
@@ -58,6 +62,41 @@ func (c *Client) SetServiceAccountPermissions() error {
 		"--member", fmt.Sprintf("serviceAccount:%s", account),
 		"--role=roles/container.admin")
 	return cmd.Run()
+}
+
+// BuildTriggerAuth checks to make sure auth to create the build trigger is present
+// if not, it redirects to the GCB GitHub App and polls ListGithubRepositories until the repo shows up
+func (c *Client) BuildTriggerAuth() error {
+	if c.repoExists() {
+		return nil
+	}
+	return c.githubAppFlow()
+}
+
+func (c *Client) githubAppFlow() error {
+	url := "https://github.com/apps/google-cloud-build"
+	color.Default.Fprintln(os.Stdout, `To use Google Cloud Build with GitHub, please install the GCB GitHub app on your github repository here: %s`, url)
+	return wait.PollImmediate(time.Second*2, 20*time.Minute, func() (bool, error) {
+		if c.repoExists() {
+			color.Green.Fprintln(os.Stdout, "GitHub App Installation successful! Moving forward with setup...")
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
+func (c *Client) repoExists() bool {
+	resp, err := c.ListGithubRepositories()
+	if err != nil {
+		return false
+	}
+	fullName := fmt.Sprintf("%s/%s", c.GithubProject.Organization, c.GithubProject.Repo)
+	for _, r := range resp.Repos {
+		if r.FullName == fullName {
+			return true
+		}
+	}
+	return false
 }
 
 type ListGithubRepositoriesResponse struct {
