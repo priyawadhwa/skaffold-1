@@ -131,7 +131,7 @@ func (c *Client) Request(method, tail string, body io.Reader) ([]byte, error) {
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.Token))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-goog-api-key", "AIzaSyAuhux0xzlQoi2Oq2QeYgQ0KyTBYiNSQw0")
+	req.Header.Set("x-goog-api-key", c.APIKey)
 	req.Header.Set("x-google-project-override", "apikey")
 	client := &http.Client{}
 

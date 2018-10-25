@@ -14,11 +14,12 @@ limitations under the License.
 package gcb
 
 import (
-	"encoding/json"
+	"bytes"
 	"io/ioutil"
 	"os"
+	"text/template"
 
-	cloudbuild "google.golang.org/api/cloudbuild/v1"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -26,41 +27,46 @@ const (
 	cloudbuildPath = "cloudbuild.yaml"
 )
 
-var template = `
+type CloudbuildTemplate struct {
+	ClusterName string
+	ClusterZone string
+	ProjectName string
+	Image       string
+}
 
-
+var tmplt = `steps:
+  - name: "{{ .Image }}"
+    args: ["gcloud", "container", "clusters", "get-credentials", "{{ .ClusterName }}", "--zone", "{{ .ClusterZone }}", "--project", "{{ .ProjectName }}"]
+  - name: "{{ .Image }}"
+    args: ["skaffold", "run"]
 `
 
-func (c *Client) build() *cloudbuild.Build {
-	var steps []*cloudbuild.BuildStep
-
-	args := []string{"gcloud", "container", "clusters", "get-credentials", c.Cluster.Name, "--zone", c.Cluster.Zone, "--project", c.GCPPRoject.Name}
-
-	steps = append(steps, &cloudbuild.BuildStep{
-		Name: skaffoldImage,
-		Args: args,
-	})
-
-	args = []string{"skaffold", "run"}
-
-	steps = append(steps, &cloudbuild.BuildStep{
-		Name: skaffoldImage,
-		Args: args,
-	})
-
-	return &cloudbuild.Build{
-		Steps: steps,
+func (c *Client) build() ([]byte, error) {
+	t := CloudbuildTemplate{
+		ClusterName: c.Cluster.Name,
+		ClusterZone: c.Cluster.Zone,
+		ProjectName: c.GCPPRoject.Name,
+		Image:       skaffoldImage,
 	}
+	tmpl := template.New("cloudbuild")
+	tmpl, err := tmpl.Parse(tmplt)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing template")
+	}
+	var tpl bytes.Buffer
+	if err := tmpl.Execute(&tpl, t); err != nil {
+		return nil, errors.Wrap(err, "parsing template for cloudbuild")
+	}
+	return tpl.Bytes(), nil
 }
 
 // WriteCloudbuildYaml write the cloudbuild yaml to fp
 func (c *Client) WriteCloudbuildYaml() error {
-	cb := c.build()
-	if _, err := os.Create(cloudbuildPath); err != nil {
+	data, err := c.build()
+	if err != nil {
 		return err
 	}
-	data, err := json.Marshal(cb)
-	if err != nil {
+	if _, err := os.Create(cloudbuildPath); err != nil {
 		return err
 	}
 	return ioutil.WriteFile(cloudbuildPath, data, 0644)

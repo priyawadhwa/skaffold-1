@@ -66,6 +66,10 @@ func retrieveOrg(repo string) (string, error) {
 		return "", err
 	}
 
+	if len(orgs) == 1 {
+		return orgs[0], nil
+	}
+
 	org := ""
 	prompt := &survey.Select{
 		Message: fmt.Sprintf("Please select an associated GitHub organization for the repository %s", repo),
