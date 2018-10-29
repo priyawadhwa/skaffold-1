@@ -76,7 +76,7 @@ func execute() error {
 	if err := client.BuildTriggerAuth(); err != nil {
 		return errors.Wrap(err, "setting up build trigger auth")
 	}
-	color.Default.Fprintln(os.Stdout, "Creating build trigger in %s\n", client.GCPPRoject.Name)
+	color.Default.Fprintf(os.Stdout, "Creating build trigger in %s\n", client.GCPPRoject.Name)
 	if err := client.CreateBuildTrigger(); err != nil {
 		return errors.Wrap(err, "creating build trigger")
 	}

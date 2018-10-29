@@ -75,7 +75,7 @@ func (c *Client) BuildTriggerAuth() error {
 
 func (c *Client) githubAppFlow() error {
 	url := "https://github.com/apps/google-cloud-build"
-	color.Default.Fprintln(os.Stdout, `To use Google Cloud Build with GitHub, please install the GCB GitHub app on your github repository here: %s`, url)
+	color.Default.Fprintf(os.Stdout, "To use Google Cloud Build with GitHub, please install the GCB GitHub app on your github repository here: %s\n", url)
 	return wait.PollImmediate(time.Second*2, 20*time.Minute, func() (bool, error) {
 		if c.repoExists() {
 			color.Green.Fprintln(os.Stdout, "GitHub App Installation successful! Moving forward with setup...")
