@@ -107,7 +107,12 @@ func retrieveProject() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "retrieving projects")
 	}
-	return input.UserSelectedList("GCP project", projects)
+	p, err := input.UserSelectedList("GCP project", projects)
+	if err != nil {
+		return "", errors.Wrap(err, "selecting gcp project")
+	}
+	cmd := exec.Command("gcloud", "config", "set", "project", p)
+	return p, util.RunCmd(cmd)
 }
 
 func listProjects() ([]string, error) {
