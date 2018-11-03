@@ -22,6 +22,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"golang.org/x/sync/syncmap"
 )
 
 // ProcessStruct validates and processes the provided pointer to a struct.
@@ -128,12 +130,12 @@ func (dt *DefaultTag) Process(val reflect.Value) error {
 // each oneOfSet is a map of a set name to the list of fields that belong to that set
 // only one field in that list can have a non-zero value.
 
-var allOneOfs map[string]map[string][]string
+var allOneOfs map[string]*syncmap.Map
 
-func getOneOfSetsForStruct(structName string) map[string][]string {
+func getOneOfSetsForStruct(structName string) *syncmap.Map {
 	_, ok := allOneOfs[structName]
 	if !ok {
-		allOneOfs[structName] = map[string][]string{}
+		allOneOfs[structName] = &syncmap.Map{}
 	}
 	return allOneOfs[structName]
 }
@@ -141,7 +143,7 @@ func getOneOfSetsForStruct(structName string) map[string][]string {
 type OneOfTag struct {
 	Field     reflect.StructField
 	Parent    reflect.Value
-	oneOfSets map[string][]string
+	oneOfSets *syncmap.Map
 	setName   string
 }
 
@@ -156,7 +158,13 @@ func (oot *OneOfTag) Load(s []string) error {
 	oot.oneOfSets = getOneOfSetsForStruct(structName)
 
 	// Add this field to the oneOfSet
-	oot.oneOfSets[oot.setName] = append(oot.oneOfSets[oot.setName], oot.Field.Name)
+	list, _ := oot.oneOfSets.Load(oot.setName)
+	if list == nil {
+		list = []string{}
+	}
+	oot.oneOfSets.Store(oot.setName, append(list.([]string), oot.Field.Name))
+
+	// oot.oneOfSets[oot.setName] = append(oot.oneOfSets[oot.setName], oot.Field.Name)
 	return nil
 }
 
@@ -166,8 +174,9 @@ func (oot *OneOfTag) Process(val reflect.Value) error {
 	}
 
 	// This must exist because process is always called after Load.
-	oneOfSet := oot.oneOfSets[oot.setName]
-	for _, otherField := range oneOfSet {
+	// oneOfSet := oot.oneOfSets[oot.setName]
+	oneOfSet, _ := oot.oneOfSets.Load(oot.setName)
+	for _, otherField := range oneOfSet.([]string) {
 		if otherField == oot.Field.Name {
 			continue
 		}
@@ -185,5 +194,5 @@ func isZeroValue(val reflect.Value) bool {
 }
 
 func init() {
-	allOneOfs = make(map[string]map[string][]string)
+	allOneOfs = make(map[string]*syncmap.Map)
 }
