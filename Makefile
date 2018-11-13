@@ -183,3 +183,10 @@ submit-release-trigger:
 .PHONY: docs-controller-image
 docs-controller-image: 
 	docker build -t gcr.io/$(GCP_PROJECT)/docs-controller -f deploy/webhook/Dockerfile .
+
+out/metrics:
+	go build -o $@ metrics/metrics.go
+
+.PHONY: metrics-image
+metrics-image: out/metrics
+	docker build -t gcr.io/$(GCP_PROJECT)/metrics -f deploy/metrics/Dockerfile .

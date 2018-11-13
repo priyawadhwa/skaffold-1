@@ -1,0 +1,31 @@
+# This is currently deployed in the docs cluster 
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: skaffold-metrics
+  namespace: metrics
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: skaffold-metrics
+            image: gcr.io/k8s-skaffold/metrics:latest
+            volumeMounts:
+            - name: gcs-admin
+              mountPath: /secret
+            env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secret/gcs-admin.json
+            - name: GITHUB_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token 
+                  key: token
+          volumes:
+          - name: gcs-admin
+            secret:
+              secretName: gcs-admin
+          restartPolicy: OnFailure
