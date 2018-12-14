@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -87,12 +86,6 @@ func (k *KubectlDeployer) Deploy(ctx context.Context, out io.Writer, builds []bu
 		return nil, errors.Wrap(err, "reading manifests")
 	}
 
-	fmt.Println(builds)
-
-	if err := k.Telepresence(builds); err != nil {
-		return nil, errors.Wrap(err, "with telepresence")
-	}
-
 	if len(manifests) == 0 {
 		return nil, nil
 	}
@@ -108,31 +101,6 @@ func (k *KubectlDeployer) Deploy(ctx context.Context, out io.Writer, builds []bu
 	}
 
 	return parseManifestsForDeploys(k.kubectl.Namespace, updated)
-}
-
-func (k *KubectlDeployer) Telepresence(builds []build.Artifact) error {
-	if len(k.KubectlDeploy.Telepresence) == 0 {
-		return nil
-	}
-	t := k.KubectlDeploy.Telepresence[0]
-	var image string
-	for _, b := range builds {
-		if b.ImageName == t.Image {
-			image = b.Tag
-		}
-	}
-	cmd := exec.Command("telepresence", "--swap-deployment", t.Name, "--logfile", "~/.skaffold/telepresence.log", "--docker-run", image)
-	cmd.Stdin = os.Stdin
-	k.cmd = cmd
-	go func() {
-		fmt.Println("Starting telepresence...")
-		if output, err := cmd.CombinedOutput(); err != nil {
-			fmt.Println(string(output))
-			fmt.Println("telepresence error")
-			return
-		}
-	}()
-	return nil
 }
 
 // Cleanup deletes what was deployed by calling Deploy.

@@ -26,8 +26,9 @@ type changes struct {
 	dirtyArtifacts []*artifactChange
 	needsRebuild   []*latest.Artifact
 	needsResync    []*sync.Item
-	needsRedeploy  bool
-	needsReload    bool
+	// needsTelepresence []*telepresence.Item
+	needsRedeploy bool
+	needsReload   bool
 }
 
 type artifactChange struct {
