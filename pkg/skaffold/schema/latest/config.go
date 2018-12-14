@@ -149,11 +149,18 @@ type DeployType struct {
 	KustomizeDeploy *KustomizeDeploy `yaml:"kustomize,omitempty" yamltags:"oneOf=deploy"`
 }
 
+type Telepresence struct {
+	Name  string `yaml:"name,omitempty"`
+	Path  string `yaml:"path,omitempty"`
+	Image string `yaml:"image,omitempty"`
+}
+
 // KubectlDeploy contains the configuration needed for deploying with `kubectl apply`
 type KubectlDeploy struct {
-	Manifests       []string     `yaml:"manifests,omitempty"`
-	RemoteManifests []string     `yaml:"remoteManifests,omitempty"`
-	Flags           KubectlFlags `yaml:"flags,omitempty"`
+	Manifests       []string       `yaml:"manifests,omitempty"`
+	RemoteManifests []string       `yaml:"remoteManifests,omitempty"`
+	Telepresence    []Telepresence `yaml:"telepresence,omitempty"`
+	Flags           KubectlFlags   `yaml:"flags,omitempty"`
 }
 
 // KubectlFlags describes additional options flags that are passed on the command

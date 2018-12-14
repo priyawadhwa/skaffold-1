@@ -20,8 +20,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
@@ -38,6 +42,7 @@ import (
 type KubectlDeployer struct {
 	*latest.KubectlDeploy
 
+	cmd         *exec.Cmd
 	workingDir  string
 	kubectl     kubectl.CLI
 	defaultRepo string
@@ -71,10 +76,21 @@ func (k *KubectlDeployer) Deploy(ctx context.Context, out io.Writer, builds []bu
 	if err := k.kubectl.CheckVersion(); err != nil {
 		color.Default.Fprintln(out, err)
 	}
+	if k.cmd != nil {
+		if err := k.cmd.Process.Kill(); err != nil {
+			fmt.Println("Error killing", k.cmd.Args)
+		}
+	}
 
 	manifests, err := k.readManifests(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading manifests")
+	}
+
+	fmt.Println(builds)
+
+	if err := k.Telepresence(builds); err != nil {
+		return nil, errors.Wrap(err, "with telepresence")
 	}
 
 	if len(manifests) == 0 {
@@ -92,6 +108,31 @@ func (k *KubectlDeployer) Deploy(ctx context.Context, out io.Writer, builds []bu
 	}
 
 	return parseManifestsForDeploys(k.kubectl.Namespace, updated)
+}
+
+func (k *KubectlDeployer) Telepresence(builds []build.Artifact) error {
+	if len(k.KubectlDeploy.Telepresence) == 0 {
+		return nil
+	}
+	t := k.KubectlDeploy.Telepresence[0]
+	var image string
+	for _, b := range builds {
+		if b.ImageName == t.Image {
+			image = b.Tag
+		}
+	}
+	cmd := exec.Command("telepresence", "--swap-deployment", t.Name, "--logfile", "~/.skaffold/telepresence.log", "--docker-run", image)
+	cmd.Stdin = os.Stdin
+	k.cmd = cmd
+	go func() {
+		fmt.Println("Starting telepresence...")
+		if output, err := cmd.CombinedOutput(); err != nil {
+			fmt.Println(string(output))
+			fmt.Println("telepresence error")
+			return
+		}
+	}()
+	return nil
 }
 
 // Cleanup deletes what was deployed by calling Deploy.
@@ -153,6 +194,11 @@ func (k *KubectlDeployer) readManifests(ctx context.Context) (kubectl.ManifestLi
 
 	var manifests kubectl.ManifestList
 	for _, manifest := range files {
+		if k.telepresenceManifest(manifest) {
+			fmt.Println("Skipping", manifest)
+			continue
+		}
+		fmt.Println("Not skipping", manifest)
 		buf, err := ioutil.ReadFile(manifest)
 		if err != nil {
 			return nil, errors.Wrap(err, "reading manifest")
@@ -173,6 +219,15 @@ func (k *KubectlDeployer) readManifests(ctx context.Context) (kubectl.ManifestLi
 	logrus.Debugln("manifests", manifests.String())
 
 	return manifests, nil
+}
+
+func (k *KubectlDeployer) telepresenceManifest(manifest string) bool {
+	for _, t := range k.KubectlDeploy.Telepresence {
+		if filepath.Base(manifest) == t.Path {
+			return true
+		}
+	}
+	return false
 }
 
 func (k *KubectlDeployer) readRemoteManifest(ctx context.Context, name string) ([]byte, error) {
