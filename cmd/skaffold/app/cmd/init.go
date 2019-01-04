@@ -38,9 +38,6 @@ import (
 	"github.com/spf13/cobra"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 	yaml "gopkg.in/yaml.v2"
-	"k8s.io/apimachinery/pkg/runtime"
-	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // NoDockerfile allows users to specify they don't want to build
@@ -115,7 +112,7 @@ func doInit(out io.Writer) error {
 		}
 
 		logrus.Debugf("%s is not a valid skaffold configuration: continuing", file)
-		imgs, err := parseKubernetesYaml(file)
+		imgs, err := kubernetes.ParseKubernetesYaml(file)
 		if err == nil {
 			logrus.Infof("found valid k8s yaml: %s", file)
 			k8sConfigs = append(k8sConfigs, file)
@@ -304,68 +301,6 @@ func generateSkaffoldPipeline(k8sConfigs []string, dockerfilePairs []dockerfileP
 	}
 
 	return pipelineStr, nil
-}
-
-// parseKubernetesYaml attempts to parse k8s objects from a yaml file
-// if successful, it will return the images referenced in the k8s config
-// so they can be built by the generated skaffold yaml
-func parseKubernetesYaml(filepath string) ([]string, error) {
-	f, err := os.Open(filepath)
-	if err != nil {
-		return nil, errors.Wrap(err, "opening config file")
-	}
-	r := k8syaml.NewYAMLReader(bufio.NewReader(f))
-
-	objects := []runtime.Object{}
-	images := []string{}
-
-	for {
-		doc, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, errors.Wrap(err, "reading config file")
-		}
-		d := scheme.Codecs.UniversalDeserializer()
-		obj, _, err := d.Decode(doc, nil, nil)
-		if err != nil {
-			return nil, errors.Wrap(err, "decoding kubernetes yaml")
-		}
-
-		m := make(map[interface{}]interface{})
-		if err := yaml.Unmarshal(doc, &m); err != nil {
-			return nil, errors.Wrap(err, "reading kubernetes YAML")
-		}
-
-		images = append(images, parseImagesFromYaml(m)...)
-		objects = append(objects, obj)
-	}
-	if len(objects) == 0 {
-		return nil, errors.New("no valid kubernetes objects decoded")
-	}
-	return images, nil
-}
-
-// adapted from pkg/skaffold/deploy/kubectl/recursiveReplaceImage()
-func parseImagesFromYaml(doc interface{}) []string {
-	images := []string{}
-	switch t := doc.(type) {
-	case []interface{}:
-		for _, v := range t {
-			images = append(images, parseImagesFromYaml(v)...)
-		}
-	case map[interface{}]interface{}:
-		for k, v := range t {
-			if k.(string) != "image" {
-				images = append(images, parseImagesFromYaml(v)...)
-				continue
-			}
-
-			images = append(images, v.(string))
-		}
-	}
-	return images
 }
 
 type dockerfilePair struct {

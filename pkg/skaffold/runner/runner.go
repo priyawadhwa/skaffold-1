@@ -38,6 +38,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync/kubectl"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/telepresence"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/test"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/watch"
 )
@@ -51,10 +52,11 @@ type SkaffoldRunner struct {
 	sync.Syncer
 	watch.Watcher
 
-	opts        *config.SkaffoldOptions
-	builds      []build.Artifact
-	hasDeployed bool
-	imageList   *kubernetes.ImageList
+	opts         *config.SkaffoldOptions
+	builds       []build.Artifact
+	telepresence *telepresence.Telepresence
+	hasDeployed  bool
+	imageList    *kubernetes.ImageList
 }
 
 // NewForConfig returns a new SkaffoldRunner for a SkaffoldPipeline
@@ -102,14 +104,15 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldPipeline) (*
 	}
 
 	return &SkaffoldRunner{
-		Builder:   builder,
-		Tester:    tester,
-		Deployer:  deployer,
-		Tagger:    tagger,
-		Syncer:    &kubectl.Syncer{},
-		Watcher:   watch.NewWatcher(trigger),
-		opts:      opts,
-		imageList: kubernetes.NewImageList(),
+		Builder:      builder,
+		Tester:       tester,
+		Deployer:     deployer,
+		Tagger:       tagger,
+		Syncer:       &kubectl.Syncer{},
+		Watcher:      watch.NewWatcher(trigger),
+		opts:         opts,
+		imageList:    kubernetes.NewImageList(),
+		telepresence: telepresence.New(cfg.Telepresence),
 	}, nil
 }
 
@@ -224,6 +227,14 @@ func (r *SkaffoldRunner) buildTestDeploy(ctx context.Context, out io.Writer, art
 		return errors.Wrap(err, "deploy failed")
 	}
 
+	if err := r.runTelepresence(ctx, out, r.builds); err != nil {
+		return errors.Wrap(err, "telepresence failed")
+	}
+
+	return nil
+}
+
+func (r *SkaffoldRunner) runTelepresence(ctx context.Context, out io.Writer, artifacts []build.Artifact) error {
 	return nil
 }
 

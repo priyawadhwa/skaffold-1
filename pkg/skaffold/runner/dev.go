@@ -35,7 +35,8 @@ var ErrorConfigurationChanged = errors.New("configuration changed")
 
 // Dev watches for changes and runs the skaffold build and deploy
 // pipeline until interrupted by the user.
-func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*latest.Artifact) error {
+func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, config *latest.SkaffoldPipeline) error {
+	artifacts := config.Build.Artifacts
 	logger := r.newLogger(out, artifacts)
 
 	// Create watcher and register artifacts to build current state of files.

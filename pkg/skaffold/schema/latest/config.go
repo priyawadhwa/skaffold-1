@@ -31,10 +31,11 @@ type SkaffoldPipeline struct {
 	APIVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
 
-	Build    BuildConfig  `yaml:"build,omitempty"`
-	Test     TestConfig   `yaml:"test,omitempty"`
-	Deploy   DeployConfig `yaml:"deploy,omitempty"`
-	Profiles []Profile    `yaml:"profiles,omitempty"`
+	Build        BuildConfig  `yaml:"build,omitempty"`
+	Test         TestConfig   `yaml:"test,omitempty"`
+	Deploy       DeployConfig `yaml:"deploy,omitempty"`
+	Telepresence []string     `yaml:"telepresence,omitempty"`
+	Profiles     []Profile    `yaml:"profiles,omitempty"`
 }
 
 func (c *SkaffoldPipeline) GetVersion() string {
