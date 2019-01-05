@@ -67,3 +67,7 @@ func (tagger *dateTimeTagger) GenerateFullyQualifiedImageName(workingDir string,
 
 	return fmt.Sprintf("%s:%s", opts.ImageName, tagger.timeFn().In(loc).Format(format)), nil
 }
+
+func (t *dateTimeTagger) String() string {
+	return constants.DateTimeTagger
+}

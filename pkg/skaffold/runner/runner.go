@@ -30,6 +30,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/gcb"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/kaniko"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/local"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/plugin"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/tag"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy"
@@ -118,6 +119,10 @@ func getBuilder(cfg *latest.BuildConfig, kubeContext string, opts *config.Skaffo
 	case len(opts.PreBuiltImages) > 0:
 		logrus.Debugln("Using pre-built images")
 		return build.NewPreBuiltImagesBuilder(opts.PreBuiltImages), nil
+
+	case cfg.PluginBuild != nil:
+		logrus.Debugln("Using builder: plugin")
+		return plugin.NewPluginBuilder(cfg.PluginBuild.Name), nil
 
 	case cfg.LocalBuild != nil:
 		logrus.Debugln("Using builder: local")

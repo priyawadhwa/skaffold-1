@@ -43,3 +43,7 @@ func (c *ChecksumTagger) GenerateFullyQualifiedImageName(workingDir string, opts
 
 	return fmt.Sprintf("%s:%s", opts.ImageName, sha256), nil
 }
+
+func (c *ChecksumTagger) String() string {
+	return constants.ChecksumTagger
+}

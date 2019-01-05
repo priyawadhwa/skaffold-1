@@ -79,6 +79,7 @@ type BuildType struct {
 	LocalBuild       *LocalBuild       `yaml:"local,omitempty" yamltags:"oneOf=build"`
 	GoogleCloudBuild *GoogleCloudBuild `yaml:"googleCloudBuild,omitempty" yamltags:"oneOf=build"`
 	KanikoBuild      *KanikoBuild      `yaml:"kaniko,omitempty" yamltags:"oneOf=build"`
+	PluginBuild      *PluginBuild      `yaml:"plugin,omitempty" yamltags:"oneOf=build"`
 }
 
 // LocalBuild contains the fields needed to do a build on the local docker daemon
@@ -97,6 +98,10 @@ type GoogleCloudBuild struct {
 	MachineType string `yaml:"machineType,omitempty"`
 	Timeout     string `yaml:"timeout,omitempty"`
 	DockerImage string `yaml:"dockerImage,omitempty"`
+}
+
+type PluginBuild struct {
+	Name string `yaml:"name,omitempty"`
 }
 
 // LocalDir represents the local directory kaniko build context

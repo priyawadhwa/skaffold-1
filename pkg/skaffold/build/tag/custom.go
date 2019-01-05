@@ -42,3 +42,7 @@ func (c *CustomTag) GenerateFullyQualifiedImageName(workingDir string, opts Opti
 
 	return fmt.Sprintf("%s:%s", opts.ImageName, tag), nil
 }
+
+func (c *CustomTag) String() string {
+	return "CustomTag"
+}

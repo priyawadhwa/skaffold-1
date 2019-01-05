@@ -82,3 +82,10 @@ var Labels = struct {
 	Builder:          "skaffold-builder",
 	DockerAPIVersion: "docker-api-version",
 }
+
+const (
+	DateTimeTagger  = "DateTimeTagger"
+	ChecksumTagger  = "ChecksumTagger"
+	GitCommitTagger = "GitCommitTagger"
+	EnvTagger       = "EnvTagger"
+)

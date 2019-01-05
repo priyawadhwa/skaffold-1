@@ -53,6 +53,10 @@ func (t *envTemplateTagger) GenerateFullyQualifiedImageName(workingDir string, o
 	return util.ExecuteEnvTemplate(t.Template, customMap)
 }
 
+func (t *envTemplateTagger) String() string {
+	return constants.EnvTagger
+}
+
 // CreateEnvVarMap creates a set of environment variables for use in Templates from the given
 // image name and digest
 func CreateEnvVarMap(imageName string, digest string) map[string]string {

@@ -60,6 +60,10 @@ func (c *GitCommit) GenerateFullyQualifiedImageName(workingDir string, opts Opti
 	return commitOrTag(hash, tag, opts), nil
 }
 
+func (c *GitCommit) String() string {
+	return constants.GitCommitTagger
+}
+
 func runGit(workingDir string, arg ...string) (string, error) {
 	cmd := exec.Command("git", arg...)
 	cmd.Dir = workingDir

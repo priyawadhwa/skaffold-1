@@ -16,14 +16,33 @@ limitations under the License.
 
 package tag
 
+import (
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
+)
+
 // Tagger is an interface for tag strategies to be implemented against
 type Tagger interface {
 	Labels() map[string]string
 
 	GenerateFullyQualifiedImageName(workingDir string, tagOpts Options) (string, error)
+
+	String() string
 }
 
 type Options struct {
 	ImageName string
 	Digest    string
+}
+
+func RetrieveTagger(tag string) Tagger {
+	switch tag {
+	case constants.ChecksumTagger:
+		return &ChecksumTagger{}
+	case constants.EnvTagger:
+		return &envTemplateTagger{}
+	case constants.DateTimeTagger:
+		return &dateTimeTagger{}
+	default:
+		return &GitCommit{}
+	}
 }
