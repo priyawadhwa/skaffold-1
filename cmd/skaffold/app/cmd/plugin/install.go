@@ -43,7 +43,7 @@ func NewCmdInstall(out io.Writer) *cobra.Command {
 
 func runInstall(builder string) error {
 	fmt.Printf("Installing %s... \n", builder)
-	manifests, err := getManifests()
+	manifests, err := GetManifests()
 	if err != nil {
 		return errors.Wrap(err, "getting builder manifests")
 	}

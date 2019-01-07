@@ -3,6 +3,9 @@ kind: Config
 build:
   plugin:
     name: cloudbuild
+    flags:
+    - name: projectID
+      value: priya-wadhwa
   artifacts:
   - image: gcr.io/k8s-skaffold/skaffold-example
 deploy:

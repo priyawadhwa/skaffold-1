@@ -20,20 +20,36 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
+	yaml "gopkg.in/yaml.v2"
+
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/plugin/schema"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/plugin/shared"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/tag"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/hashicorp/go-plugin"
+	"github.com/pkg/errors"
 )
 
-func NewPluginBuilder(pluginName string) build.Builder {
+func NewPluginBuilder(cfg *latest.PluginBuild) build.Builder {
 	// We're a host. Start by launching the plugin process.
 	log.SetOutput(os.Stdout)
+
+	if err := validate(cfg); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	var flags []string
+	for _, f := range cfg.Flags {
+		flags = append(flags, fmt.Sprintf("-%s=%s", f.Name, f.Value))
+	}
 
 	client := plugin.NewClient(&plugin.ClientConfig{
 		Stderr:          os.Stderr,
@@ -42,7 +58,7 @@ func NewPluginBuilder(pluginName string) build.Builder {
 		Managed:         true,
 		HandshakeConfig: shared.Handshake,
 		Plugins:         shared.PluginMap,
-		Cmd:             exec.Command(pluginName),
+		Cmd:             exec.Command(cfg.Name, flags...),
 	})
 
 	// Connect via RPC
@@ -53,7 +69,7 @@ func NewPluginBuilder(pluginName string) build.Builder {
 	}
 
 	// Request the plugin
-	raw, err := rpcClient.Dispense(pluginName)
+	raw, err := rpcClient.Dispense(cfg.Name)
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 		os.Exit(1)
@@ -62,6 +78,62 @@ func NewPluginBuilder(pluginName string) build.Builder {
 	return &PluginBuilder{
 		Builder: raw.(build.Builder),
 	}
+}
+
+func validate(cfg *latest.PluginBuild) error {
+	m, err := getManifestForBuilder(cfg.Name)
+	if err != nil {
+		return errors.Wrapf(err, "getting manifest for builder")
+	}
+	return requiredFlagsExist(m, cfg.Flags)
+}
+
+func requiredFlagsExist(m *schema.PluginManifest, flags []latest.Flag) error {
+	for _, mf := range m.Flags {
+		if mf.Required && !requiredFlagExists(mf.Name, flags) {
+			return errors.Errorf("Required flag %s not found in skaffold.yaml", mf.Name)
+		}
+	}
+	return nil
+}
+
+func requiredFlagExists(name string, flags []latest.Flag) bool {
+	for _, f := range flags {
+		if f.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func getManifestForBuilder(builder string) (*schema.PluginManifest, error) {
+	path := filepath.Join(os.Getenv("HOME"), ".skaffold/skaffold-builders-manifests/plugins")
+	if _, err := os.Stat(path); err != nil {
+		return nil, errors.Errorf("%s does not exist, please run 'skaffold update' first", path)
+	}
+	var manifests []schema.PluginManifest
+	err := filepath.Walk(path, func(path string, info os.FileInfo, _ error) error {
+		if info.IsDir() {
+			return nil
+		}
+		contents, err := ioutil.ReadFile(path)
+		if err != nil {
+			return errors.Wrapf(err, "reading %s", path)
+		}
+		var m schema.PluginManifest
+		if err := yaml.Unmarshal(contents, &m); err != nil {
+			return errors.Wrapf(err, "unmarshalling %s", path)
+		}
+		manifests = append(manifests, m)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, m := range manifests {
+		return &m, nil
+	}
+	return nil, errors.Errorf("Couldn't get manifest for builder %s", builder)
 }
 
 type PluginBuilder struct {

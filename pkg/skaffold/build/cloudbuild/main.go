@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"io"
 	"os"
 
@@ -29,6 +30,15 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	plugin "github.com/hashicorp/go-plugin"
 )
+
+var (
+	projectID string
+)
+
+func init() {
+	flag.StringVar(&projectID, "projectID", "", "Set the GCP project id")
+	flag.Parse()
+}
 
 func main() {
 	// pluginMap is the map of plugins we can dispense.
@@ -57,7 +67,7 @@ func (b *CloudbuildBuilderPlugin) Build(ctx context.Context, out io.Writer, tagg
 func newBuilder() build.Builder {
 	return &CloudbuildBuilderPlugin{
 		Impl: gcb.NewBuilder(&latest.GoogleCloudBuild{
-			ProjectID:   "priya-wadhwa",
+			ProjectID:   projectID,
 			DockerImage: constants.DefaultCloudBuildDockerImage,
 		}),
 	}

@@ -100,8 +100,14 @@ type GoogleCloudBuild struct {
 	DockerImage string `yaml:"dockerImage,omitempty"`
 }
 
+type Flag struct {
+	Name  string `yaml:"name,omitempty"`
+	Value string `yaml:"value,omitempty"`
+}
+
 type PluginBuild struct {
-	Name string `yaml:"name,omitempty"`
+	Name  string `yaml:"name,omitempty"`
+	Flags []Flag `yaml:"flags,omitempty"`
 }
 
 // LocalDir represents the local directory kaniko build context

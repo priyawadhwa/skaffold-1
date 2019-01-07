@@ -122,7 +122,7 @@ func getBuilder(cfg *latest.BuildConfig, kubeContext string, opts *config.Skaffo
 
 	case cfg.PluginBuild != nil:
 		logrus.Debugln("Using builder: plugin")
-		return plugin.NewPluginBuilder(cfg.PluginBuild.Name), nil
+		return plugin.NewPluginBuilder(cfg.PluginBuild), nil
 
 	case cfg.LocalBuild != nil:
 		logrus.Debugln("Using builder: local")

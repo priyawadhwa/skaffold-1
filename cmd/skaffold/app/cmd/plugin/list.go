@@ -47,7 +47,7 @@ func runList() error {
 	if _, err := os.Stat(path); err != nil {
 		return errors.Errorf("%s does not exist, please run 'skaffold plugin update' first", path)
 	}
-	manifests, err := getManifests()
+	manifests, err := GetManifests()
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func runList() error {
 	return nil
 }
 
-func getManifests() ([]schema.PluginManifest, error) {
+func GetManifests() ([]schema.PluginManifest, error) {
 	path := filepath.Join(os.Getenv("HOME"), ".skaffold/skaffold-builders-manifests/plugins")
 	if _, err := os.Stat(path); err != nil {
 		return nil, errors.Errorf("%s does not exist, please run 'skaffold update' first", path)

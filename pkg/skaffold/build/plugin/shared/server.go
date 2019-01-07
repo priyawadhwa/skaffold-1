@@ -73,10 +73,10 @@ type BuilderArgs struct {
 // This is the implementation of plugin.Plugin so we can serve/consume this
 //
 // This has two methods: Server must return an RPC server for this plugin
-// type. We construct a GreeterRPCServer for this.
+// type. We construct a BuilderRPCServer for this.
 //
 // Client must return an implementation of our interface that communicates
-// over an RPC client. We return GreeterRPC for this.
+// over an RPC client. We return BuilderRPC for this.
 //
 // Ignore MuxBroker. That is used to create more multiplexed streams on our
 // plugin connection and is a more advanced use case.

@@ -22,10 +22,17 @@ type PluginManifest struct {
 	Version     string     `yaml:"version,omitempty"`
 	Description string     `yaml:"description,omitempty"`
 	Caveats     string     `yaml:"caveats,omitempty"`
+	Flags       []Flag     `yaml:"flags,omitempty"`
 }
 
 type Platform struct {
 	OS     string `yaml:"os,omitempty"`
 	Sha256 string `yaml:"sha256,omitempty"`
 	URI    string `yaml:"uri,omitempty"`
+}
+
+type Flag struct {
+	Name        string `yaml:"name,omitempty"`
+	Description string `yaml:"description,omitempty"`
+	Required    bool   `yaml:"required,omitempty"`
 }
