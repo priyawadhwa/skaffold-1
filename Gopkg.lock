@@ -43,6 +43,14 @@
   version = "v10.15.5"
 
 [[projects]]
+  digest = "1:5f622957e913f4b8e05655a3f35792387ebb7f125cb0ffa9b1900859bec25f03"
+  name = "github.com/GoogleContainerTools/krew"
+  packages = ["pkg/gitutil"]
+  pruneopts = "NUT"
+  revision = "cd2c6e1ad1d2e7958037141cf1c7aa596a9fa581"
+  version = "v0.2.1"
+
+[[projects]]
   digest = "1:2be791e7b333ff7c06f8fb3dc18a7d70580e9399dbdffd352621d067ff260b6e"
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
@@ -1218,6 +1226,7 @@
   analyzer-version = 1
   input-imports = [
     "cloud.google.com/go/storage",
+    "github.com/GoogleContainerTools/krew/pkg/gitutil",
     "github.com/blang/semver",
     "github.com/bmatcuk/doublestar",
     "github.com/docker/cli/cli/config",

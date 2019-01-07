@@ -89,3 +89,7 @@ const (
 	GitCommitTagger = "GitCommitTagger"
 	EnvTagger       = "EnvTagger"
 )
+
+const (
+	BuilderPluginManifestRepo = "https://github.com/priyawadhwa/skaffold-builders-manifests.git"
+)
