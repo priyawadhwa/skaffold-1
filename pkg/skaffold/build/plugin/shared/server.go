@@ -51,14 +51,11 @@ type BuilderRPCServer struct {
 }
 
 func (s *BuilderRPCServer) Labels(args interface{}, resp *map[string]string) error {
-	fmt.Println("calling labels from server")
 	*resp = s.Impl.Labels()
 	return nil
 }
 
 func (s *BuilderRPCServer) Build(b BuilderArgs, resp *[]build.Artifact) error {
-	fmt.Println("calling build from server")
-
 	tagger := tag.RetrieveTagger(b.Tagger)
 	artifacts, err := s.Impl.Build(context.Background(), os.Stderr, tagger, b.Artifacts)
 	if err != nil {

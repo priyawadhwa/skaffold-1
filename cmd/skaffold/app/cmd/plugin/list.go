@@ -45,7 +45,7 @@ func NewCmdList(out io.Writer) *cobra.Command {
 func runList() error {
 	path := filepath.Join(os.Getenv("HOME"), ".skaffold/skaffold-builders-manifests/plugins")
 	if _, err := os.Stat(path); err != nil {
-		return errors.Errorf("%s does not exist, please run 'skaffold update' first", path)
+		return errors.Errorf("%s does not exist, please run 'skaffold plugin update' first", path)
 	}
 	manifests, err := getManifests()
 	if err != nil {

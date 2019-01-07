@@ -70,15 +70,9 @@ type PluginBuilder struct {
 
 // Labels are labels applied to deployed resources.
 func (b *PluginBuilder) Labels() map[string]string {
-	fmt.Println("Calling Labels() on plugin!")
-	labels := b.Builder.Labels()
-	fmt.Printf("Result: %s\n", labels)
-	return labels
+	return b.Builder.Labels()
 }
 
 func (b *PluginBuilder) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact) ([]build.Artifact, error) {
-	fmt.Println("Calling Build() on plugin!")
-	i, e := b.Builder.Build(ctx, out, tagger, artifacts)
-	fmt.Printf("Result on Build(): %+v, %v\n", i, e)
-	return i, e
+	return b.Builder.Build(ctx, out, tagger, artifacts)
 }
