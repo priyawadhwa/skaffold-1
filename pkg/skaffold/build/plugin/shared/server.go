@@ -2,7 +2,6 @@ package shared
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/rpc"
 	"os"
@@ -32,7 +31,6 @@ func (b *BuilderRPC) Labels() map[string]string {
 
 func (b *BuilderRPC) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact) ([]build.Artifact, error) {
 	var resp []build.Artifact
-	fmt.Println("registered")
 	args := BuilderArgs{
 		Tagger:    tagger.String(),
 		Artifacts: artifacts,

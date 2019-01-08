@@ -21,6 +21,8 @@ import (
 	"flag"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/gcb"
@@ -46,10 +48,18 @@ func main() {
 		"cloudbuild": &shared.BuilderPlugin{Impl: newBuilder()},
 	}
 
-	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: shared.Handshake,
-		Plugins:         pluginMap,
-	})
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		plugin.Serve(&plugin.ServeConfig{
+			HandshakeConfig: shared.Handshake,
+			Plugins:         pluginMap,
+		})
+	}()
+
+	<-sigs
+	plugin.CleanupClients()
 }
 
 type CloudbuildBuilderPlugin struct {
