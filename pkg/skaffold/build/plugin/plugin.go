@@ -145,6 +145,6 @@ func (b *PluginBuilder) Labels() map[string]string {
 	return b.Builder.Labels()
 }
 
-func (b *PluginBuilder) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact) ([]build.Artifact, error) {
-	return b.Builder.Build(ctx, out, tagger, artifacts)
+func (b *PluginBuilder) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact, env string) ([]build.Artifact, error) {
+	return b.Builder.Build(ctx, out, tagger, artifacts, env)
 }

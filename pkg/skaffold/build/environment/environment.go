@@ -14,28 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package build
+package environment
 
 import (
 	"context"
 	"io"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/tag"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 )
 
-// Artifact is the result corresponding to each successful build.
-type Artifact struct {
-	ImageName string
-	Tag       string
-}
-
-// Builder is an interface to the Build API of Skaffold.
-// It must build and make the resulting image accesible to the cluster.
-// This could include pushing to a authorized repository or loading the nodes with the image.
-// If artifacts is supplied, the builder should only rebuild those artifacts.
-type Builder interface {
-	Labels() map[string]string
-
-	Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact, environment string) ([]Artifact, error)
+type ExecutionEnvironment interface {
+	Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact) ([]build.Artifact, error)
+	String() string
 }

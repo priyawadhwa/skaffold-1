@@ -27,6 +27,7 @@ import (
 
 	configutil "github.com/GoogleContainerTools/skaffold/cmd/skaffold/app/cmd/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/environment"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/gcb"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/kaniko"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/local"
@@ -47,6 +48,7 @@ import (
 type SkaffoldRunner struct {
 	build.Builder
 	deploy.Deployer
+	environment.ExecutionEnvironment
 	test.Tester
 	tag.Tagger
 	sync.Syncer
@@ -103,14 +105,15 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldPipeline) (*
 	}
 
 	return &SkaffoldRunner{
-		Builder:   builder,
-		Tester:    tester,
-		Deployer:  deployer,
-		Tagger:    tagger,
-		Syncer:    &kubectl.Syncer{},
-		Watcher:   watch.NewWatcher(trigger),
-		opts:      opts,
-		imageList: kubernetes.NewImageList(),
+		Builder:              builder,
+		Tester:               tester,
+		Deployer:             deployer,
+		Tagger:               tagger,
+		ExecutionEnvironment: getEnvironment(),
+		Syncer:               &kubectl.Syncer{},
+		Watcher:              watch.NewWatcher(trigger),
+		opts:                 opts,
+		imageList:            kubernetes.NewImageList(),
 	}, nil
 }
 
@@ -197,6 +200,9 @@ func getTagger(t latest.TagPolicy, customTag string) (tag.Tagger, error) {
 	}
 }
 
+func getEnvironment() environment.ExecutionEnvironment {
+	return &environment.Local{}
+}
 func (r *SkaffoldRunner) newLogger(out io.Writer, artifacts []*latest.Artifact) *kubernetes.LogAggregator {
 	var imageNames []string
 	for _, artifact := range artifacts {
@@ -251,7 +257,7 @@ func (r *SkaffoldRunner) Run(ctx context.Context, out io.Writer, artifacts []*la
 
 // BuildAndTest builds artifacts and runs tests on built artifacts
 func (r *SkaffoldRunner) BuildAndTest(ctx context.Context, out io.Writer, artifacts []*latest.Artifact) ([]build.Artifact, error) {
-	bRes, err := r.Build(ctx, out, r.Tagger, artifacts)
+	bRes, err := r.ExecutionEnvironment.Build(ctx, out, r.Tagger, artifacts)
 	if err != nil {
 		return nil, errors.Wrap(err, "build failed")
 	}

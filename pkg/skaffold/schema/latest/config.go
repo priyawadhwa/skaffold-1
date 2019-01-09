@@ -31,10 +31,15 @@ type SkaffoldPipeline struct {
 	APIVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
 
-	Build    BuildConfig  `yaml:"build,omitempty"`
-	Test     TestConfig   `yaml:"test,omitempty"`
-	Deploy   DeployConfig `yaml:"deploy,omitempty"`
-	Profiles []Profile    `yaml:"profiles,omitempty"`
+	Build                BuildConfig          `yaml:"build,omitempty"`
+	Test                 TestConfig           `yaml:"test,omitempty"`
+	ExecutionEnvironment ExecutionEnvironment `yaml:"executionEnvironment,omitempty"`
+	Deploy               DeployConfig         `yaml:"deploy,omitempty"`
+	Profiles             []Profile            `yaml:"profiles,omitempty"`
+}
+
+type ExecutionEnvironment struct {
+	EnvPlugin PluginBuild `yaml:"plugin,omitempty"`
 }
 
 func (c *SkaffoldPipeline) GetVersion() string {
@@ -237,6 +242,7 @@ type Artifact struct {
 	ImageName    string            `yaml:"image,omitempty"`
 	Workspace    string            `yaml:"context,omitempty"`
 	Sync         map[string]string `yaml:"sync,omitempty"`
+	PluginBuild  PluginBuild       `yaml:"plugin,omitempty"`
 	ArtifactType `yaml:",inline"`
 }
 

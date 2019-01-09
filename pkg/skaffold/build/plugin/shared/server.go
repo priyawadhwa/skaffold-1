@@ -29,11 +29,12 @@ func (b *BuilderRPC) Labels() map[string]string {
 	return resp
 }
 
-func (b *BuilderRPC) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact) ([]build.Artifact, error) {
+func (b *BuilderRPC) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact, env string) ([]build.Artifact, error) {
 	var resp []build.Artifact
 	args := BuilderArgs{
 		Tagger:    tagger.String(),
 		Artifacts: artifacts,
+		Env:       env,
 	}
 	err := b.client.Call("Plugin.Build", args, &resp)
 	if err != nil {
@@ -55,7 +56,7 @@ func (s *BuilderRPCServer) Labels(args interface{}, resp *map[string]string) err
 
 func (s *BuilderRPCServer) Build(b BuilderArgs, resp *[]build.Artifact) error {
 	tagger := tag.RetrieveTagger(b.Tagger)
-	artifacts, err := s.Impl.Build(context.Background(), os.Stderr, tagger, b.Artifacts)
+	artifacts, err := s.Impl.Build(context.Background(), os.Stderr, tagger, b.Artifacts, b.Env)
 	if err != nil {
 		return errors.Wrap(err, "building artifacts")
 	}
@@ -66,6 +67,7 @@ func (s *BuilderRPCServer) Build(b BuilderArgs, resp *[]build.Artifact) error {
 type BuilderArgs struct {
 	Tagger    string
 	Artifacts []*latest.Artifact
+	Env       string
 }
 
 // This is the implementation of plugin.Plugin so we can serve/consume this

@@ -3,7 +3,13 @@ kind: Config
 build:
   artifacts:
   - image: gcr.io/k8s-skaffold/skaffold-example
+    plugin:
+      name: docker
+executionEnvironment:
+  plugin:
+    name: local
 deploy:
   kubectl:
     manifests:
       - k8s-*
+ 
