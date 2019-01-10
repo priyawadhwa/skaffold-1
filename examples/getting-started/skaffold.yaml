@@ -3,6 +3,15 @@ kind: Config
 build:
   artifacts:
   - image: gcr.io/k8s-skaffold/skaffold-example
+    plugin: 
+      name: bazel
+      properties:
+        target: //:skaffold_example.tar
+executionEnvironment:
+  name: local
+  # flags: 
+  #   - key: projectID
+  #     value: priyawadhwa
 deploy:
   kubectl:
     manifests:

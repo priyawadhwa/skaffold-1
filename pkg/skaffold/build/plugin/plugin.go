@@ -37,74 +37,78 @@ import (
 	"github.com/pkg/errors"
 )
 
-func NewPluginBuilder(cfg *latest.PluginBuild) build.Builder {
+func NewPluginBuilder(cfg *latest.BuildConfig, env latest.ExecutionEnvironment) build.Builder {
 	// We're a host. Start by launching the plugin process.
 	log.SetOutput(os.Stdout)
 
-	if err := validate(cfg); err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
 	var flags []string
-	for _, f := range cfg.Flags {
-		flags = append(flags, fmt.Sprintf("-%s=%s", f.Name, f.Value))
+	for _, f := range env.Flags {
+		flags = append(flags, fmt.Sprintf("-%s=%s", f.Key, f.Value))
 	}
 
-	client := plugin.NewClient(&plugin.ClientConfig{
-		Stderr:          os.Stderr,
-		SyncStderr:      os.Stderr,
-		SyncStdout:      os.Stdout,
-		Managed:         true,
-		HandshakeConfig: shared.Handshake,
-		Plugins:         shared.PluginMap,
-		Cmd:             exec.Command(cfg.Name, flags...),
-	})
-
-	// Connect via RPC
-	rpcClient, err := client.Client()
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		os.Exit(1)
+	plugins := map[string]struct{}{}
+	for _, a := range cfg.Artifacts {
+		plugins[a.Plugin.Name] = struct{}{}
 	}
 
-	// Request the plugin
-	raw, err := rpcClient.Dispense(cfg.Name)
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		os.Exit(1)
+	builders := map[string]build.Builder{}
+	for p := range plugins {
+		client := plugin.NewClient(&plugin.ClientConfig{
+			Stderr:          os.Stderr,
+			SyncStderr:      os.Stderr,
+			SyncStdout:      os.Stdout,
+			Managed:         true,
+			HandshakeConfig: shared.Handshake,
+			Plugins:         shared.PluginMap,
+			Cmd:             exec.Command(p, flags...),
+		})
+
+		// Connect via RPC
+		rpcClient, err := client.Client()
+		if err != nil {
+			fmt.Println("Error:", err.Error())
+			os.Exit(1)
+		}
+
+		// Request the plugin
+		raw, err := rpcClient.Dispense(p)
+		if err != nil {
+			fmt.Println("Error:", err.Error())
+			os.Exit(1)
+		}
+		builders[p] = raw.(build.Builder)
 	}
 
 	return &PluginBuilder{
-		Builder: raw.(build.Builder),
+		Builders: builders,
 	}
 }
 
-func validate(cfg *latest.PluginBuild) error {
-	m, err := getManifestForBuilder(cfg.Name)
-	if err != nil {
-		return errors.Wrapf(err, "getting manifest for builder")
-	}
-	return requiredFlagsExist(m, cfg.Flags)
-}
+// func validate(cfg *latest.PluginBuild) error {
+// 	m, err := getManifestForBuilder(cfg.Name)
+// 	if err != nil {
+// 		return errors.Wrapf(err, "getting manifest for builder")
+// 	}
+// 	return requiredFlagsExist(m, cfg.Flags)
+// }
 
-func requiredFlagsExist(m *schema.PluginManifest, flags []latest.Flag) error {
-	for _, mf := range m.Flags {
-		if mf.Required && !requiredFlagExists(mf.Name, flags) {
-			return errors.Errorf("Required flag %s not found in skaffold.yaml", mf.Name)
-		}
-	}
-	return nil
-}
+// func requiredFlagsExist(m *schema.PluginManifest, flags []latest.Flag) error {
+// 	for _, mf := range m.Flags {
+// 		if mf.Required && !requiredFlagExists(mf.Name, flags) {
+// 			return errors.Errorf("Required flag %s not found in skaffold.yaml", mf.Name)
+// 		}
+// 	}
+// 	return nil
+// }
 
-func requiredFlagExists(name string, flags []latest.Flag) bool {
-	for _, f := range flags {
-		if f.Name == name {
-			return true
-		}
-	}
-	return false
-}
+// func requiredFlagExists(name string, flags []latest.Flag) bool {
+// 	for _, f := range flags {
+// 		if f.Name == name {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
 func getManifestForBuilder(builder string) (*schema.PluginManifest, error) {
 	path := filepath.Join(os.Getenv("HOME"), ".skaffold/skaffold-builders-manifests/plugins")
@@ -137,14 +141,33 @@ func getManifestForBuilder(builder string) (*schema.PluginManifest, error) {
 }
 
 type PluginBuilder struct {
-	build.Builder
+	Builders map[string]build.Builder
 }
 
 // Labels are labels applied to deployed resources.
 func (b *PluginBuilder) Labels() map[string]string {
-	return b.Builder.Labels()
+	for _, builder := range b.Builders {
+		return builder.Labels()
+	}
+	return nil
 }
 
-func (b *PluginBuilder) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact) ([]build.Artifact, error) {
-	return b.Builder.Build(ctx, out, tagger, artifacts)
+func (b *PluginBuilder) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact, env latest.ExecutionEnvironment) ([]build.Artifact, error) {
+	var builtArtifacts []build.Artifact
+	// Group artifacts by builder
+	for name, builder := range b.Builders {
+		var arts []*latest.Artifact
+		for _, a := range artifacts {
+			if a.Plugin.Name == name {
+				arts = append(arts, a)
+			}
+		}
+		bArts, err := builder.Build(ctx, out, tagger, arts, env)
+		if err != nil {
+			return nil, errors.Wrapf(err, "building artifacts with builder %s", name)
+		}
+		builtArtifacts = append(builtArtifacts, bArts...)
+	}
+	fmt.Printf("return built artifacts %s \n", builtArtifacts)
+	return builtArtifacts, nil
 }

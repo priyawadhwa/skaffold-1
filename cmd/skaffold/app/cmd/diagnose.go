@@ -111,6 +111,7 @@ func timeToListDependencies(ctx context.Context, a *latest.Artifact) (time.Durat
 	start := time.Now()
 
 	deps, err := runner.DependenciesForArtifact(ctx, a)
+	fmt.Printf("got %d dependencies \n", len(deps))
 	if err != nil {
 		return 0, nil, errors.Wrap(err, "listing artifact dependencies")
 	}

@@ -30,5 +30,5 @@ var Handshake = plugin.HandshakeConfig{
 }
 
 var PluginMap = map[string]plugin.Plugin{
-	"cloudbuild": &BuilderPlugin{},
+	"bazel-skaffold": &BuilderPlugin{},
 }

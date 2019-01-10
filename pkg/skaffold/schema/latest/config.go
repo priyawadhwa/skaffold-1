@@ -31,10 +31,27 @@ type SkaffoldPipeline struct {
 	APIVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
 
-	Build    BuildConfig  `yaml:"build,omitempty"`
-	Test     TestConfig   `yaml:"test,omitempty"`
-	Deploy   DeployConfig `yaml:"deploy,omitempty"`
-	Profiles []Profile    `yaml:"profiles,omitempty"`
+	Build                BuildConfig          `yaml:"build,omitempty"`
+	Test                 TestConfig           `yaml:"test,omitempty"`
+	Deploy               DeployConfig         `yaml:"deploy,omitempty"`
+	ExecutionEnvironment ExecutionEnvironment `yaml:"executionEnvironment,omitempty"`
+	Profiles             []Profile            `yaml:"profiles,omitempty"`
+}
+
+type ExecutionEnvironment struct {
+	Name  string `yaml:"name,omitempty"`
+	Flags []Flag `yaml:"flags,omitempty"`
+}
+
+type Plugin struct {
+	Name       string                 `yaml:"name,omitempty"`
+	Properties map[string]interface{} `yaml:"properties,omitempty"`
+	Flags      []Flag                 `yaml:"flags,omitempty"`
+}
+
+type Flag struct {
+	Key   string `yaml:"key,omitempty"`
+	Value string `yaml:"value,omitempty"` // TODO: This should probs be an interface{}
 }
 
 func (c *SkaffoldPipeline) GetVersion() string {
@@ -226,6 +243,7 @@ type Artifact struct {
 	ImageName    string            `yaml:"image,omitempty"`
 	Workspace    string            `yaml:"context,omitempty"`
 	Sync         map[string]string `yaml:"sync,omitempty"`
+	Plugin       Plugin            `yaml:"plugin,omitempty"`
 	ArtifactType `yaml:",inline"`
 }
 

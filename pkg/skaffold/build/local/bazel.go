@@ -57,7 +57,7 @@ func (b *Builder) buildBazel(ctx context.Context, out io.Writer, workspace strin
 
 	ref := buildImageTag(a.BuildTarget)
 
-	imageID, err := b.localDocker.Load(ctx, out, imageTar, ref)
+	imageID, err := b.LocalDocker.Load(ctx, out, imageTar, ref)
 	if err != nil {
 		return "", errors.Wrap(err, "loading image into docker daemon")
 	}

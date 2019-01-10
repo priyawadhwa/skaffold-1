@@ -30,7 +30,7 @@ import (
 )
 
 func (b *Builder) buildJibGradle(ctx context.Context, out io.Writer, workspace string, artifact *latest.Artifact) (string, error) {
-	if b.pushImages {
+	if b.PushImages {
 		return b.buildJibGradleToRegistry(ctx, out, workspace, artifact)
 	}
 	return b.buildJibGradleToDocker(ctx, out, workspace, artifact.JibGradleArtifact)
@@ -44,7 +44,7 @@ func (b *Builder) buildJibGradleToDocker(ctx context.Context, out io.Writer, wor
 		return "", err
 	}
 
-	return b.localDocker.ImageID(ctx, skaffoldImage)
+	return b.LocalDocker.ImageID(ctx, skaffoldImage)
 }
 
 func (b *Builder) buildJibGradleToRegistry(ctx context.Context, out io.Writer, workspace string, artifact *latest.Artifact) (string, error) {

@@ -32,10 +32,10 @@ import (
 // Build runs a docker build on the host and tags the resulting image with
 // its checksum. It streams build progress to the writer argument.
 func (b *Builder) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact) ([]build.Artifact, error) {
-	if b.localCluster {
-		color.Default.Fprintf(out, "Found [%s] context, using local docker daemon.\n", b.kubeContext)
+	if b.LocalCluster {
+		color.Default.Fprintf(out, "Found [%s] context, using local docker daemon.\n", b.KubeContext)
 	}
-	defer b.localDocker.Close()
+	defer b.LocalDocker.Close()
 
 	// TODO(dgageot): parallel builds
 	return build.InSequence(ctx, out, tagger, artifacts, b.buildArtifact)
@@ -47,10 +47,10 @@ func (b *Builder) buildArtifact(ctx context.Context, out io.Writer, tagger tag.T
 		return "", errors.Wrap(err, "build artifact")
 	}
 
-	if b.alreadyTagged == nil {
-		b.alreadyTagged = make(map[string]string)
+	if b.AlreadyTagged == nil {
+		b.AlreadyTagged = make(map[string]string)
 	}
-	if tag, present := b.alreadyTagged[digest]; present {
+	if tag, present := b.AlreadyTagged[digest]; present {
 		return tag, nil
 	}
 
@@ -66,7 +66,7 @@ func (b *Builder) buildArtifact(ctx context.Context, out io.Writer, tagger tag.T
 		return "", errors.Wrap(err, "tagging")
 	}
 
-	b.alreadyTagged[digest] = tag
+	b.AlreadyTagged[digest] = tag
 
 	return tag, nil
 }
@@ -91,19 +91,19 @@ func (b *Builder) runBuildForArtifact(ctx context.Context, out io.Writer, artifa
 }
 
 func (b *Builder) retagAndPush(ctx context.Context, out io.Writer, initialTag string, newTag string, artifact *latest.Artifact) error {
-	if b.pushImages && (artifact.JibMavenArtifact != nil || artifact.JibGradleArtifact != nil) {
+	if b.PushImages && (artifact.JibMavenArtifact != nil || artifact.JibGradleArtifact != nil) {
 		if err := docker.AddTag(initialTag, newTag); err != nil {
 			return errors.Wrap(err, "tagging image")
 		}
 		return nil
 	}
 
-	if err := b.localDocker.Tag(ctx, initialTag, newTag); err != nil {
+	if err := b.LocalDocker.Tag(ctx, initialTag, newTag); err != nil {
 		return err
 	}
 
-	if b.pushImages {
-		if _, err := b.localDocker.Push(ctx, out, newTag); err != nil {
+	if b.PushImages {
+		if _, err := b.LocalDocker.Push(ctx, out, newTag); err != nil {
 			return errors.Wrap(err, "pushing")
 		}
 	}

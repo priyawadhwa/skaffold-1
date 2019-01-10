@@ -40,6 +40,7 @@ func (c *GitCommit) Labels() map[string]string {
 
 // GenerateFullyQualifiedImageName tags an image with the supplied image name and the git commit.
 func (c *GitCommit) GenerateFullyQualifiedImageName(workingDir string, opts Options) (string, error) {
+	fmt.Println("generating fully qualified image name")
 	hash, err := runGit(workingDir, "rev-parse", "--short", "HEAD")
 	if err != nil {
 		return fallbackOnDigest(opts, err), nil

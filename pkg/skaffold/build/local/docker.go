@@ -51,8 +51,8 @@ func (b *Builder) buildDocker(ctx context.Context, out io.Writer, workspace stri
 			return "", errors.Wrap(err, "running build")
 		}
 
-		return b.localDocker.ImageID(ctx, initialTag)
+		return b.LocalDocker.ImageID(ctx, initialTag)
 	}
 
-	return b.localDocker.Build(ctx, out, workspace, a, initialTag)
+	return b.LocalDocker.Build(ctx, out, workspace, a, initialTag)
 }

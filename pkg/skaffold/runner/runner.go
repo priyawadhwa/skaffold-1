@@ -27,9 +27,7 @@ import (
 
 	configutil "github.com/GoogleContainerTools/skaffold/cmd/skaffold/app/cmd/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/gcb"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/kaniko"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/local"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/plugin"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/tag"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy"
@@ -51,6 +49,7 @@ type SkaffoldRunner struct {
 	sync.Syncer
 	watch.Watcher
 
+	Env         latest.ExecutionEnvironment
 	opts        *config.SkaffoldOptions
 	builds      []build.Artifact
 	hasDeployed bool
@@ -75,7 +74,7 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldPipeline) (*
 		return nil, errors.Wrap(err, "parsing tag config")
 	}
 
-	builder, err := getBuilder(&cfg.Build, kubeContext, opts)
+	builder, err := getBuilder(&cfg.Build, cfg.ExecutionEnvironment, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing build config")
 	}
@@ -110,30 +109,33 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldPipeline) (*
 		Watcher:   watch.NewWatcher(trigger),
 		opts:      opts,
 		imageList: kubernetes.NewImageList(),
+		Env:       cfg.ExecutionEnvironment,
 	}, nil
 }
 
-func getBuilder(cfg *latest.BuildConfig, kubeContext string, opts *config.SkaffoldOptions) (build.Builder, error) {
-	switch {
-	case len(opts.PreBuiltImages) > 0:
-		logrus.Debugln("Using pre-built images")
-		return build.NewPreBuiltImagesBuilder(opts.PreBuiltImages), nil
+func getBuilder(cfg *latest.BuildConfig, env latest.ExecutionEnvironment, opts *config.SkaffoldOptions) (build.Builder, error) {
 
-	case cfg.LocalBuild != nil:
-		logrus.Debugln("Using builder: local")
-		return local.NewBuilder(cfg.LocalBuild, kubeContext)
+	return plugin.NewPluginBuilder(cfg, env), nil
+	// switch {
+	// case len(opts.PreBuiltImages) > 0:
+	// 	logrus.Debugln("Using pre-built images")
+	// 	return build.NewPreBuiltImagesBuilder(opts.PreBuiltImages), nil
 
-	case cfg.GoogleCloudBuild != nil:
-		logrus.Debugln("Using builder: google cloud")
-		return gcb.NewBuilder(cfg.GoogleCloudBuild), nil
+	// case cfg.LocalBuild != nil:
+	// 	logrus.Debugln("Using builder: local")
+	// 	return local.NewBuilder(cfg.LocalBuild, kubeContext)
 
-	case cfg.KanikoBuild != nil:
-		logrus.Debugln("Using builder: kaniko")
-		return kaniko.NewBuilder(cfg.KanikoBuild)
+	// case cfg.GoogleCloudBuild != nil:
+	// 	logrus.Debugln("Using builder: google cloud")
+	// 	return gcb.NewBuilder(cfg.GoogleCloudBuild), nil
 
-	default:
-		return nil, fmt.Errorf("unknown builder for config %+v", cfg)
-	}
+	// case cfg.KanikoBuild != nil:
+	// 	logrus.Debugln("Using builder: kaniko")
+	// 	return kaniko.NewBuilder(cfg.KanikoBuild)
+
+	// default:
+	// 	return nil, fmt.Errorf("unknown builder for config %+v", cfg)
+	// }
 }
 
 func getTester(cfg *latest.TestConfig, opts *config.SkaffoldOptions) (test.Tester, error) {
@@ -246,7 +248,7 @@ func (r *SkaffoldRunner) Run(ctx context.Context, out io.Writer, artifacts []*la
 
 // BuildAndTest builds artifacts and runs tests on built artifacts
 func (r *SkaffoldRunner) BuildAndTest(ctx context.Context, out io.Writer, artifacts []*latest.Artifact) ([]build.Artifact, error) {
-	bRes, err := r.Build(ctx, out, r.Tagger, artifacts)
+	bRes, err := r.Build(ctx, out, r.Tagger, artifacts, r.Env)
 	if err != nil {
 		return nil, errors.Wrap(err, "build failed")
 	}

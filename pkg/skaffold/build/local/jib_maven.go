@@ -31,7 +31,7 @@ import (
 )
 
 func (b *Builder) buildJibMaven(ctx context.Context, out io.Writer, workspace string, artifact *latest.Artifact) (string, error) {
-	if b.pushImages {
+	if b.PushImages {
 		return b.buildJibMavenToRegistry(ctx, out, workspace, artifact)
 	}
 	return b.buildJibMavenToDocker(ctx, out, workspace, artifact.JibMavenArtifact)
@@ -52,7 +52,7 @@ func (b *Builder) buildJibMavenToDocker(ctx context.Context, out io.Writer, work
 		return "", err
 	}
 
-	return b.localDocker.ImageID(ctx, skaffoldImage)
+	return b.LocalDocker.ImageID(ctx, skaffoldImage)
 }
 
 func (b *Builder) buildJibMavenToRegistry(ctx context.Context, out io.Writer, workspace string, artifact *latest.Artifact) (string, error) {
