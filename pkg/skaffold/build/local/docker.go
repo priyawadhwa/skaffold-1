@@ -31,7 +31,7 @@ import (
 func (b *Builder) buildDocker(ctx context.Context, out io.Writer, workspace string, a *latest.DockerArtifact) (string, error) {
 	initialTag := util.RandomID()
 
-	if b.cfg.UseDockerCLI || b.cfg.UseBuildkit {
+	if b.Cfg.UseDockerCLI || b.Cfg.UseBuildkit {
 		dockerfilePath, err := docker.NormalizeDockerfilePath(workspace, a.DockerfilePath)
 		if err != nil {
 			return "", errors.Wrap(err, "normalizing dockerfile path")
@@ -41,7 +41,7 @@ func (b *Builder) buildDocker(ctx context.Context, out io.Writer, workspace stri
 		args = append(args, docker.GetBuildArgs(a)...)
 
 		cmd := exec.CommandContext(ctx, "docker", args...)
-		if b.cfg.UseBuildkit {
+		if b.Cfg.UseBuildkit {
 			cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
 		}
 		cmd.Stdout = out

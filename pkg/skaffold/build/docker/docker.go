@@ -1,4 +1,4 @@
-package bazel
+package docker
 
 import (
 	"context"
@@ -6,8 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
+	"sort"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/local"
@@ -25,10 +24,13 @@ type Builder struct {
 	Builder *local.Builder
 }
 
-// BazelArtifact describes an artifact built with Bazel.
-type BazelArtifact struct {
-	BuildTarget string   `yaml:"target,omitempty"`
-	BuildArgs   []string `yaml:"args,omitempty"`
+// DockerArtifact describes an artifact built from a Dockerfile,
+// usually using `docker build`.
+type DockerArtifact struct {
+	DockerfilePath string             `yaml:"dockerfile,omitempty"`
+	BuildArgs      map[string]*string `yaml:"buildArgs,omitempty"`
+	CacheFrom      []string           `yaml:"cacheFrom,omitempty"`
+	Target         string             `yaml:"target,omitempty"`
 }
 
 // NewBuilder creates a new Builder that builds artifacts with Google Cloud Build.
@@ -42,10 +44,10 @@ func NewBuilder() *Builder {
 	}
 }
 
-// Labels are labels specific to Bazel.
+// Labels are labels specific to Docker.
 func (b *Builder) Labels() map[string]string {
 	return map[string]string{
-		constants.Labels.Builder: "bazel",
+		constants.Labels.Builder: "docker",
 	}
 }
 
@@ -54,7 +56,7 @@ func (b *Builder) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, a
 	if env.Name == "local" {
 		return build.InSequence(ctx, out, tagger, artifacts, b.buildArtifact)
 	}
-	return nil, errors.Errorf("%s is not a supported environment for builder %s", env.Name, "bazel")
+	return nil, errors.Errorf("%s is not a supported environment for builder %s", env.Name, "docker")
 }
 
 func (b *Builder) buildArtifact(ctx context.Context, out io.Writer, tagger tag.Tagger, artifact *latest.Artifact) (string, error) {
@@ -109,87 +111,78 @@ func (b *Builder) retagAndPush(ctx context.Context, out io.Writer, initialTag st
 }
 
 func (b *Builder) buildLocal(ctx context.Context, out io.Writer, tagger tag.Tagger, artifact *latest.Artifact) (string, error) {
-	var properties *BazelArtifact
+
+	var properties *DockerArtifact
 	if err := yaml.Unmarshal(artifact.Plugin.Contents, &properties); err != nil {
 		return "", err
 	}
 
-	args := []string{"build"}
-	args = append(args, properties.BuildArgs...)
-	args = append(args, properties.BuildTarget)
+	initialTag := util.RandomID()
 	workspace := artifact.Workspace
 
-	fmt.Println("workspace is", workspace)
-	fmt.Println(os.Getwd())
+	if b.Builder.Cfg.UseDockerCLI || b.Builder.Cfg.UseBuildkit {
 
-	cmd := exec.CommandContext(ctx, "bazel", args...)
-	cmd.Dir = workspace
-	cmd.Stdout = out
-	cmd.Stderr = out
-	if err := cmd.Run(); err != nil {
-		return "", errors.Wrap(err, "running command")
+		dockerfilePath, err := docker.NormalizeDockerfilePath(workspace, properties.DockerfilePath)
+		if err != nil {
+			return "", errors.Wrap(err, "normalizing dockerfile path")
+		}
+
+		args := []string{"build", workspace, "--file", dockerfilePath, "-t", initialTag}
+		args = append(args, GetBuildArgs(properties)...)
+
+		fmt.Printf("Args are %v \n", args)
+
+		cmd := exec.CommandContext(ctx, "docker", args...)
+		if b.Builder.Cfg.UseBuildkit {
+			cmd.Env = append(os.Environ(), "DOCKER_BUILDKIT=1")
+		}
+		cmd.Stdout = out
+		cmd.Stderr = out
+
+		if err := util.RunCmd(cmd); err != nil {
+			return "", errors.Wrap(err, "running build")
+		}
+
+		return b.Builder.LocalDocker.ImageID(ctx, initialTag)
 	}
 
-	bazelBin, err := bazelBin(ctx, workspace)
-	if err != nil {
-		return "", errors.Wrap(err, "getting path of bazel-bin")
-	}
-
-	tarPath := buildTarPath(properties.BuildTarget)
-	imageTar, err := os.Open(filepath.Join(bazelBin, tarPath))
-	if err != nil {
-		return "", errors.Wrap(err, "opening image tarball")
-	}
-	defer imageTar.Close()
-
-	ref := buildImageTag(properties.BuildTarget)
-
-	imageID, err := b.Builder.LocalDocker.Load(ctx, out, imageTar, ref)
-	if err != nil {
-		return "", errors.Wrap(err, "loading image into docker daemon")
-	}
-
-	return imageID, nil
-}
-
-func bazelBin(ctx context.Context, workspace string) (string, error) {
-	cmd := exec.CommandContext(ctx, "bazel", "info", "bazel-bin")
-	cmd.Dir = workspace
-
-	buf, err := util.RunCmdOut(cmd)
-	if err != nil {
+	// unmarshal to latest.DockerArtifact to make life easier
+	var da *latest.DockerArtifact
+	if err := yaml.Unmarshal(artifact.Plugin.Contents, &da); err != nil {
 		return "", err
 	}
 
-	return strings.TrimSpace(string(buf)), nil
+	return b.Builder.LocalDocker.Build(ctx, out, workspace, da, initialTag)
 }
 
-func trimTarget(buildTarget string) string {
-	//TODO(r2d4): strip off leading //:, bad
-	trimmedTarget := strings.TrimPrefix(buildTarget, "//")
-	// Useful if root target "//:target"
-	trimmedTarget = strings.TrimPrefix(trimmedTarget, ":")
+// GetBuildArgs gives the build args flags for docker build.
+func GetBuildArgs(a *DockerArtifact) []string {
+	var args []string
 
-	return trimmedTarget
-}
+	var keys []string
+	for k := range a.BuildArgs {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
-func buildTarPath(buildTarget string) string {
-	tarPath := trimTarget(buildTarget)
-	tarPath = strings.Replace(tarPath, ":", string(os.PathSeparator), 1)
+	for _, k := range keys {
+		args = append(args, "--build-arg")
 
-	return tarPath
-}
-
-func buildImageTag(buildTarget string) string {
-	imageTag := trimTarget(buildTarget)
-	imageTag = strings.TrimPrefix(imageTag, ":")
-
-	//TODO(r2d4): strip off trailing .tar, even worse
-	imageTag = strings.TrimSuffix(imageTag, ".tar")
-
-	if strings.Contains(imageTag, ":") {
-		return fmt.Sprintf("bazel/%s", imageTag)
+		v := a.BuildArgs[k]
+		if v == nil {
+			args = append(args, k)
+		} else {
+			args = append(args, fmt.Sprintf("%s=%s", k, *v))
+		}
 	}
 
-	return fmt.Sprintf("bazel:%s", imageTag)
+	for _, from := range a.CacheFrom {
+		args = append(args, "--cache-from", from)
+	}
+
+	if a.Target != "" {
+		args = append(args, "--target", a.Target)
+	}
+
+	return args
 }

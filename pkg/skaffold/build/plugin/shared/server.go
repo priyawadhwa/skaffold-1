@@ -11,6 +11,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	plugin "github.com/hashicorp/go-plugin"
 	"github.com/pkg/errors"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Here is an implementation that talks over RPC
@@ -31,6 +32,9 @@ func (b *BuilderRPC) Labels() map[string]string {
 
 func (b *BuilderRPC) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact, env latest.ExecutionEnvironment) ([]build.Artifact, error) {
 	var resp []build.Artifact
+	if err := convertPropertiesToBytes(artifacts); err != nil {
+		return nil, errors.Wrapf(err, "converting properties to bytes")
+	}
 	args := BuilderArgs{
 		Tagger:    &tag.GitCommit{},
 		Artifacts: artifacts,
@@ -41,6 +45,18 @@ func (b *BuilderRPC) Build(ctx context.Context, out io.Writer, tagger tag.Tagger
 		return nil, err
 	}
 	return resp, nil
+}
+
+func convertPropertiesToBytes(artifacts []*latest.Artifact) error {
+	for _, a := range artifacts {
+		data, err := yaml.Marshal(a.Plugin.Properties)
+		if err != nil {
+			return err
+		}
+		a.Plugin.Contents = data
+		a.Plugin.Properties = nil
+	}
+	return nil
 }
 
 // Here is the RPC server that BuilderRPC talks to, conforming to

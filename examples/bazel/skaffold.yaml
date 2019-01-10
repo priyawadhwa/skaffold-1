@@ -8,6 +8,14 @@ build:
       name: bazel-skaffold
       properties:
         target: //:skaffold_example.tar
+  - image: gcr.io/priya-wadhwa/hey
+    context: .
+    plugin:
+      name: docker-skaffold
+      properties:
+        dockerfile: ./Dockerfile 
+        buildArgs:
+          hey: priya
 executionEnvironment:
   name: local
   # properties:

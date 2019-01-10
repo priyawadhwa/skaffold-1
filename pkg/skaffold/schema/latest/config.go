@@ -46,6 +46,7 @@ type ExecutionEnvironment struct {
 type Plugin struct {
 	Name       string                 `yaml:"name,omitempty"`
 	Properties map[string]interface{} `yaml:"properties,omitempty"`
+	Contents   []byte                 `yaml:",omitempty"`
 	Flags      []Flag                 `yaml:"flags,omitempty"`
 }
 
