@@ -41,11 +41,6 @@ func NewPluginBuilder(cfg *latest.BuildConfig, env latest.ExecutionEnvironment) 
 	// We're a host. Start by launching the plugin process.
 	log.SetOutput(os.Stdout)
 
-	var flags []string
-	for _, f := range env.Flags {
-		flags = append(flags, fmt.Sprintf("-%s=%s", f.Key, f.Value))
-	}
-
 	plugins := map[string]struct{}{}
 	for _, a := range cfg.Artifacts {
 		plugins[a.Plugin.Name] = struct{}{}
@@ -60,7 +55,7 @@ func NewPluginBuilder(cfg *latest.BuildConfig, env latest.ExecutionEnvironment) 
 			Managed:         true,
 			HandshakeConfig: shared.Handshake,
 			Plugins:         shared.PluginMap,
-			Cmd:             exec.Command(p, flags...),
+			Cmd:             exec.Command(p),
 		})
 
 		// Connect via RPC
@@ -83,32 +78,6 @@ func NewPluginBuilder(cfg *latest.BuildConfig, env latest.ExecutionEnvironment) 
 		Builders: builders,
 	}
 }
-
-// func validate(cfg *latest.PluginBuild) error {
-// 	m, err := getManifestForBuilder(cfg.Name)
-// 	if err != nil {
-// 		return errors.Wrapf(err, "getting manifest for builder")
-// 	}
-// 	return requiredFlagsExist(m, cfg.Flags)
-// }
-
-// func requiredFlagsExist(m *schema.PluginManifest, flags []latest.Flag) error {
-// 	for _, mf := range m.Flags {
-// 		if mf.Required && !requiredFlagExists(mf.Name, flags) {
-// 			return errors.Errorf("Required flag %s not found in skaffold.yaml", mf.Name)
-// 		}
-// 	}
-// 	return nil
-// }
-
-// func requiredFlagExists(name string, flags []latest.Flag) bool {
-// 	for _, f := range flags {
-// 		if f.Name == name {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
 
 func getManifestForBuilder(builder string) (*schema.PluginManifest, error) {
 	path := filepath.Join(os.Getenv("HOME"), ".skaffold/skaffold-builders-manifests/plugins")

@@ -39,20 +39,14 @@ type SkaffoldPipeline struct {
 }
 
 type ExecutionEnvironment struct {
-	Name  string `yaml:"name,omitempty"`
-	Flags []Flag `yaml:"flags,omitempty"`
+	Name       string                 `yaml:"name,omitempty"`
+	Properties map[string]interface{} `yaml:"properties,omitempty"`
 }
 
 type Plugin struct {
 	Name       string                 `yaml:"name,omitempty"`
 	Properties map[string]interface{} `yaml:"properties,omitempty"`
 	Contents   []byte                 `yaml:",omitempty"`
-	Flags      []Flag                 `yaml:"flags,omitempty"`
-}
-
-type Flag struct {
-	Key   string `yaml:"key,omitempty"`
-	Value string `yaml:"value,omitempty"` // TODO: This should probs be an interface{}
 }
 
 func (c *SkaffoldPipeline) GetVersion() string {

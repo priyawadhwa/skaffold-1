@@ -52,14 +52,13 @@ func (b *Builder) Labels() map[string]string {
 }
 
 func (b *Builder) Build(ctx context.Context, out io.Writer, tagger tag.Tagger, artifacts []*latest.Artifact, env latest.ExecutionEnvironment) ([]build.Artifact, error) {
-
 	if env.Name == "local" {
-		return build.InSequence(ctx, out, tagger, artifacts, b.buildArtifact)
+		return build.InSequence(ctx, out, tagger, artifacts, b.buildArtifactLocal)
 	}
 	return nil, errors.Errorf("%s is not a supported environment for builder %s", env.Name, "docker")
 }
 
-func (b *Builder) buildArtifact(ctx context.Context, out io.Writer, tagger tag.Tagger, artifact *latest.Artifact) (string, error) {
+func (b *Builder) buildArtifactLocal(ctx context.Context, out io.Writer, tagger tag.Tagger, artifact *latest.Artifact) (string, error) {
 	digest, err := b.buildLocal(ctx, out, tagger, artifact)
 	if err != nil {
 		return "", errors.Wrap(err, "build artifact")

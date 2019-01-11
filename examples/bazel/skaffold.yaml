@@ -15,7 +15,7 @@ build:
       properties:
         dockerfile: ./Dockerfile 
         buildArgs:
-          hey: priya
+          hey: there
 executionEnvironment:
   name: local
   # properties:
@@ -24,3 +24,4 @@ deploy:
   kubectl:
     manifests:
       - k8s/k8s-*
+ 
