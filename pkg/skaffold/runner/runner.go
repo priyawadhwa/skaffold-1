@@ -74,7 +74,7 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldPipeline) (*
 		return nil, errors.Wrap(err, "parsing tag config")
 	}
 
-	builder, err := getBuilder(&cfg.Build, cfg.ExecutionEnvironment, opts)
+	builder, err := getBuilder(&cfg.Build, cfg.Build.ExecutionEnvironment, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing build config")
 	}
@@ -109,7 +109,7 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldPipeline) (*
 		Watcher:   watch.NewWatcher(trigger),
 		opts:      opts,
 		imageList: kubernetes.NewImageList(),
-		Env:       cfg.ExecutionEnvironment,
+		Env:       cfg.Build.ExecutionEnvironment,
 	}, nil
 }
 

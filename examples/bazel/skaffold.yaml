@@ -16,10 +16,10 @@ build:
         dockerfile: ./Dockerfile 
         buildArgs:
           hey: there
-executionEnvironment:
-  name: local
-  # properties:
-  #   projectID: priyawadhwa
+  executionEnvironment:
+    name: local
+    # properties:
+    #   projectID: priyawadhwa
 deploy:
   kubectl:
     manifests:

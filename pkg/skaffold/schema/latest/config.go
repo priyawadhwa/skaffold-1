@@ -31,11 +31,10 @@ type SkaffoldPipeline struct {
 	APIVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
 
-	Build                BuildConfig          `yaml:"build,omitempty"`
-	Test                 TestConfig           `yaml:"test,omitempty"`
-	Deploy               DeployConfig         `yaml:"deploy,omitempty"`
-	ExecutionEnvironment ExecutionEnvironment `yaml:"executionEnvironment,omitempty"`
-	Profiles             []Profile            `yaml:"profiles,omitempty"`
+	Build    BuildConfig  `yaml:"build,omitempty"`
+	Test     TestConfig   `yaml:"test,omitempty"`
+	Deploy   DeployConfig `yaml:"deploy,omitempty"`
+	Profiles []Profile    `yaml:"profiles,omitempty"`
 }
 
 type ExecutionEnvironment struct {
@@ -55,9 +54,10 @@ func (c *SkaffoldPipeline) GetVersion() string {
 
 // BuildConfig contains all the configuration for the build steps
 type BuildConfig struct {
-	Artifacts []*Artifact `yaml:"artifacts,omitempty"`
-	TagPolicy TagPolicy   `yaml:"tagPolicy,omitempty"`
-	BuildType `yaml:",inline"`
+	Artifacts            []*Artifact          `yaml:"artifacts,omitempty"`
+	ExecutionEnvironment ExecutionEnvironment `yaml:"executionEnvironment,omitempty"`
+	TagPolicy            TagPolicy            `yaml:"tagPolicy,omitempty"`
+	BuildType            `yaml:",inline"`
 }
 
 // TagPolicy contains all the configuration for the tagging step
