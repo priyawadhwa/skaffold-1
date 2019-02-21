@@ -39,22 +39,7 @@ func Set(c *latest.SkaffoldPipeline) error {
 	setDefaultKustomizePath(c)
 	setDefaultKubectlManifests(c)
 
-	if err := withCloudBuildConfig(c,
-		SetDefaultCloudBuildDockerImage,
-		setDefaultCloudBuildMavenImage,
-		setDefaultCloudBuildGradleImage,
-	); err != nil {
-		return err
-	}
-
-	if err := withKanikoConfig(c,
-		setDefaultKanikoTimeout,
-		setDefaultKanikoImage,
-		setDefaultKanikoNamespace,
-		setDefaultKanikoSecret,
-		setDefaultKanikoBuildContext,
-		setDefaultDockerConfigSecret,
-	); err != nil {
+	if err := DefaultKanikoConfig(c.Build.KanikoBuild); err != nil {
 		return err
 	}
 
@@ -69,6 +54,18 @@ func Set(c *latest.SkaffoldPipeline) error {
 	}
 
 	return nil
+}
+
+// DefaultKanikoConfig sets defaults on the kaniko config
+func DefaultKanikoConfig(c *latest.KanikoBuild) error {
+	return withKanikoConfig(c,
+		setDefaultKanikoTimeout,
+		setDefaultKanikoImage,
+		setDefaultKanikoNamespace,
+		setDefaultKanikoSecret,
+		setDefaultKanikoBuildContext,
+		setDefaultDockerConfigSecret,
+	)
 }
 
 func defaultToLocalExecEnvironment(c *latest.SkaffoldPipeline) {
@@ -186,15 +183,15 @@ func setDefaultWorkspace(a *latest.Artifact) {
 	a.Workspace = valueOrDefault(a.Workspace, ".")
 }
 
-func withKanikoConfig(c *latest.SkaffoldPipeline, operations ...func(kaniko *latest.KanikoBuild) error) error {
-	if kaniko := c.Build.KanikoBuild; kaniko != nil {
-		for _, operation := range operations {
-			if err := operation(kaniko); err != nil {
-				return err
-			}
+func withKanikoConfig(c *latest.KanikoBuild, operations ...func(kaniko *latest.KanikoBuild) error) error {
+	if c == nil {
+		return nil
+	}
+	for _, operation := range operations {
+		if err := operation(c); err != nil {
+			return err
 		}
 	}
-
 	return nil
 }
 

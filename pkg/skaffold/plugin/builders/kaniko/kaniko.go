@@ -14,23 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package shared
+package kaniko
 
 import (
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/kaniko"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/plugin/shared"
 	plugin "github.com/hashicorp/go-plugin"
 )
 
-// Handshake is a common handshake that is shared by plugin and host.
-var Handshake = plugin.HandshakeConfig{
-	ProtocolVersion: 1,
+// Execute an image build with kaniko
+func Execute() error {
+	// pluginMap is the map of plugins we can dispense.
+	var pluginMap = map[string]plugin.Plugin{
+		"kaniko": &shared.BuilderPlugin{Impl: kaniko.NewBuilder()},
+	}
 
-	MagicCookieKey:   "SKAFFOLD_BUILDER_PLUGIN",
-	MagicCookieValue: "hello",
-}
-
-// PluginMap is a map of all accepted plugins
-var PluginMap = map[string]plugin.Plugin{
-	"docker": &BuilderPlugin{},
-	"bazel":  &BuilderPlugin{},
-	"kaniko": &BuilderPlugin{},
+	plugin.Serve(&plugin.ServeConfig{
+		HandshakeConfig: shared.Handshake,
+		Plugins:         pluginMap,
+	})
+	return nil
 }
