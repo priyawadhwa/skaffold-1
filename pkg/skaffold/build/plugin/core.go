@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/plugin/builders/bazel"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/plugin/builders/docker"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/plugin/builders/kaniko"
 	hashiplugin "github.com/hashicorp/go-plugin"
 	"github.com/pkg/errors"
 )
@@ -32,6 +33,7 @@ import (
 var SkaffoldCorePluginExecutionMap = map[string]func() error{
 	"docker": docker.Execute,
 	"bazel":  bazel.Execute,
+	"kaniko": kaniko.Execute,
 }
 
 // ShouldExecuteCorePlugin returns true if env variables for plugins are set properly

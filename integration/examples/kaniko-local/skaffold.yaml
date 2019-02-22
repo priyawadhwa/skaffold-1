@@ -2,14 +2,16 @@ apiVersion: skaffold/v1beta5
 kind: Config
 build:
   artifacts:
-  - image: gcr.io/k8s-skaffold/skaffold-example
+    - image: gcr.io/k8s-skaffold/skaffold-example
+    - image: gcr.io/k8s-skaffold/skaffold-example-2
+      context: dir
   kaniko:
-    buildContext: 
+    buildContext:
       localDir: {}
     pullSecretName: e2esecret
     namespace: default
     cache: {}
-    flags: 
+    flags:
       - --single-snapshot
 deploy:
   kubectl:

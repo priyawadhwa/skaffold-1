@@ -21,16 +21,15 @@ import (
 	"io"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/kaniko"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/tag"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/docker"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kaniko"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/defaults"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // Builder builds artifacts with kaniko.
@@ -62,9 +61,6 @@ func (b *Builder) DependenciesForArtifact(ctx context.Context, artifact *latest.
 	if err := setArtifact(artifact); err != nil {
 		return nil, err
 	}
-	if artifact.DockerArtifact == nil {
-		return nil, errors.New("kaniko artifact is nil")
-	}
 	paths, err := docker.GetDependencies(ctx, artifact.Workspace, artifact.DockerArtifact)
 	if err != nil {
 		return nil, errors.Wrap(err, "getting kaniko dependencies")
@@ -83,7 +79,7 @@ func (b *Builder) Build(ctx context.Context, out io.Writer, tags tag.ImageTags, 
 	}
 }
 
-// local sets any necessary defaults and then builds artifacts with kaniko locally
+// inCluster sets any necessary defaults and then builds artifacts with kaniko in cluster
 func (b *Builder) inCluster(ctx context.Context, out io.Writer, tags tag.ImageTags, artifacts []*latest.Artifact) ([]build.Artifact, error) {
 	var l *latest.KanikoBuild
 	if err := util.CloneThroughJSON(b.env.Properties, &l); err != nil {
@@ -105,16 +101,8 @@ func (b *Builder) inCluster(ctx context.Context, out io.Writer, tags tag.ImageTa
 }
 
 func setArtifact(artifact *latest.Artifact) error {
-	if artifact.ArtifactType.DockerArtifact != nil {
-		return nil
-	}
-	var a *latest.DockerArtifact
-	if err := yaml.UnmarshalStrict(artifact.BuilderPlugin.Contents, &a); err != nil {
-		return errors.Wrap(err, "unmarshalling kaniko artifact")
-	}
-	if a == nil {
-		return errors.New("artifact is nil")
-	}
+	a := &latest.DockerArtifact{}
+	defaults.SetDefaultDockerArtifact(a)
 	artifact.ArtifactType.DockerArtifact = a
 	return nil
 }
