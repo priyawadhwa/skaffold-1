@@ -23,11 +23,6 @@ ENV KUBECTL_VERSION v1.12.0
 RUN curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl  && \
   chmod +x /usr/local/bin/kubectl
 
-ENV HELM_VERSION v2.8.1
-RUN curl -LO https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz && \
-  tar -zxvf helm-${HELM_VERSION}-linux-amd64.tar.gz && \
-  mv linux-amd64/helm /usr/local/bin/helm
-
 ENV CLOUD_SDK_VERSION 217.0.0
 RUN curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${CLOUD_SDK_VERSION}-linux-x86_64.tar.gz && \
   tar -zxvf google-cloud-sdk-${CLOUD_SDK_VERSION}-linux-x86_64.tar.gz && \
@@ -38,27 +33,6 @@ RUN curl -LO https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-c
 ENV PATH=$PATH:/google-cloud-sdk/bin
 RUN /google-cloud-sdk/bin/gcloud auth configure-docker
 
-ENV KUSTOMIZE_VERSION=1.0.1
-RUN curl -LO https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64 && \
-  chmod +x kustomize_${KUSTOMIZE_VERSION}_linux_amd64 && \
-  mv kustomize_${KUSTOMIZE_VERSION}_linux_amd64 /usr/local/bin/kustomize
-
-ENV KOMPOSE_VERSION=1.17.0
-RUN curl -L https://github.com/kubernetes/kompose/releases/download/v${KOMPOSE_VERSION}/kompose-linux-amd64 -o kompose && \
-  chmod +x kompose && \
-  mv kompose /usr/local/bin
-
-RUN echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list \
-  && curl https://bazel.build/bazel-release.pub.gpg | apt-key add -
-
-RUN apt-get update \
-  && apt-get install -y bazel && \
-  rm -rf /var/lib/apt/lists/*
-
-ENV CONTAINER_STRUCTURE_TEST_VERSION=1.5.0
-RUN curl -LO https://storage.googleapis.com/container-structure-test/v${CONTAINER_STRUCTURE_TEST_VERSION}/container-structure-test-linux-amd64 \
-  && chmod +x container-structure-test-linux-amd64 \
-  && mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
 
 ENV PATH /usr/local/go/bin:/go/bin:/google-cloud-sdk/bin:$PATH
 
