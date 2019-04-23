@@ -116,6 +116,34 @@ func (c *Cache) RetrieveCachedArtifacts(ctx context.Context, out io.Writer, arti
 		}
 	}
 
+	go func() {
+		for {
+			select {
+			case <-c.stop:
+				logrus.Warn("STOPPING GOROUTINE")
+				break
+			default: // triggered when the stop channel is closed
+				for _, a := range artifacts {
+					initialHash, ok := c.hashes.Load(a.ImageName)
+					if !ok || initialHash == "" {
+						continue
+					}
+					currentHash, err := getHashForArtifact(ctx, c.builder, a)
+					if err != nil {
+						logrus.Warnf("Unable to get hash for %s; this artifact won't be cached.", a.ImageName)
+						c.hashes.Store(a.ImageName, "")
+						continue
+					}
+					if initialHash != currentHash {
+						logrus.Warnf("Dependencies for %s have changed, %s won't be cached.", a.ImageName)
+						c.hashes.Store(a.ImageName, "")
+					}
+
+				}
+			}
+		}
+	}()
+
 	color.Default.Fprintln(out, "Cache check complete in", time.Since(start))
 	return needToBuild, built, nil
 }
@@ -133,6 +161,7 @@ func (c *Cache) retrieveCachedArtifactDetails(ctx context.Context, a *latest.Art
 	if err != nil {
 		return nil, errors.Wrapf(err, "getting hash for artifact %s", a.ImageName)
 	}
+	c.hashes.Store(a.ImageName, hash)
 	a.WorkspaceHash = hash
 	imageDetails, cacheHit := c.artifactCache[hash]
 	if !cacheHit {

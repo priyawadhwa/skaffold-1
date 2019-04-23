@@ -20,6 +20,7 @@ import (
 	"context"
 	"io/ioutil"
 	"path/filepath"
+	"sync"
 
 	"github.com/GoogleContainerTools/skaffold/cmd/skaffold/app/cmd/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
@@ -40,6 +41,8 @@ type ArtifactCache map[string]ImageDetails
 // Cache holds any data necessary for accessing the cache
 type Cache struct {
 	artifactCache      ArtifactCache
+	hashes             sync.Map
+	stop               chan struct{}
 	client             docker.LocalDaemon
 	builder            build.Builder
 	imageList          []types.ImageSummary
@@ -95,6 +98,8 @@ func NewCache(builder build.Builder, runCtx *runcontext.RunContext) *Cache {
 	return &Cache{
 		artifactCache:      cache,
 		cacheFile:          cf,
+		hashes:             sync.Map{},
+		stop:               make(chan struct{}),
 		useCache:           runCtx.Opts.CacheArtifacts,
 		client:             client,
 		builder:            builder,
