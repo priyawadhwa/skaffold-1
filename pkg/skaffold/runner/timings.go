@@ -60,6 +60,7 @@ func (w withTimings) Build(ctx context.Context, out io.Writer, tags tag.ImageTag
 	}
 	start := time.Now()
 	color.Default.Fprintln(out, "Starting build...")
+	time.Sleep(10 * time.Second)
 
 	bRes, err := w.Builder.Build(ctx, out, tags, artifacts)
 	if err != nil {

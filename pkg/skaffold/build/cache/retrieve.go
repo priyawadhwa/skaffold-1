@@ -56,11 +56,12 @@ func (c *Cache) RetrieveCachedArtifacts(ctx context.Context, out io.Writer, arti
 	start := time.Now()
 	color.Default.Fprintln(out, "Checking cache...")
 
+	c.artifacts = artifacts
+
 	detailsErrs := make([]chan detailsErr, len(artifacts))
 
 	for i := range artifacts {
 		detailsErrs[i] = make(chan detailsErr, 1)
-
 		i := i
 		go func() {
 			details, err := c.retrieveCachedArtifactDetails(ctx, artifacts[i])
@@ -108,6 +109,8 @@ func (c *Cache) RetrieveCachedArtifacts(ctx context.Context, out io.Writer, arti
 					return nil, nil, errors.Wrap(err, "pushing image")
 				}
 			}
+
+			c.validArtifacts[artifact.ImageName] = struct{}{}
 
 			built = append(built, build.Artifact{
 				ImageName: artifact.ImageName,

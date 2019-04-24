@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -38,7 +39,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	runcontext "github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/context"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync"
+	pkgsync "github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync/kubectl"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/test"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/version"
@@ -51,13 +52,14 @@ type SkaffoldRunner struct {
 	deploy.Deployer
 	test.Tester
 	tag.Tagger
-	sync.Syncer
+	pkgsync.Syncer
 	watch.Watcher
 
 	cache             *cache.Cache
 	runCtx            *runcontext.RunContext
 	labellers         []deploy.Labeller
 	builds            []build.Artifact
+	hashes            sync.Map
 	hasBuilt          bool
 	hasDeployed       bool
 	imageList         *kubernetes.ImageList
@@ -122,6 +124,7 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldConfig) (*Sk
 		imageList:         kubernetes.NewImageList(),
 		cache:             artifactCache,
 		runCtx:            runCtx,
+		hashes:            sync.Map{},
 		RPCServerShutdown: shutdown,
 	}, nil
 }
@@ -306,7 +309,7 @@ func (r *SkaffoldRunner) BuildAndTest(ctx context.Context, out io.Writer, artifa
 		return nil, errors.Wrap(err, "generating tag")
 	}
 	r.hasBuilt = true
-
+	r.Watcher.Subscribe(r.cache)
 	artifactsToBuild, res, err := r.cache.RetrieveCachedArtifacts(ctx, out, artifacts)
 	if err != nil {
 		return nil, errors.Wrap(err, "retrieving cached artifacts")

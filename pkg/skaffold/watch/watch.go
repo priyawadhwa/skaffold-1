@@ -18,6 +18,7 @@ package watch
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/pkg/errors"
@@ -30,11 +31,13 @@ type Factory func() Watcher
 type Watcher interface {
 	Register(deps func() ([]string, error), onChange func(Events)) error
 	Run(ctx context.Context, out io.Writer, onChange func() error) error
+	Subscribe(s Subscriber)
 }
 
 type watchList struct {
-	components []*component
-	trigger    Trigger
+	components  []*component
+	trigger     Trigger
+	subscribers []Subscriber
 }
 
 // NewWatcher creates a new Watcher.
@@ -49,6 +52,20 @@ type component struct {
 	onChange func(Events)
 	state    FileMap
 	events   Events
+}
+
+type Subscriber interface {
+	HandleEvent(event string, data interface{})
+}
+
+func (w *watchList) Subscribe(s Subscriber) {
+	w.subscribers = append(w.subscribers, s)
+}
+
+func (w *watchList) HandleEvent(event string, data interface{}) {
+	for _, s := range w.subscribers {
+		s.HandleEvent(event, data)
+	}
 }
 
 // Register adds a new component to the watch list.
@@ -107,11 +124,17 @@ func (w *watchList) Run(ctx context.Context, out io.Writer, onChange func() erro
 			// the accumulated changes.
 			debounce := w.trigger.Debounce()
 			if (!debounce && changed > 0) || (debounce && changed == 0 && len(changedComponents) > 0) {
+				var deps []string
 				for i, component := range w.components {
 					if changedComponents[i] {
+						for d := range component.state {
+							deps = append(deps, d)
+						}
 						component.onChange(component.events)
 					}
 				}
+				fmt.Println("sending over", deps)
+				w.HandleEvent("change", deps)
 
 				if err := onChange(); err != nil {
 					return errors.Wrap(err, "calling final callback")

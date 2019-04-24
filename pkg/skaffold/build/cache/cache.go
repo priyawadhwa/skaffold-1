@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/docker"
 	runcontext "github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/context"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/docker/docker/api/types"
 	homedir "github.com/mitchellh/go-homedir"
@@ -40,6 +41,8 @@ type ArtifactCache map[string]ImageDetails
 // Cache holds any data necessary for accessing the cache
 type Cache struct {
 	artifactCache      ArtifactCache
+	validArtifacts     map[string]struct{}
+	artifacts          []*latest.Artifact
 	client             docker.LocalDaemon
 	builder            build.Builder
 	imageList          []types.ImageSummary
@@ -95,6 +98,8 @@ func NewCache(builder build.Builder, runCtx *runcontext.RunContext) *Cache {
 	return &Cache{
 		artifactCache:      cache,
 		cacheFile:          cf,
+		artifacts:          runCtx.Cfg.Build.Artifacts,
+		validArtifacts:     map[string]struct{}{},
 		useCache:           runCtx.Opts.CacheArtifacts,
 		client:             client,
 		builder:            builder,
@@ -130,4 +135,38 @@ func retrieveArtifactCache(cacheFile string) (ArtifactCache, error) {
 		return nil, err
 	}
 	return cache, nil
+}
+
+func (c *Cache) HandleEvent(event string, data interface{}) {
+	if event != "change" {
+		return
+	}
+	modifiedDeps := data.([]string)
+	for _, a := range c.artifacts {
+		if _, valid := c.validArtifacts[a.ImageName]; !valid {
+			continue
+		}
+		deps, err := c.builder.DependenciesForArtifact(context.Background(), a)
+		if err != nil {
+			// remove from cache
+			logrus.Warnf("error getting deps fro %s; removing from cache: %v.", a.ImageName, err)
+			delete(c.validArtifacts, a.ImageName)
+		}
+		if depModifed(modifiedDeps, deps) {
+			logrus.Warnf("%s dependencies have changed; removing from cache.", a.ImageName)
+			delete(c.validArtifacts, a.ImageName)
+		}
+
+	}
+}
+
+func depModifed(modifiedDeps, deps []string) bool {
+	for _, m := range modifiedDeps {
+		for _, d := range deps {
+			if m == d {
+				return true
+			}
+		}
+	}
+	return false
 }

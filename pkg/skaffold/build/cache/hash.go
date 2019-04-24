@@ -37,6 +37,10 @@ var (
 	hashFunction = cacheHasher
 )
 
+func GetHashForArtifact(ctx context.Context, builder build.Builder, a *latest.Artifact) (string, error) {
+	return getHashForArtifact(ctx, builder, a)
+}
+
 func getHashForArtifact(ctx context.Context, builder build.Builder, a *latest.Artifact) (string, error) {
 	deps, err := builder.DependenciesForArtifact(ctx, a)
 	if err != nil {

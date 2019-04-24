@@ -73,6 +73,11 @@ func (c *Cache) CacheArtifacts(ctx context.Context, artifacts []*latest.Artifact
 		tags[t.ImageName] = t.Tag
 	}
 	for _, a := range artifacts {
+		_, valid := c.validArtifacts[a.ImageName]
+		if !valid {
+			logrus.Warnf("Not saving %s to cache.", a.ImageName)
+			continue
+		}
 		hash, err := hashForArtifact(ctx, c.builder, a)
 		if err != nil {
 			continue
