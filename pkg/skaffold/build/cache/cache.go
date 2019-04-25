@@ -142,6 +142,9 @@ func (c *Cache) HandleEvent(event string, data interface{}) {
 		return
 	}
 	modifiedDeps := data.([]string)
+	if modifiedDeps == nil {
+		return
+	}
 	for _, a := range c.artifacts {
 		if _, valid := c.validArtifacts[a.ImageName]; !valid {
 			continue
@@ -149,7 +152,7 @@ func (c *Cache) HandleEvent(event string, data interface{}) {
 		deps, err := c.builder.DependenciesForArtifact(context.Background(), a)
 		if err != nil {
 			// remove from cache
-			logrus.Warnf("error getting deps fro %s; removing from cache: %v.", a.ImageName, err)
+			logrus.Warnf("error getting deps for %s; removing from cache: %v.", a.ImageName, err)
 			delete(c.validArtifacts, a.ImageName)
 		}
 		if depModifed(modifiedDeps, deps) {

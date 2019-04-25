@@ -123,18 +123,26 @@ func (w *watchList) Run(ctx context.Context, out io.Writer, onChange func() erro
 			// by waiting for a full turn where nothing happens and trigger a rebuild for
 			// the accumulated changes.
 			debounce := w.trigger.Debounce()
-			if (!debounce && changed > 0) || (debounce && changed == 0 && len(changedComponents) > 0) {
+
+			if changed > 0 {
 				var deps []string
 				for i, component := range w.components {
 					if changedComponents[i] {
 						for d := range component.state {
 							deps = append(deps, d)
 						}
-						component.onChange(component.events)
 					}
 				}
 				fmt.Println("sending over", deps)
 				w.HandleEvent("change", deps)
+			}
+
+			if (!debounce && changed > 0) || (debounce && changed == 0 && len(changedComponents) > 0) {
+				for i, component := range w.components {
+					if changedComponents[i] {
+						component.onChange(component.events)
+					}
+				}
 
 				if err := onChange(); err != nil {
 					return errors.Wrap(err, "calling final callback")
