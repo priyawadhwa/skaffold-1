@@ -75,6 +75,7 @@ func (c *Cache) RetrieveCachedArtifacts(ctx context.Context, out io.Writer, arti
 	)
 
 	for i, artifact := range artifacts {
+		c.validArtifacts[artifact.ImageName] = struct{}{}
 		color.Default.Fprintf(out, " - %s: ", artifact.ImageName)
 
 		select {
