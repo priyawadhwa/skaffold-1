@@ -120,23 +120,22 @@ func (c *Cache) RetrieveCachedArtifacts(ctx context.Context, out io.Writer, arti
 		for {
 			select {
 			case <-c.stop:
-				logrus.Warn("STOPPING GOROUTINE")
 				break
-			default: // triggered when the stop channel is closed
+			default:
 				for _, a := range artifacts {
 					initialHash, ok := c.hashes.Load(a.ImageName)
-					if !ok || initialHash == "" {
+					if !ok {
 						continue
 					}
 					currentHash, err := getHashForArtifact(ctx, c.builder, a)
 					if err != nil {
 						logrus.Warnf("Unable to get hash for %s; this artifact won't be cached.", a.ImageName)
-						c.hashes.Store(a.ImageName, "")
+						c.hashes.Delete(a.ImageName)
 						continue
 					}
 					if initialHash != currentHash {
-						logrus.Warnf("Dependencies for %s have changed, %s won't be cached.", a.ImageName)
-						c.hashes.Store(a.ImageName, "")
+						logrus.Warnf("Dependencies for %s have changed; it won't be cached.", a.ImageName)
+						c.hashes.Delete(a.ImageName)
 					}
 
 				}
