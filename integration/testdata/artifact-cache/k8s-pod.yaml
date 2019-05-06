@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: artifact-cache
+spec:
+  containers:
+    - name: artifact-cache
+      image: gcr.io/k8s-skaffold/skaffold-example
