@@ -72,9 +72,10 @@ func (c *Cache) CacheArtifacts(ctx context.Context, artifacts []*latest.Artifact
 	for _, t := range buildArtifacts {
 		tags[t.ImageName] = t.Tag
 	}
+	c.stop <- struct{}{}
 	for _, a := range artifacts {
-		hash, err := hashForArtifact(ctx, c.builder, a)
-		if err != nil {
+		hash, ok := c.hashes.Load(a.ImageName)
+		if !ok {
 			continue
 		}
 		digest, err := c.retrieveImageDigest(ctx, tags[a.ImageName])
@@ -95,7 +96,7 @@ func (c *Cache) CacheArtifacts(ctx context.Context, artifacts []*latest.Artifact
 			logrus.Debugf("both image id and digest are empty for %s, skipping caching", tags[a.ImageName])
 			continue
 		}
-		c.artifactCache[hash] = ImageDetails{
+		c.artifactCache[hash.(string)] = ImageDetails{
 			Digest: digest,
 			ID:     id,
 		}

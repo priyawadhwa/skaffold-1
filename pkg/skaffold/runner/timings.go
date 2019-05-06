@@ -19,6 +19,8 @@ package runner
 import (
 	"context"
 	"io"
+	"os"
+	"os/exec"
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
@@ -26,9 +28,11 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/tag"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/test"
+	"github.com/pkg/errors"
 )
 
 // WithTimings creates a deployer that logs the duration of each phase.
@@ -60,6 +64,14 @@ func (w withTimings) Build(ctx context.Context, out io.Writer, tags tag.ImageTag
 	}
 	start := time.Now()
 	color.Default.Fprintln(out, "Starting build...")
+
+	if c := os.Getenv(constants.SkaffoldIntegrationTestPrebuildCommand); c != "" {
+		// Execute the command if running integration test
+		if output, err := exec.Command("sh", "-c", c).Output(); err != nil {
+			color.Default.Fprintf(out, "Running prebuild command: %s with error: \n %s", c, string(output))
+			return nil, errors.Wrap(err, "running integration test prebuild command")
+		}
+	}
 
 	bRes, err := w.Builder.Build(ctx, out, tags, artifacts)
 	if err != nil {

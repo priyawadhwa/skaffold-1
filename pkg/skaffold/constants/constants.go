@@ -62,6 +62,8 @@ const (
 
 	DefaultRPCPort     = 50051
 	DefaultRPCHTTPPort = 50052
+
+	SkaffoldIntegrationTestPrebuildCommand = "SKAFFOLD_INTEGRATION_TEST_PREBUILD_COMMAND"
 )
 
 var (
