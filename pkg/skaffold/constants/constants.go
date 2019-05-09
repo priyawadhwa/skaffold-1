@@ -62,6 +62,9 @@ const (
 
 	DefaultRPCPort     = 50051
 	DefaultRPCHTTPPort = 50052
+
+	DevMode   = "dev"
+	DebugMode = "debug"
 )
 
 var (

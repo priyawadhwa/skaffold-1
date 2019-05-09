@@ -19,6 +19,7 @@ package cmd
 import (
 	"io"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	debugging "github.com/GoogleContainerTools/skaffold/pkg/skaffold/debug"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy"
 	"github.com/spf13/cobra"
@@ -49,5 +50,5 @@ func debug(out io.Writer) error {
 
 	deploy.AddManifestTransform(debugging.ApplyDebuggingTransforms)
 
-	return dev(out)
+	return dev(out, constants.DebugMode)
 }

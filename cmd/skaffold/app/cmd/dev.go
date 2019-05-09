@@ -20,6 +20,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -33,7 +34,7 @@ func NewCmdDev(out io.Writer) *cobra.Command {
 		Short: "Runs a pipeline file in development mode",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return dev(out)
+			return dev(out, constants.DevMode)
 		},
 	}
 	AddRunDevFlags(cmd)
@@ -44,7 +45,7 @@ func NewCmdDev(out io.Writer) *cobra.Command {
 	return cmd
 }
 
-func dev(out io.Writer) error {
+func dev(out io.Writer, mode string) error {
 	opts.EnableRPC = true
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
