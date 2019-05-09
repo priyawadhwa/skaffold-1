@@ -76,7 +76,7 @@ func dev(out io.Writer, mode string) error {
 				return errors.Wrap(err, "creating runner")
 			}
 
-			err = r.Dev(ctx, out, config.Build.Artifacts)
+			err = r.Dev(ctx, out, config.Build.Artifacts, mode)
 			if r.HasDeployed() {
 				cleanup = func() {
 					if err := r.Cleanup(context.Background(), out); err != nil {

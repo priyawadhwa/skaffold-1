@@ -26,6 +26,7 @@ import (
 	"sync"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
@@ -38,7 +39,7 @@ import (
 // container ports within those pods. It also tracks and manages the port-forward connections.
 type PortForwarder struct {
 	Forwarder
-
+	forwardPods bool
 	output      io.Writer
 	podSelector PodSelector
 	namespaces  []string
@@ -112,12 +113,13 @@ func (*kubectlForwarder) Terminate(p *portForwardEntry) {
 }
 
 // NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
-func NewPortForwarder(out io.Writer, podSelector PodSelector, namespaces []string) *PortForwarder {
+func NewPortForwarder(out io.Writer, podSelector PodSelector, namespaces []string, mode string) *PortForwarder {
 	return &PortForwarder{
 		Forwarder:      &kubectlForwarder{},
 		output:         out,
 		podSelector:    podSelector,
 		namespaces:     namespaces,
+		forwardPods:    mode == constants.DebugMode,
 		forwardedPods:  make(map[string]*portForwardEntry),
 		forwardedPorts: &sync.Map{},
 	}
@@ -133,6 +135,24 @@ func (p *PortForwarder) Stop() {
 // Start begins a pod watcher that port forwards any pods involving containers with exposed ports.
 // TODO(r2d4): merge this event loop with pod watcher from log writer
 func (p *PortForwarder) Start(ctx context.Context) error {
+	if p.forwardPods {
+		if err := p.portForwardPods(ctx); err != nil {
+			return errors.Wrap(err, "port forwarding pods")
+		}
+	}
+
+	if err := p.portForwardServices(ctx); err != nil {
+		return errors.Wrap(err, "port forwarding services")
+	}
+
+	if err := p.userDefinedPortForwarding(ctx); err != nil {
+		return errors.Wrap(err, "user defined port forwarding")
+	}
+
+	return nil
+}
+
+func (p *PortForwarder) portForwardPods(ctx context.Context) error {
 	aggregate := make(chan watch.Event)
 	stopWatchers, err := AggregatePodWatcher(p.namespaces, aggregate)
 	if err != nil {
@@ -177,7 +197,15 @@ func (p *PortForwarder) Start(ctx context.Context) error {
 			}
 		}
 	}()
+	return nil
+}
 
+func (p *PortForwarder) portForwardServices(ctx context.Context) error {
+	// Gather all services
+	return nil
+}
+
+func (p *PortForwarder) userDefinedPortForwarding(ctx context.Context) error {
 	return nil
 }
 
