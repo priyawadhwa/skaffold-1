@@ -1,10 +1,47 @@
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: python
+# spec:
+#   containers:
+#   - name: python
+#     image: gcr.io/k8s-skaffold/python-reload
+#     ports:
+#     - containerPort: 5000
 apiVersion: v1
-kind: Pod
+kind: Service
 metadata:
-  name: python
+  name: python-example
+  labels:
+    app: python-example
 spec:
-  containers:
-  - name: python
-    image: gcr.io/k8s-skaffold/python-reload
-    ports:
-    - containerPort: 5000
+  type: NodePort
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+      name: python-example
+  selector:
+    app: python-example
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-example
+  labels:
+    app: python-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-example
+  template:
+    metadata:
+      labels:
+        app: python-example
+    spec:
+      containers:
+        - name: python-example
+          image: gcr.io/k8s-skaffold/python-reload
+          ports:
+            - containerPort: 5000

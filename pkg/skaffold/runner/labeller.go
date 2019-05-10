@@ -51,3 +51,9 @@ func (d *DefaultLabeller) Labels() map[string]string {
 		K8ManagedByLabel: fmt.Sprintf("skaffold-%s", version),
 	}
 }
+
+// retrieveK8MangedByLabel returns the k8s managed-by label
+func retrieveK8MangedByLabel() string {
+	version := version.Get().Version
+	return fmt.Sprintf("%s=skaffold-%s", K8ManagedByLabel, version)
+}

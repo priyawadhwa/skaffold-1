@@ -17,17 +17,14 @@ limitations under the License.
 package kubernetes
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"os/exec"
 	"strconv"
 	"sync"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -35,11 +32,16 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
+const (
+	podResource = "pod"
+)
+
 // PortForwarder is responsible for selecting pods satisfying a certain condition and port-forwarding the exposed
 // container ports within those pods. It also tracks and manages the port-forward connections.
 type PortForwarder struct {
 	Forwarder
 	forwardPods bool
+	label       string
 	output      io.Writer
 	podSelector PodSelector
 	namespaces  []string
@@ -53,7 +55,8 @@ type PortForwarder struct {
 
 type portForwardEntry struct {
 	resourceVersion int
-	podName         string
+	resource        string
+	resourceName    string
 	namespace       string
 	containerName   string
 	portName        string
@@ -69,54 +72,17 @@ type Forwarder interface {
 	Terminate(*portForwardEntry)
 }
 
-type kubectlForwarder struct{}
-
 var (
 	// For testing
 	retrieveAvailablePort = util.GetAvailablePort
 )
 
-// Forward port-forwards a pod using kubectl port-forward
-// It returns an error only if the process fails or was terminated by a signal other than SIGTERM
-func (*kubectlForwarder) Forward(parentCtx context.Context, pfe *portForwardEntry) error {
-	logrus.Debugf("Port forwarding %s", pfe)
-
-	ctx, cancel := context.WithCancel(parentCtx)
-	pfe.cancel = cancel
-
-	cmd := exec.CommandContext(ctx, "kubectl", "port-forward", pfe.podName, fmt.Sprintf("%d:%d", pfe.localPort, pfe.port), "--namespace", pfe.namespace)
-	buf := &bytes.Buffer{}
-	cmd.Stdout = buf
-	cmd.Stderr = buf
-
-	if err := cmd.Start(); err != nil {
-		if errors.Cause(err) == context.Canceled {
-			return nil
-		}
-		return errors.Wrapf(err, "port forwarding pod: %s/%s, port: %d to local port: %d, err: %s", pfe.namespace, pfe.podName, pfe.port, pfe.localPort, buf.String())
-	}
-
-	event.PortForwarded(pfe.localPort, pfe.port, pfe.podName, pfe.containerName, pfe.namespace, pfe.portName)
-
-	go cmd.Wait()
-
-	return nil
-}
-
-// Terminate terminates an existing kubectl port-forward command using SIGTERM
-func (*kubectlForwarder) Terminate(p *portForwardEntry) {
-	logrus.Debugf("Terminating port-forward %s", p)
-
-	if p.cancel != nil {
-		p.cancel()
-	}
-}
-
 // NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
-func NewPortForwarder(out io.Writer, podSelector PodSelector, namespaces []string, mode string) *PortForwarder {
+func NewPortForwarder(out io.Writer, podSelector PodSelector, namespaces []string, mode, label string) *PortForwarder {
 	return &PortForwarder{
 		Forwarder:      &kubectlForwarder{},
 		output:         out,
+		label:          label,
 		podSelector:    podSelector,
 		namespaces:     namespaces,
 		forwardPods:    mode == constants.DebugMode,
@@ -200,11 +166,6 @@ func (p *PortForwarder) portForwardPods(ctx context.Context) error {
 	return nil
 }
 
-func (p *PortForwarder) portForwardServices(ctx context.Context) error {
-	// Gather all services
-	return nil
-}
-
 func (p *PortForwarder) userDefinedPortForwarding(ctx context.Context) error {
 	return nil
 }
@@ -218,7 +179,7 @@ func (p *PortForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) error {
 	for _, c := range pod.Spec.Containers {
 		for _, port := range c.Ports {
 			// get current entry for this container
-			entry := p.getCurrentEntry(pod, c, port, resourceVersion)
+			entry := p.getCurrentEntry(podResource, pod.Name, pod.Namespace, c.Name, port.Name, port.ContainerPort, resourceVersion)
 			if entry.port != entry.localPort {
 				color.Yellow.Fprintf(p.output, "Forwarding container %s to local port %d.\n", c.Name, entry.localPort)
 			}
@@ -230,15 +191,16 @@ func (p *PortForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) error {
 	return nil
 }
 
-func (p *PortForwarder) getCurrentEntry(pod *v1.Pod, c v1.Container, port v1.ContainerPort, resourceVersion int) *portForwardEntry {
+func (p *PortForwarder) getCurrentEntry(resource, resourceName, namespace, containerName, portName string, port int32, resourceVersion int) *portForwardEntry {
 	// determine if we have seen this before
 	entry := &portForwardEntry{
 		resourceVersion: resourceVersion,
-		podName:         pod.Name,
-		namespace:       pod.Namespace,
-		containerName:   c.Name,
-		portName:        port.Name,
-		port:            port.ContainerPort,
+		resource:        resource,
+		resourceName:    resourceName,
+		namespace:       namespace,
+		containerName:   containerName,
+		portName:        portName,
+		port:            port,
 	}
 	// If we have, return the current entry
 	oldEntry, ok := p.forwardedPods[entry.key()]
@@ -248,7 +210,7 @@ func (p *PortForwarder) getCurrentEntry(pod *v1.Pod, c v1.Container, port v1.Con
 	}
 
 	// retrieve an open port on the host
-	entry.localPort = int32(retrieveAvailablePort(int(port.ContainerPort), p.forwardedPorts))
+	entry.localPort = int32(retrieveAvailablePort(int(port), p.forwardedPorts))
 	return entry
 }
 
@@ -260,7 +222,7 @@ func (p *PortForwarder) forward(ctx context.Context, entry *portForwardEntry) er
 		}
 	}
 
-	color.Default.Fprintln(p.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.podName, entry.containerName, entry.port, entry.localPort))
+	color.Default.Fprintln(p.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource, entry.resourceName, entry.port, entry.localPort))
 	p.forwardedPods[entry.key()] = entry
 
 	if err := p.Forward(ctx, entry); err != nil {
@@ -271,10 +233,10 @@ func (p *PortForwarder) forward(ctx context.Context, entry *portForwardEntry) er
 
 // Key is an identifier for the lock on a port during the skaffold dev cycle.
 func (p *portForwardEntry) key() string {
-	return fmt.Sprintf("%s-%s-%s-%d", p.containerName, p.namespace, p.portName, p.port)
+	return fmt.Sprintf("%s-%s-%s-%d", p.resource, p.resourceName, p.portName, p.port)
 }
 
 // String is a utility function that returns the port forward entry as a user-readable string
 func (p *portForwardEntry) String() string {
-	return fmt.Sprintf("%s/%s/%s:%d", p.podName, p.containerName, p.portName, p.port)
+	return fmt.Sprintf("%s/%s/%s:%d", p.resource, p.resourceName, p.portName, p.port)
 }
