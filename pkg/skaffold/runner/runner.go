@@ -53,14 +53,15 @@ type SkaffoldRunner struct {
 	sync.Syncer
 	watch.Watcher
 
-	cache             *cache.Cache
-	runCtx            *runcontext.RunContext
-	labellers         []deploy.Labeller
-	builds            []build.Artifact
-	hasBuilt          bool
-	hasDeployed       bool
-	imageList         *kubernetes.ImageList
-	RPCServerShutdown func() error
+	cache              *cache.Cache
+	runCtx             *runcontext.RunContext
+	labellers          []deploy.Labeller
+	builds             []build.Artifact
+	hasBuilt           bool
+	hasDeployed        bool
+	imageList          *kubernetes.ImageList
+	portForwardEntries []latest.PortForwardEntry
+	RPCServerShutdown  func() error
 }
 
 // NewForConfig returns a new SkaffoldRunner for a SkaffoldConfig
@@ -112,17 +113,18 @@ func NewForConfig(opts *config.SkaffoldOptions, cfg *latest.SkaffoldConfig) (*Sk
 	event.LogSkaffoldMetadata(version.Get())
 
 	return &SkaffoldRunner{
-		Builder:           builder,
-		Tester:            tester,
-		Deployer:          deployer,
-		Tagger:            tagger,
-		Syncer:            kubectl.NewSyncer(runCtx.Namespaces),
-		Watcher:           watch.NewWatcher(trigger),
-		labellers:         labellers,
-		imageList:         kubernetes.NewImageList(),
-		cache:             artifactCache,
-		runCtx:            runCtx,
-		RPCServerShutdown: shutdown,
+		Builder:            builder,
+		Tester:             tester,
+		Deployer:           deployer,
+		Tagger:             tagger,
+		Syncer:             kubectl.NewSyncer(runCtx.Namespaces),
+		Watcher:            watch.NewWatcher(trigger),
+		labellers:          labellers,
+		imageList:          kubernetes.NewImageList(),
+		portForwardEntries: cfg.PortForward,
+		cache:              artifactCache,
+		runCtx:             runCtx,
+		RPCServerShutdown:  shutdown,
 	}, nil
 }
 

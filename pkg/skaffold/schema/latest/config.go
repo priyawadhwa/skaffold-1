@@ -52,6 +52,14 @@ type Pipeline struct {
 
 	// Deploy describes how images are deployed.
 	Deploy DeployConfig `yaml:"deploy,omitempty"`
+
+	PortForward []PortForwardEntry `yaml:"portForward,omitempty"`
+}
+
+type PortForwardEntry struct {
+	Resource     string `yaml:"resource,omitempty"`
+	ResourceName string `yaml:"resourceName,omitempty"`
+	Port         int32  `yaml:"port,omitempty"`
 }
 
 func (c *SkaffoldConfig) GetVersion() string {
