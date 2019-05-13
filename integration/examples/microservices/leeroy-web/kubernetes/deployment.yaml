@@ -21,7 +21,7 @@ metadata:
   labels:
     app: leeroy-web
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: leeroy-web
@@ -31,7 +31,7 @@ spec:
         app: leeroy-web
     spec:
       containers:
-      - name: leeroy-web
-        image: gcr.io/k8s-skaffold/leeroy-web
-        ports:
-        - containerPort: 8080
+        - name: leeroy-web
+          image: gcr.io/priya-wadhwa/gcr.io/k8s-skaffold/leeroy-web
+          ports:
+            - containerPort: 8080
