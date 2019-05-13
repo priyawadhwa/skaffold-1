@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kubernetes
+package portforward
 
 import (
 	"context"
@@ -25,6 +25,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/GoogleContainerTools/skaffold/testutil"
 	v1 "k8s.io/api/core/v1"
@@ -444,7 +445,7 @@ func TestPortForwardPod(t *testing.T) {
 				retrieveAvailablePort = originalGetAvailablePort
 			}()
 
-			p := NewPortForwarder(ioutil.Discard, NewImageList(), []string{""})
+			p := NewPortForwarder(ioutil.Discard, kubernetes.NewImageList(), []string{""})
 			if test.forwarder == nil {
 				test.forwarder = newTestForwarder(nil)
 			}

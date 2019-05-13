@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kubernetes
+package portforward
 
 import (
 	"bytes"
@@ -27,6 +27,7 @@ import (
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -40,7 +41,7 @@ type PortForwarder struct {
 	Forwarder
 
 	output      io.Writer
-	podSelector PodSelector
+	podSelector kubernetes.PodSelector
 	namespaces  []string
 
 	// forwardedPods is a map of portForwardEntry.key() (string) -> portForwardEntry
@@ -112,7 +113,7 @@ func (*kubectlForwarder) Terminate(p *portForwardEntry) {
 }
 
 // NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
-func NewPortForwarder(out io.Writer, podSelector PodSelector, namespaces []string) *PortForwarder {
+func NewPortForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string) *PortForwarder {
 	return &PortForwarder{
 		Forwarder:      &kubectlForwarder{},
 		output:         out,
@@ -134,7 +135,7 @@ func (p *PortForwarder) Stop() {
 // TODO(r2d4): merge this event loop with pod watcher from log writer
 func (p *PortForwarder) Start(ctx context.Context) error {
 	aggregate := make(chan watch.Event)
-	stopWatchers, err := AggregatePodWatcher(p.namespaces, aggregate)
+	stopWatchers, err := kubernetes.AggregatePodWatcher(p.namespaces, aggregate)
 	if err != nil {
 		stopWatchers()
 		return errors.Wrap(err, "initializing pod watcher")
