@@ -14,24 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package config
+package portforward
 
-import "github.com/spf13/pflag"
-
-var (
-	configFile, kubecontext string
-	showAll, global         bool
-)
-
-func AddCommonFlags(f *pflag.FlagSet) {
-	f.StringVarP(&configFile, "config", "c", "", "Path to Skaffold config")
-	f.StringVarP(&kubecontext, "kube-context", "k", "", "Kubectl context to set values against")
+type kubectlForwarder struct {
+	// kubectl things?
 }
 
-func AddListFlags(f *pflag.FlagSet) {
-	f.BoolVarP(&showAll, "all", "a", false, "Show values for all kubecontexts")
-}
-
-func AddSetUnsetFlags(f *pflag.FlagSet) {
-	f.BoolVarP(&global, "global", "g", false, "Set value for global config")
+// This function will be responsible for running kubectl port-forward
+// on whatever resource type it is given
+func (k *kubectlForwarder) forward(resourceType, resourceName string, port, targetPort int32) error {
+	return nil
 }

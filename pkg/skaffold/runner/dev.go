@@ -38,7 +38,7 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 	logger := r.newLogger(out, artifacts)
 	defer logger.Stop()
 
-	portForwarder := kubernetes.NewPortForwarder(out, r.imageList, r.runCtx.Namespaces)
+	portForwarder := kubernetes.NewPortForwarder(out, r.imageList, r.runCtx.Namespaces, r.defaultLabeller.K8sMangedByLabel())
 	defer portForwarder.Stop()
 
 	// Create watcher and register artifacts to build current state of files.

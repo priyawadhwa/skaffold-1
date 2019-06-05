@@ -14,24 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package config
+package portforward
 
-import "github.com/spf13/pflag"
-
-var (
-	configFile, kubecontext string
-	showAll, global         bool
+import (
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func AddCommonFlags(f *pflag.FlagSet) {
-	f.StringVarP(&configFile, "config", "c", "", "Path to Skaffold config")
-	f.StringVarP(&kubecontext, "kube-context", "k", "", "Kubectl context to set values against")
+type serviceForwarder struct {
+	//  what do we need to put in here?
 }
 
-func AddListFlags(f *pflag.FlagSet) {
-	f.BoolVarP(&showAll, "all", "a", false, "Show values for all kubecontexts")
-}
-
-func AddSetUnsetFlags(f *pflag.FlagSet) {
-	f.BoolVarP(&global, "global", "g", false, "Set value for global config")
+func RetrieveServices(label string) ([]*v1.Service, error) {
+	clientset, err := kubernetes.GetClientset()
+	if err != nil {
+		return nil, errors.Wrap(err, "getting clientset")
+	}
+	services, err := clientset.CoreV1().Services("").List(metav1.ListOptions{
+		LabelSelector: label,
+	})
+	fmt.Println(services)
+	return services, err
 }
