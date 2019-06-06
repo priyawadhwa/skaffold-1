@@ -120,3 +120,22 @@ func (p *PortForwarder) portForwardService(ctx context.Context, service v1.Servi
 	}
 	return p.forward(ctx, entry)
 }
+
+// retrieveContainerNameAndPortNameFromPod returns the container name and port name for a given port and pod
+func retrieveContainerNameAndPortNameFromPod(pod v1.Pod, port int32) (string, string, error) {
+	for _, c := range pod.Spec.InitContainers {
+		for _, p := range c.Ports {
+			if p.ContainerPort == port {
+				return c.Name, p.Name, nil
+			}
+		}
+	}
+	for _, c := range pod.Spec.Containers {
+		for _, p := range c.Ports {
+			if p.ContainerPort == port {
+				return c.Name, p.Name, nil
+			}
+		}
+	}
+	return "", "", fmt.Errorf("pod %s does not expose port %d", pod.Name, port)
+}
