@@ -21,13 +21,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strconv"
 	"sync"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -53,14 +53,11 @@ type PortForwarder struct {
 }
 
 type portForwardEntry struct {
-	resourceType    string
-	resourceName    string
 	resourceVersion int
+	resource        latest.PortForwardResource
 	podName         string
 	containerName   string
 	portName        string
-	namespace       string
-	port            int32
 	localPort       int32
 
 	cancel context.CancelFunc
@@ -87,23 +84,23 @@ func (*kubectlForwarder) Forward(parentCtx context.Context, pfe *portForwardEntr
 	ctx, cancel := context.WithCancel(parentCtx)
 	pfe.cancel = cancel
 
-	cmd := exec.CommandContext(ctx, "kubectl", "port-forward", fmt.Sprintf("%s/%s", pfe.resourceType, pfe.resourceName), fmt.Sprintf("%d:%d", pfe.localPort, pfe.port), "--namespace", pfe.namespace)
+	cmd := exec.CommandContext(ctx, "kubectl", "port-forward", fmt.Sprintf("%s/%s", pfe.resource.Type, pfe.resource.Name), fmt.Sprintf("%d:%d", pfe.localPort, pfe.resource.Port), "--namespace", pfe.resource.Namespace)
 	buf := &bytes.Buffer{}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
+	cmd.Stdout = buf
+	cmd.Stderr = buf
 
 	if err := cmd.Start(); err != nil {
 		if errors.Cause(err) == context.Canceled {
 			return nil
 		}
-		return errors.Wrapf(err, "port forwarding %s/%s, port: %d to local port: %d, err: %s", pfe.resourceType, pfe.resourceName, pfe.port, pfe.localPort, buf.String())
+		return errors.Wrapf(err, "port forwarding %s/%s, port: %d to local port: %d, err: %s", pfe.resource.Type, pfe.resource.Name, pfe.resource.Port, pfe.localPort, buf.String())
 	}
 
-	event.PortForwarded(pfe.localPort, pfe.port, pfe.podName, pfe.containerName, pfe.namespace, pfe.portName, pfe.resourceType, pfe.resourceName)
+	event.PortForwarded(pfe.localPort, pfe.resource.Port, pfe.podName, pfe.containerName, pfe.resource.Namespace, pfe.portName, pfe.resource.Type, pfe.resource.Name)
 
 	go func() {
 		if err := cmd.Wait(); err != nil {
-			fmt.Println(pfe.resourceType, pfe.resourceName, "error waiting", err)
+			logrus.Debugf("error port forwarding %s/%s, port %d to local port %d: %v", pfe.resource.Type, pfe.resource.Name, pfe.resource.Port, pfe.localPort, err)
 		}
 	}()
 
@@ -187,24 +184,32 @@ func (p *PortForwarder) Start(ctx context.Context) error {
 		}
 	}()
 
-	if err := p.portForwardServices(ctx); err != nil {
-		logrus.Warnf("error port forwarding services: %v", err)
+	serviceResources, err := RetrieveServicesResources(p.label)
+	if err != nil {
+		logrus.Warnf("error retrieving service resources, will not port forward: %v", err)
+	}
+	if err := p.portForwardResources(ctx, serviceResources); err != nil {
+		logrus.Warnf("error port forwarding resources: %v", err)
 	}
 
 	return nil
 }
 
 func (p *PortForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) error {
-	resourceVersion, err := strconv.Atoi(pod.ResourceVersion)
-	if err != nil {
-		return errors.Wrap(err, "converting resource version to integer")
-	}
-
 	for _, c := range pod.Spec.Containers {
 		for _, port := range c.Ports {
 			// get current entry for this container
-			entry := p.getCurrentEntry("pod", pod.Name, pod.Namespace, port.ContainerPort, resourceVersion)
-			if entry.port != entry.localPort {
+			resource := latest.PortForwardResource{
+				Type:      "pod",
+				Name:      pod.Name,
+				Namespace: pod.Namespace,
+				Port:      port.ContainerPort,
+			}
+			entry, err := p.getCurrentEntry(resource, pod)
+			if err != nil {
+				return errors.Wrap(err, "failed to get port forward entry")
+			}
+			if entry.resource.Port != entry.localPort {
 				color.Yellow.Fprintf(p.output, "Forwarding container %s to local port %d.\n", c.Name, entry.localPort)
 			}
 			if err := p.forward(ctx, entry); err != nil {
@@ -215,25 +220,36 @@ func (p *PortForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) error {
 	return nil
 }
 
-func (p *PortForwarder) getCurrentEntry(resourceType, resourceName, namespace string, port int32, resourceVersion int) *portForwardEntry {
+func (p *PortForwarder) getCurrentEntry(resource latest.PortForwardResource, forwardablePod *v1.Pod) (*portForwardEntry, error) {
+	resourceVersion, err := strconv.Atoi(forwardablePod.ResourceVersion)
+	if err != nil {
+		return nil, errors.Wrap(err, "converting resource version to integer")
+	}
 	// determine if we have seen this before
 	entry := &portForwardEntry{
 		resourceVersion: resourceVersion,
-		resourceName:    resourceName,
-		resourceType:    resourceType,
-		namespace:       namespace,
-		port:            port,
+		resource:        resource,
+		podName:         forwardablePod.Name,
 	}
 	// If we have, return the current entry
 	oldEntry, ok := p.forwardedPods[entry.key()]
 	if ok {
 		entry.localPort = oldEntry.localPort
-		return entry
+		return entry, nil
 	}
 
 	// retrieve an open port on the host
-	entry.localPort = int32(retrieveAvailablePort(int(port), p.forwardedPorts))
-	return entry
+	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.forwardedPorts))
+
+	// determine the container name and port name for this entry
+	containerName, portName, err := retrieveContainerNameAndPortNameFromPod(forwardablePod, resource.Port)
+	if err != nil {
+		return nil, errors.Wrapf(err, "retrieving container and port name for %s/%s", resource.Type, resource.Name)
+	}
+	entry.containerName = containerName
+	entry.portName = portName
+
+	return entry, nil
 }
 
 func (p *PortForwarder) forward(ctx context.Context, entry *portForwardEntry) error {
@@ -244,7 +260,7 @@ func (p *PortForwarder) forward(ctx context.Context, entry *portForwardEntry) er
 		}
 	}
 
-	color.Default.Fprintln(p.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resourceType, entry.resourceName, entry.port, entry.localPort))
+	color.Default.Fprintln(p.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource.Type, entry.resource.Name, entry.resource.Port, entry.localPort))
 	p.forwardedPods[entry.key()] = entry
 
 	if err := p.Forward(ctx, entry); err != nil {
@@ -255,10 +271,10 @@ func (p *PortForwarder) forward(ctx context.Context, entry *portForwardEntry) er
 
 // Key is an identifier for the lock on a port during the skaffold dev cycle.
 func (p *portForwardEntry) key() string {
-	return fmt.Sprintf("%s-%s-%s-%d", p.resourceType, p.resourceName, p.namespace, p.port)
+	return fmt.Sprintf("%s-%s-%s-%d", p.resource.Type, p.resource.Name, p.resource.Namespace, p.resource.Port)
 }
 
 // String is a utility function that returns the port forward entry as a user-readable string
 func (p *portForwardEntry) String() string {
-	return fmt.Sprintf("%s/%s/%s:%d", p.resourceType, p.resourceName, p.namespace, p.port)
+	return fmt.Sprintf("%s/%s/%s:%d", p.resource.Type, p.resource.Name, p.resource.Namespace, p.resource.Port)
 }
