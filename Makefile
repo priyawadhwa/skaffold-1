@@ -195,3 +195,7 @@ build-docs-preview:
 .PHONY: generate-schemas
 generate-schemas:
 	go run hack/schemas/main.go
+
+.PHONY: generate-proto
+generate-proto:
+	protoc -I /usr/local/include -I pkg/skaffold/server/proto -I ${GOPATH}/src -I ${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out=logtostderr=true:pkg/skaffold/server/proto pkg/skaffold/server/proto/skaffold.proto --go_out=plugins=grpc:pkg/skaffold/server/proto

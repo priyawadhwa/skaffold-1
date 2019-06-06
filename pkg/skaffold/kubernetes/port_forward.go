@@ -56,6 +56,9 @@ type portForwardEntry struct {
 	resourceType    string
 	resourceName    string
 	resourceVersion int
+	podName         string
+	containerName   string
+	portName        string
 	namespace       string
 	port            int32
 	localPort       int32
@@ -96,7 +99,7 @@ func (*kubectlForwarder) Forward(parentCtx context.Context, pfe *portForwardEntr
 		return errors.Wrapf(err, "port forwarding %s/%s, port: %d to local port: %d, err: %s", pfe.resourceType, pfe.resourceName, pfe.port, pfe.localPort, buf.String())
 	}
 
-	event.PortForwarded(pfe.localPort, pfe.port, pfe.resourceType, pfe.resourceType, pfe.namespace, "nothing")
+	event.PortForwarded(pfe.localPort, pfe.port, pfe.podName, pfe.containerName, pfe.namespace, pfe.portName, pfe.resourceType, pfe.resourceName)
 
 	go func() {
 		if err := cmd.Wait(); err != nil {

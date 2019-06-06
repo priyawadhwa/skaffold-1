@@ -106,7 +106,7 @@ func (p *PortForwarder) portForwardService(ctx context.Context, service v1.Servi
 	if err != nil {
 		return errors.Wrap(err, "unable to get forwardable pod")
 	}
-
+	entry.podName = pod.Name
 	fmt.Println("forwraded pod is ", pod.Name)
 
 	client, err := GetClientset()
