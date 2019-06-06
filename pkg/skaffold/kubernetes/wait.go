@@ -57,9 +57,7 @@ func watchUntil(ctx context.Context, w watch.Interface, condition func(event *wa
 func WaitForPodScheduled(ctx context.Context, pods corev1.PodInterface, podName string) error {
 	logrus.Infof("Waiting for %s to be scheduled", podName)
 
-	w, err := pods.Watch(meta_v1.ListOptions{
-		IncludeUninitialized: true,
-	})
+	w, err := pods.Watch(meta_v1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("initializing pod watcher: %s", err)
 	}
@@ -78,9 +76,7 @@ func WaitForPodScheduled(ctx context.Context, pods corev1.PodInterface, podName 
 func WaitForPodComplete(ctx context.Context, pods corev1.PodInterface, podName string, timeout time.Duration) error {
 	logrus.Infof("Waiting for %s to be complete", podName)
 
-	w, err := pods.Watch(meta_v1.ListOptions{
-		IncludeUninitialized: true,
-	})
+	w, err := pods.Watch(meta_v1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("initializing pod watcher: %s", err)
 	}
@@ -112,13 +108,45 @@ func WaitForPodComplete(ctx context.Context, pods corev1.PodInterface, podName s
 	})
 }
 
+// WaitForPodRunning waits until the Pod status is complete.
+func WaitForPodRunning(ctx context.Context, pods corev1.PodInterface, podName string, timeout time.Duration) error {
+	logrus.Infof("Waiting for %s to be complete", podName)
+
+	w, err := pods.Watch(meta_v1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("initializing pod watcher: %s", err)
+	}
+	defer w.Stop()
+
+	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
+	defer cancelTimeout()
+
+	return watchUntil(ctx, w, func(event *watch.Event) (bool, error) {
+		if event.Object == nil {
+			return false, nil
+		}
+		pod := event.Object.(*v1.Pod)
+		if pod.Name != podName {
+			return false, nil
+		}
+
+		switch pod.Status.Phase {
+		case v1.PodRunning:
+			return true, nil
+		case v1.PodFailed:
+			return false, fmt.Errorf("pod already in terminal phase: %s", pod.Status.Phase)
+		case v1.PodUnknown, v1.PodPending:
+			return false, nil
+		}
+		return false, fmt.Errorf("unknown phase: %s", pod.Status.Phase)
+	})
+}
+
 // WaitForPodInitialized waits until init containers have started running
 func WaitForPodInitialized(ctx context.Context, pods corev1.PodInterface, podName string) error {
 	logrus.Infof("Waiting for %s to be initialized", podName)
 
-	w, err := pods.Watch(meta_v1.ListOptions{
-		IncludeUninitialized: true,
-	})
+	w, err := pods.Watch(meta_v1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("initializing pod watcher: %s", err)
 	}

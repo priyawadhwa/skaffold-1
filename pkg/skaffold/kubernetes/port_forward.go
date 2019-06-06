@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strconv"
 	"sync"
@@ -85,8 +86,8 @@ func (*kubectlForwarder) Forward(parentCtx context.Context, pfe *portForwardEntr
 
 	cmd := exec.CommandContext(ctx, "kubectl", "port-forward", fmt.Sprintf("%s/%s", pfe.resourceType, pfe.resourceName), fmt.Sprintf("%d:%d", pfe.localPort, pfe.port), "--namespace", pfe.namespace)
 	buf := &bytes.Buffer{}
-	cmd.Stdout = buf
-	cmd.Stderr = buf
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
 
 	if err := cmd.Start(); err != nil {
 		if errors.Cause(err) == context.Canceled {
@@ -97,7 +98,11 @@ func (*kubectlForwarder) Forward(parentCtx context.Context, pfe *portForwardEntr
 
 	event.PortForwarded(pfe.localPort, pfe.port, pfe.resourceType, pfe.resourceType, pfe.namespace, "nothing")
 
-	go cmd.Wait()
+	go func() {
+		if err := cmd.Wait(); err != nil {
+			fmt.Println(pfe.resourceType, pfe.resourceName, "error waiting", err)
+		}
+	}()
 
 	return nil
 }
@@ -178,6 +183,10 @@ func (p *PortForwarder) Start(ctx context.Context) error {
 			}
 		}
 	}()
+
+	if err := p.portForwardServices(ctx); err != nil {
+		logrus.Warnf("error port forwarding services: %v", err)
+	}
 
 	return nil
 }

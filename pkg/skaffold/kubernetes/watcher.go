@@ -31,8 +31,7 @@ func PodWatcher(namespace string) (watch.Interface, error) {
 	client := kubeclient.CoreV1()
 	var forever int64 = 3600 * 24 * 365 * 100
 	return client.Pods(namespace).Watch(meta_v1.ListOptions{
-		IncludeUninitialized: true,
-		TimeoutSeconds:       &forever,
+		TimeoutSeconds: &forever,
 	})
 }
 
