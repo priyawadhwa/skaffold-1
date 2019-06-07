@@ -48,8 +48,8 @@ type PortForwarder struct {
 	namespaces  []string
 	label       string
 
-	// forwardedPods is a map of portForwardEntry.key() (string) -> portForwardEntry
-	forwardedPods map[string]*portForwardEntry
+	// forwardedResources is a map of portForwardEntry.key() (string) -> portForwardEntry
+	forwardedResources map[string]*portForwardEntry
 
 	// forwardedPorts serves as a synchronized set of ports we've forwarded.
 	forwardedPorts *sync.Map
@@ -121,19 +121,19 @@ func (*kubectlForwarder) Terminate(p *portForwardEntry) {
 // NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
 func NewPortForwarder(out io.Writer, podSelector PodSelector, namespaces []string, label string) *PortForwarder {
 	return &PortForwarder{
-		Forwarder:      &kubectlForwarder{},
-		output:         out,
-		podSelector:    podSelector,
-		namespaces:     namespaces,
-		forwardedPods:  make(map[string]*portForwardEntry),
-		forwardedPorts: &sync.Map{},
-		label:          label,
+		Forwarder:          &kubectlForwarder{},
+		output:             out,
+		podSelector:        podSelector,
+		namespaces:         namespaces,
+		forwardedResources: make(map[string]*portForwardEntry),
+		forwardedPorts:     &sync.Map{},
+		label:              label,
 	}
 }
 
 // Stop terminates all kubectl port-forward commands.
 func (p *PortForwarder) Stop() {
-	for _, entry := range p.forwardedPods {
+	for _, entry := range p.forwardedResources {
 		p.Terminate(entry)
 	}
 }
@@ -207,11 +207,8 @@ func (p *PortForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) error {
 				Namespace: pod.Namespace,
 				Port:      port.ContainerPort,
 			}
-			resourceVersion, err := strconv.Atoi(pod.ResourceVersion)
-			if err != nil {
-				return errors.Wrap(err, "converting resource version to integer")
-			}
-			entry, err := p.getCurrentEntry(resource, resourceVersion)
+
+			entry, err := p.getCurrentEntry(resource)
 			if err != nil {
 				return errors.Wrap(err, "failed to get port forward entry")
 			}
@@ -230,6 +227,11 @@ func (p *PortForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) error {
 }
 
 func updateEntryWithPodDetails(pod *v1.Pod, resource latest.PortForwardResource, entry *portForwardEntry) error {
+	resourceVersion, err := strconv.Atoi(pod.ResourceVersion)
+	if err != nil {
+		return errors.Wrap(err, "converting resource version to integer")
+	}
+	entry.resourceVersion = resourceVersion
 	entry.podName = pod.Name
 	// determine the container name and port name for this entry
 	containerName, portName, err := retrieveContainerNameAndPortNameFromPod(pod, resource.Port)
@@ -241,14 +243,13 @@ func updateEntryWithPodDetails(pod *v1.Pod, resource latest.PortForwardResource,
 	return nil
 }
 
-func (p *PortForwarder) getCurrentEntry(resource latest.PortForwardResource, resourceVersion int) (*portForwardEntry, error) {
+func (p *PortForwarder) getCurrentEntry(resource latest.PortForwardResource) (*portForwardEntry, error) {
 	// determine if we have seen this before
 	entry := &portForwardEntry{
-		resourceVersion: resourceVersion,
-		resource:        resource,
+		resource: resource,
 	}
 	// If we have, return the current entry
-	oldEntry, ok := p.forwardedPods[entry.key()]
+	oldEntry, ok := p.forwardedResources[entry.key()]
 	if ok {
 		entry.localPort = oldEntry.localPort
 		return entry, nil
@@ -260,14 +261,14 @@ func (p *PortForwarder) getCurrentEntry(resource latest.PortForwardResource, res
 }
 
 func (p *PortForwarder) forward(ctx context.Context, entry *portForwardEntry) error {
-	if prevEntry, ok := p.forwardedPods[entry.key()]; ok {
+	if prevEntry, ok := p.forwardedResources[entry.key()]; ok {
 		// Check if this is a new generation of pod
 		if entry.resourceVersion > prevEntry.resourceVersion {
 			p.Terminate(prevEntry)
 		}
 	}
 	color.Default.Fprintln(p.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource.Type, entry.resource.Name, entry.resource.Port, entry.localPort))
-	p.forwardedPods[entry.key()] = entry
+	p.forwardedResources[entry.key()] = entry
 	err := wait.PollImmediate(2*time.Second, 1*time.Minute, func() (bool, error) {
 		if err := p.Forward(ctx, entry); err != nil {
 			return false, nil

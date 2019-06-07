@@ -19,15 +19,12 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // RetrieveServicesResources retrieves all services in the cluster matching the given label
@@ -72,48 +69,14 @@ func (p *PortForwarder) portForwardResources(ctx context.Context, resources []la
 }
 
 func (p *PortForwarder) portForwardResource(ctx context.Context, resource latest.PortForwardResource) error {
-	// Get the object for this resource to obtain the resourceVersion
-	obj, err := retrieveRuntimeObject(resource)
-	if err != nil {
-		return err
-	}
-	objectMeta, err := meta.Accessor(obj)
-	if err != nil {
-		return errors.Wrap(err, "accessing meta data for obj")
-	}
-
-	resourceVersion, err := strconv.Atoi(objectMeta.GetResourceVersion())
-	if err != nil {
-		return errors.Wrap(err, "converting resource version to integer")
-	}
-
 	// Get port forward entry for this resource
-	entry, err := p.getCurrentEntry(resource, resourceVersion)
+	entry, err := p.getCurrentEntry(resource)
 	if err != nil {
 		return errors.Wrapf(err, "getting port forward entry for %s/%s", resource.Type, resource.Name)
 	}
 
 	// Forward the resource
 	return p.forward(ctx, entry)
-}
-
-func retrieveRuntimeObject(resource latest.PortForwardResource) (runtime.Object, error) {
-	clientset, err := GetClientset()
-	if err != nil {
-		return nil, errors.Wrap(err, "getting clientset")
-	}
-	switch resource.Type {
-	case "pod":
-		return clientset.CoreV1().Pods(resource.Namespace).Get(resource.Name, metav1.GetOptions{})
-	case "service":
-		return clientset.CoreV1().Services(resource.Namespace).Get(resource.Name, metav1.GetOptions{})
-	case "deployment":
-		return clientset.AppsV1().Deployments(resource.Namespace).Get(resource.Name, metav1.GetOptions{})
-	case "replicaset":
-		return clientset.AppsV1().ReplicaSets(resource.Namespace).Get(resource.Name, metav1.GetOptions{})
-	default:
-		return nil, fmt.Errorf("cannot port forward type %s", resource.Type)
-	}
 }
 
 // retrieveContainerNameAndPortNameFromPod returns the container name and port name for a given port and pod
