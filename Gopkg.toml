@@ -29,19 +29,19 @@
 
 [[constraint]]
   name = "k8s.io/apimachinery"
-  branch = "master"
+  version = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  branch = "master"
+  version = "kubernetes-1.11.0"
 
 [[constraint]]
   name = "k8s.io/api"
-  branch = "master"
+  version = "kubernetes-1.11.0"
 
 [[override]]
   name = "github.com/Azure/go-autorest"
-  version = "v11.1.2+incompatible"
+  version = "v10.6.2"
 
 [[constraint]]
   name = "cloud.google.com/go"
