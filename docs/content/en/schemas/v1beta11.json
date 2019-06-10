@@ -491,13 +491,13 @@
         },
         "pullSecret": {
           "type": "string",
-          "description": "path to the secret key file.",
-          "x-intellij-html-description": "path to the secret key file."
+          "description": "path to the Google Cloud service account secret key file.",
+          "x-intellij-html-description": "path to the Google Cloud service account secret key file."
         },
         "pullSecretName": {
           "type": "string",
-          "description": "name of the Kubernetes secret for pulling the files from the build context and pushing the final image.",
-          "x-intellij-html-description": "name of the Kubernetes secret for pulling the files from the build context and pushing the final image.",
+          "description": "name of the Kubernetes secret for pulling the files from the build context and pushing the final image. If given, the secret needs to contain the Google Cloud service account secret key under the key `kaniko-secret`.",
+          "x-intellij-html-description": "name of the Kubernetes secret for pulling the files from the build context and pushing the final image. If given, the secret needs to contain the Google Cloud service account secret key under the key <code>kaniko-secret</code>.",
           "default": "kaniko-secret"
         },
         "resources": {
@@ -725,8 +725,8 @@
         },
         "secretName": {
           "type": "string",
-          "description": "Kubernetes secret that will hold the Docker configuration.",
-          "x-intellij-html-description": "Kubernetes secret that will hold the Docker configuration."
+          "description": "Kubernetes secret that contains the `config.json` Docker configuration. Note that the expected secret type is not 'kubernetes.io/dockerconfigjson' but 'Opaque'.",
+          "x-intellij-html-description": "Kubernetes secret that contains the <code>config.json</code> Docker configuration. Note that the expected secret type is not 'kubernetes.io/dockerconfigjson' but 'Opaque'."
         }
       },
       "preferredOrder": [
@@ -1472,6 +1472,45 @@
       "description": "configures how Kaniko mounts sources directly via an `emptyDir` volume.",
       "x-intellij-html-description": "configures how Kaniko mounts sources directly via an <code>emptyDir</code> volume."
     },
+    "PortForwardResource": {
+      "properties": {
+        "localPort": {
+          "$ref": "#/definitions/int32",
+          "description": "local port to forward too. If the port is unavailable, Skaffold will choose a random open port to forward to. *Optional*.",
+          "x-intellij-html-description": "local port to forward too. If the port is unavailable, Skaffold will choose a random open port to forward to. <em>Optional</em>."
+        },
+        "namespace": {
+          "type": "string",
+          "description": "namespace of the resource to port forward.",
+          "x-intellij-html-description": "namespace of the resource to port forward."
+        },
+        "port": {
+          "$ref": "#/definitions/int32",
+          "description": "resource port that will be forwarded.",
+          "x-intellij-html-description": "resource port that will be forwarded."
+        },
+        "resourceName": {
+          "type": "string",
+          "description": "name of the Kubernetes resource to port forward.",
+          "x-intellij-html-description": "name of the Kubernetes resource to port forward."
+        },
+        "resourceType": {
+          "type": "string",
+          "description": "Kubernetes type that should be port forwarded. Acceptable resource types include: `Service`, `Pod` and Controller resource type that has a pod spec: `ReplicaSet`, `ReplicationController`, `Deployment`, `StatefulSet`, `DaemonSet`, `Job`, `CronJob`.",
+          "x-intellij-html-description": "Kubernetes type that should be port forwarded. Acceptable resource types include: <code>Service</code>, <code>Pod</code> and Controller resource type that has a pod spec: <code>ReplicaSet</code>, <code>ReplicationController</code>, <code>Deployment</code>, <code>StatefulSet</code>, <code>DaemonSet</code>, <code>Job</code>, <code>CronJob</code>."
+        }
+      },
+      "preferredOrder": [
+        "resourceType",
+        "resourceName",
+        "namespace",
+        "port",
+        "localPort"
+      ],
+      "additionalProperties": false,
+      "description": "describes a resource to port forward.",
+      "x-intellij-html-description": "describes a resource to port forward."
+    },
     "Profile": {
       "required": [
         "name"
@@ -1511,6 +1550,14 @@
           "description": "patches applied to the configuration. Patches use the JSON patch notation.",
           "x-intellij-html-description": "patches applied to the configuration. Patches use the JSON patch notation."
         },
+        "portForward": {
+          "items": {
+            "$ref": "#/definitions/PortForwardResource"
+          },
+          "type": "array",
+          "description": "allows users to define additional resources to port forward after deployment.",
+          "x-intellij-html-description": "allows users to define additional resources to port forward after deployment."
+        },
         "test": {
           "items": {
             "$ref": "#/definitions/TestCase"
@@ -1526,7 +1573,8 @@
         "activation",
         "build",
         "test",
-        "deploy"
+        "deploy",
+        "portForward"
       ],
       "additionalProperties": false,
       "description": "*beta* profiles are used to override any `build`, `test` or `deploy` configuration.",
@@ -1611,6 +1659,14 @@
           "x-intellij-html-description": "always <code>Config</code>.",
           "default": "Config"
         },
+        "portForward": {
+          "items": {
+            "$ref": "#/definitions/PortForwardResource"
+          },
+          "type": "array",
+          "description": "allows users to define additional resources to port forward after deployment.",
+          "x-intellij-html-description": "allows users to define additional resources to port forward after deployment."
+        },
         "profiles": {
           "items": {
             "$ref": "#/definitions/Profile"
@@ -1634,7 +1690,8 @@
         "profiles",
         "build",
         "test",
-        "deploy"
+        "deploy",
+        "portForward"
       ],
       "additionalProperties": false,
       "description": "holds the fields parsed from the Skaffold configuration file (skaffold.yaml).",

@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kubernetes
+package portforward
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -30,7 +31,7 @@ import (
 // RetrieveServicesResources retrieves all services in the cluster matching the given label
 // as a list of PortForwardResources
 func RetrieveServicesResources(label string) ([]latest.PortForwardResource, error) {
-	clientset, err := GetClientset()
+	clientset, err := kubernetes.GetClientset()
 	if err != nil {
 		return nil, errors.Wrap(err, "getting clientset")
 	}
@@ -56,7 +57,7 @@ func RetrieveServicesResources(label string) ([]latest.PortForwardResource, erro
 
 // We will port forward everything from here
 // We want to wait on the pod to be created and then port forward
-func (p *PortForwarder) portForwardResources(ctx context.Context, resources []latest.PortForwardResource) error {
+func (p *PortForwarder) portForwardResources(ctx context.Context, resources []latest.PortForwardResource) {
 	for _, r := range resources {
 		r := r
 		go func() {
@@ -65,16 +66,11 @@ func (p *PortForwarder) portForwardResources(ctx context.Context, resources []la
 			}
 		}()
 	}
-	return nil
 }
 
 func (p *PortForwarder) portForwardResource(ctx context.Context, resource latest.PortForwardResource) error {
 	// Get port forward entry for this resource
-	entry, err := p.getCurrentEntry(resource)
-	if err != nil {
-		return errors.Wrapf(err, "getting port forward entry for %s/%s", resource.Type, resource.Name)
-	}
-
+	entry := p.getCurrentEntry(resource)
 	// Forward the resource
 	return p.forward(ctx, entry)
 }

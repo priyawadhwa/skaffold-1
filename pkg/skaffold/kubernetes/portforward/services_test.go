@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package kubernetes
+package portforward
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ import (
 )
 
 func TestRetrieveContainerNameAndPortNameFromPod(t *testing.T) {
-	pod := v1.Pod{
+	pod := &v1.Pod{
 		Spec: v1.PodSpec{
 			InitContainers: []v1.Container{
 				{
@@ -44,9 +44,9 @@ func TestRetrieveContainerNameAndPortNameFromPod(t *testing.T) {
 
 	tests := []struct {
 		description           string
-		port                  int32
 		expectedContainerName string
 		expectedPortName      string
+		port                  int32
 		shouldErr             bool
 	}{
 		{
