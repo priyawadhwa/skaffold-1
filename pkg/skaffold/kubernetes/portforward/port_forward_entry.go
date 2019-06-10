@@ -39,7 +39,13 @@ func (p *portForwardEntry) key() string {
 	return fmt.Sprintf("%s-%s-%s-%d", p.resource.Type, p.resource.Name, p.resource.Namespace, p.resource.Port)
 }
 
+// Key is an identifier for the lock on a port during the skaffold dev cycle.
+func (p *portForwardEntry) podKey() string {
+	return fmt.Sprintf("%s-%s-%s-%d", p.containerName, p.resource.Namespace, p.portName, p.resource.Port)
+}
+
 // String is a utility function that returns the port forward entry as a user-readable string
 func (p *portForwardEntry) String() string {
-	return p.key()
+	fmt.Println(*p)
+	return fmt.Sprintf("%s-%s-%s-%d", p.resource.Type, p.resource.Name, p.resource.Namespace, p.resource.Port)
 }

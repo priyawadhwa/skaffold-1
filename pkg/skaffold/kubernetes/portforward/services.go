@@ -17,14 +17,9 @@ limitations under the License.
 package portforward
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -53,43 +48,4 @@ func RetrieveServicesResources(label string) ([]latest.PortForwardResource, erro
 		}
 	}
 	return resources, nil
-}
-
-// We will port forward everything from here
-// We want to wait on the pod to be created and then port forward
-func (p *PortForwarder) portForwardResources(ctx context.Context, resources []latest.PortForwardResource) {
-	for _, r := range resources {
-		r := r
-		go func() {
-			if err := p.portForwardResource(ctx, r); err != nil {
-				logrus.Warnf("Unable to port forward %s/%s: %v", r.Type, r.Name, err)
-			}
-		}()
-	}
-}
-
-func (p *PortForwarder) portForwardResource(ctx context.Context, resource latest.PortForwardResource) error {
-	// Get port forward entry for this resource
-	entry := p.getCurrentEntry(resource)
-	// Forward the resource
-	return p.forward(ctx, entry)
-}
-
-// retrieveContainerNameAndPortNameFromPod returns the container name and port name for a given port and pod
-func retrieveContainerNameAndPortNameFromPod(pod *v1.Pod, port int32) (string, string, error) {
-	for _, c := range pod.Spec.InitContainers {
-		for _, p := range c.Ports {
-			if p.ContainerPort == port {
-				return c.Name, p.Name, nil
-			}
-		}
-	}
-	for _, c := range pod.Spec.Containers {
-		for _, p := range c.Ports {
-			if p.ContainerPort == port {
-				return c.Name, p.Name, nil
-			}
-		}
-	}
-	return "", "", fmt.Errorf("pod %s does not expose port %d", pod.Name, port)
 }

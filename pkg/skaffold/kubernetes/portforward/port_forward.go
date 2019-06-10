@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strconv"
 	"sync"
 	"time"
 
@@ -28,11 +27,8 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/apimachinery/pkg/watch"
 )
 
 var (
@@ -55,12 +51,6 @@ type PortForwarder struct {
 
 	// forwardedPorts serves as a synchronized set of ports we've forwarded.
 	forwardedPorts *sync.Map
-}
-
-// Forwarder is an interface that can modify and manage port-forward processes
-type Forwarder interface {
-	Forward(context.Context, *portForwardEntry) error
-	Terminate(*portForwardEntry)
 }
 
 var (
@@ -91,51 +81,6 @@ func (p *PortForwarder) Stop() {
 // Start begins a pod watcher that port forwards any pods involving containers with exposed ports.
 // TODO(r2d4): merge this event loop with pod watcher from log writer
 func (p *PortForwarder) Start(ctx context.Context) error {
-	aggregate := make(chan watch.Event)
-	stopWatchers, err := kubernetes.AggregatePodWatcher(p.namespaces, aggregate)
-	if err != nil {
-		stopWatchers()
-		return errors.Wrap(err, "initializing pod watcher")
-	}
-
-	go func() {
-		defer stopWatchers()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case evt, ok := <-aggregate:
-				if !ok {
-					return
-				}
-
-				// If the event's type is "ERROR", warn and continue.
-				if evt.Type == watch.Error {
-					logrus.Warnf("got unexpected event of type %s", evt.Type)
-					continue
-				}
-				// Grab the pod from the event.
-				pod, ok := evt.Object.(*v1.Pod)
-				if !ok {
-					continue
-				}
-				// If the event's type is "DELETED", continue.
-				if evt.Type == watch.Deleted {
-					continue
-				}
-
-				// At this point, we know the event's type is "ADDED" or "MODIFIED".
-				// We must take both types into account as it is possible for the pod to have become ready for port-forwarding before we established the watch.
-				if p.podSelector.Select(pod) && pod.Status.Phase == v1.PodRunning && pod.DeletionTimestamp == nil {
-					if err := p.portForwardPod(ctx, pod); err != nil {
-						logrus.Warnf("port forwarding pod failed: %s", err)
-					}
-				}
-			}
-		}
-	}()
-
 	serviceResources, err := RetrieveServicesResources(p.label)
 	if err != nil {
 		logrus.Warnf("error retrieving service resources, will not port forward: %v", err)
@@ -145,47 +90,24 @@ func (p *PortForwarder) Start(ctx context.Context) error {
 	return nil
 }
 
-func (p *PortForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) error {
-	for _, c := range pod.Spec.Containers {
-		for _, port := range c.Ports {
-			// get current entry for this container
-			resource := latest.PortForwardResource{
-				Type:      "pod",
-				Name:      pod.Name,
-				Namespace: pod.Namespace,
-				Port:      port.ContainerPort,
+// We will port forward everything from here
+// We want to wait on the pod to be created and then port forward
+func (p *PortForwarder) portForwardResources(ctx context.Context, resources []latest.PortForwardResource) {
+	for _, r := range resources {
+		r := r
+		go func() {
+			if err := p.portForwardResource(ctx, r); err != nil {
+				logrus.Warnf("Unable to port forward %s/%s: %v", r.Type, r.Name, err)
 			}
-
-			entry := p.getCurrentEntry(resource)
-			if err := updateEntryWithPodDetails(pod, resource, entry); err != nil {
-				return errors.Wrap(err, "updating port forward entry with pod details")
-			}
-			if entry.resource.Port != entry.localPort {
-				color.Yellow.Fprintf(p.output, "Forwarding container %s to local port %d.\n", c.Name, entry.localPort)
-			}
-			if err := p.forward(ctx, entry); err != nil {
-				return errors.Wrap(err, "failed to forward port")
-			}
-		}
+		}()
 	}
-	return nil
 }
 
-func updateEntryWithPodDetails(pod *v1.Pod, resource latest.PortForwardResource, entry *portForwardEntry) error {
-	resourceVersion, err := strconv.Atoi(pod.ResourceVersion)
-	if err != nil {
-		return errors.Wrap(err, "converting resource version to integer")
-	}
-	entry.resourceVersion = resourceVersion
-	entry.podName = pod.Name
-	// determine the container name and port name for this entry
-	containerName, portName, err := retrieveContainerNameAndPortNameFromPod(pod, resource.Port)
-	if err != nil {
-		return errors.Wrapf(err, "retrieving container and port name for %s/%s", resource.Type, resource.Name)
-	}
-	entry.containerName = containerName
-	entry.portName = portName
-	return nil
+func (p *PortForwarder) portForwardResource(ctx context.Context, resource latest.PortForwardResource) error {
+	// Get port forward entry for this resource
+	entry := p.getCurrentEntry(resource)
+	// Forward the resource
+	return p.forward(ctx, entry)
 }
 
 func (p *PortForwarder) getCurrentEntry(resource latest.PortForwardResource) *portForwardEntry {
@@ -205,13 +127,8 @@ func (p *PortForwarder) getCurrentEntry(resource latest.PortForwardResource) *po
 	return entry
 }
 
+// forward the portForwardEntry
 func (p *PortForwarder) forward(ctx context.Context, entry *portForwardEntry) error {
-	if prevEntry, ok := p.forwardedResources[entry.key()]; ok {
-		// Check if this is a new generation of pod
-		if entry.resourceVersion > prevEntry.resourceVersion {
-			p.Terminate(prevEntry)
-		}
-	}
 	color.Default.Fprintln(p.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource.Type, entry.resource.Name, entry.resource.Port, entry.localPort))
 	p.forwardedResources[entry.key()] = entry
 	err := wait.PollImmediate(time.Second, forwardingPollTime, func() (bool, error) {

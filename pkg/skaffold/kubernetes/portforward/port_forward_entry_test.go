@@ -17,33 +17,38 @@ limitations under the License.
 package portforward
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 )
 
-func TestPortForwardEntryString(t *testing.T) {
+func TestPortForwardEntryKey(t *testing.T) {
 	tests := []struct {
 		description string
-		resource    latest.PortForwardResource
+		pfe         *portForwardEntry
 		expected    string
 	}{
 		{
 			description: "entry for pod",
-			resource: latest.PortForwardResource{
-				Type:      "pod",
-				Name:      "podName",
-				Namespace: "default",
-				Port:      8080,
+			pfe: &portForwardEntry{
+				resource: latest.PortForwardResource{
+					Type:      "pod",
+					Name:      "podName",
+					Namespace: "default",
+					Port:      8080,
+				},
 			},
 			expected: "pod-podName-default-8080",
 		}, {
 			description: "entry for deploy",
-			resource: latest.PortForwardResource{
-				Type:      "deployment",
-				Name:      "depName",
-				Namespace: "namespace",
-				Port:      9000,
+			pfe: &portForwardEntry{
+				resource: latest.PortForwardResource{
+					Type:      "deployment",
+					Name:      "depName",
+					Namespace: "namespace",
+					Port:      9000,
+				},
 			},
 			expected: "deployment-depName-namespace-9000",
 		},
@@ -51,11 +56,47 @@ func TestPortForwardEntryString(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			pfe := &portForwardEntry{resource: test.resource}
-			acutalKey := pfe.String()
+			acutalKey := test.pfe.key()
 
 			if acutalKey != test.expected {
 				t.Fatalf("port forward entry key is incorrect: \n actual: %s \n expected: %s", acutalKey, test.expected)
+			}
+		})
+	}
+}
+
+func TestPortForwardEntryPodKey(t *testing.T) {
+	tests := []struct {
+		description string
+		pfe         *portForwardEntry
+		expected    string
+	}{
+		{
+			description: "entry for automatically port forwarded pod",
+			pfe: &portForwardEntry{
+				containerName: "containerName",
+				portName:      "portName",
+				resource: latest.PortForwardResource{
+					Type:      "pod",
+					Name:      "podName",
+					Namespace: "default",
+					Port:      8080,
+				},
+			},
+			expected: "containerName-default-portName-8080",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			acutalKey := test.pfe.podKey()
+
+			if acutalKey != test.expected {
+				t.Fatalf("port forward entry key is incorrect: \n actual: %s \n expected: %s", acutalKey, test.expected)
+			}
+
+			if strings.Contains(acutalKey, "pod") {
+				t.Fatal("key should not contain podname, otherwise containers will be mapped to a new port every time a pod is regenerated. See Issues #1815 and #1594.")
 			}
 		})
 	}
