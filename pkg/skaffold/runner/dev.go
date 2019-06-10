@@ -38,6 +38,11 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 	logger := r.newLogger(out, artifacts)
 	defer logger.Stop()
 
+	forwarders := r.retrievePortForwarders(ctx, out)
+	for _, f := range forwarders {
+		defer f.Stop()
+	}
+
 	portForwarder := portforward.NewPortForwarder(out, r.imageList, r.runCtx.Namespaces, r.defaultLabeller.K8sMangedByLabel())
 	defer portForwarder.Stop()
 
@@ -138,12 +143,25 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 			return errors.Wrap(err, "starting logger")
 		}
 	}
-
-	if r.runCtx.Opts.PortForward {
-		if err := portForwarder.Start(ctx); err != nil {
+	// Start port forwarding
+	for _, f := range forwarders {
+		if err := f.Start(ctx); err != nil {
 			return errors.Wrap(err, "starting port-forwarder")
 		}
 	}
 
 	return r.Watcher.Run(ctx, out, onChange)
+}
+
+func (r *SkaffoldRunner) retrievePortForwarders(ctx context.Context, out io.Writer) []portforward.Forwarder {
+	var forwarders []portforward.Forwarder
+	if r.runCtx.Opts.PortForward {
+		pf := portforward.NewPortForwarder(out, r.imageList, r.runCtx.Namespaces, r.defaultLabeller.K8sMangedByLabel())
+		forwarders = append(forwarders, pf)
+	}
+	if r.runCtx.Opts.AutomaticPodForwarding {
+		pf := portforward.NewAutomaticPodForwarder(out, r.imageList, r.runCtx.Namespaces)
+		forwarders = append(forwarders, pf)
+	}
+	return forwarders
 }

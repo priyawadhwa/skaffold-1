@@ -35,7 +35,7 @@ import (
 // AutomaticPodForwarder is responsible for selecting pods satisfying a certain condition and port-forwarding the exposed
 // container ports within those pods. It also tracks and manages the port-forward connections.
 type AutomaticPodForwarder struct {
-	Forwarder
+	*kubectlForwarder
 
 	output      io.Writer
 	podSelector kubernetes.PodSelector
@@ -51,12 +51,19 @@ type AutomaticPodForwarder struct {
 // NewAutomaticPodForwarder returns a struct that tracks and port-forwards pods as they are created and modified
 func NewAutomaticPodForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string) *AutomaticPodForwarder {
 	return &AutomaticPodForwarder{
-		Forwarder:      &kubectlForwarder{},
-		output:         out,
-		podSelector:    podSelector,
-		namespaces:     namespaces,
-		forwardedPods:  make(map[string]*portForwardEntry),
-		forwardedPorts: &sync.Map{},
+		kubectlForwarder: &kubectlForwarder{},
+		output:           out,
+		podSelector:      podSelector,
+		namespaces:       namespaces,
+		forwardedPods:    make(map[string]*portForwardEntry),
+		forwardedPorts:   &sync.Map{},
+	}
+}
+
+// Stop terminates all kubectl port-forward commands.
+func (p *AutomaticPodForwarder) Stop() {
+	for _, entry := range p.forwardedPods {
+		p.Terminate(entry)
 	}
 }
 

@@ -39,7 +39,7 @@ var (
 // PortForwarder is responsible for selecting pods satisfying a certain condition and port-forwarding the exposed
 // container ports within those pods. It also tracks and manages the port-forward connections.
 type PortForwarder struct {
-	Forwarder
+	*kubectlForwarder
 
 	output      io.Writer
 	podSelector kubernetes.PodSelector
@@ -61,7 +61,7 @@ var (
 // NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
 func NewPortForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, label string) *PortForwarder {
 	return &PortForwarder{
-		Forwarder:          &kubectlForwarder{},
+		kubectlForwarder:   &kubectlForwarder{},
 		output:             out,
 		podSelector:        podSelector,
 		namespaces:         namespaces,

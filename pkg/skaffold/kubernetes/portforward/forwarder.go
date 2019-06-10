@@ -20,6 +20,6 @@ import "context"
 
 // Forwarder is an interface that can modify and manage port-forward processes
 type Forwarder interface {
-	Forward(context.Context, *portForwardEntry) error
-	Terminate(*portForwardEntry)
+	Start(ctx context.Context) error
+	Stop()
 }
