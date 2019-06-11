@@ -46,9 +46,10 @@ type forwarders []Forwarder
 // GetForwarders returns a list of forwarders
 func GetForwarders(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, label string, automaticPodForwarding bool) forwarders {
 	baseForwarder := BaseForwarder{
-		output:         out,
-		namespaces:     namespaces,
-		forwardedPorts: &sync.Map{},
+		output:             out,
+		namespaces:         namespaces,
+		forwardedPorts:     &sync.Map{},
+		forwardedResources: make(map[string]*portForwardEntry),
 	}
 
 	var f forwarders
@@ -91,6 +92,9 @@ type BaseForwarder struct {
 
 	// forwardedPorts serves as a synchronized set of ports we've forwarded.
 	forwardedPorts *sync.Map
+
+	// forwardedResources is a map of portForwardEntry.key() (string) -> portForwardEntry
+	forwardedResources map[string]*portForwardEntry
 }
 
 func (b *BaseForwarder) forwardEntry(ctx context.Context, entry *portForwardEntry) error {
@@ -101,4 +105,11 @@ func (b *BaseForwarder) forwardEntry(ctx context.Context, entry *portForwardEntr
 		}
 		return true, nil
 	})
+}
+
+// Stop terminates all kubectl port-forward commands.
+func (b *BaseForwarder) Stop() {
+	for _, entry := range b.forwardedResources {
+		b.Terminate(entry)
+	}
 }

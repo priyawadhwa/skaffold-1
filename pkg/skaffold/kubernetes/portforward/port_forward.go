@@ -43,16 +43,8 @@ var (
 // NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
 func NewPortForwarder(baseForwarder BaseForwarder, label string) *PortForwarder {
 	return &PortForwarder{
-		BaseForwarder:      baseForwarder,
-		forwardedResources: make(map[string]*portForwardEntry),
-		label:              label,
-	}
-}
-
-// Stop terminates all kubectl port-forward commands.
-func (p *PortForwarder) Stop() {
-	for _, entry := range p.forwardedResources {
-		p.Terminate(entry)
+		BaseForwarder: baseForwarder,
+		label:         label,
 	}
 }
 

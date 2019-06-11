@@ -35,9 +35,6 @@ import (
 type AutomaticPodForwarder struct {
 	BaseForwarder
 	podSelector kubernetes.PodSelector
-
-	// forwardedPods is a map of portForwardEntry.podKey() (string) -> portForwardEntry
-	forwardedPods map[string]*portForwardEntry
 }
 
 // NewAutomaticPodForwarder returns a struct that tracks and port-forwards pods as they are created and modified
@@ -45,14 +42,6 @@ func NewAutomaticPodForwarder(baseForwarder BaseForwarder, podSelector kubernete
 	return &AutomaticPodForwarder{
 		BaseForwarder: baseForwarder,
 		podSelector:   podSelector,
-		forwardedPods: make(map[string]*portForwardEntry),
-	}
-}
-
-// Stop terminates all kubectl port-forward commands.
-func (p *AutomaticPodForwarder) Stop() {
-	for _, entry := range p.forwardedPods {
-		p.Terminate(entry)
 	}
 }
 
@@ -150,7 +139,7 @@ func (p *AutomaticPodForwarder) getAutomaticPodForwardingEntry(pod *v1.Pod, reso
 	entry.portName = portName
 
 	// If we have, return the current entry
-	oldEntry, ok := p.forwardedPods[entry.podKey()]
+	oldEntry, ok := p.forwardedResources[entry.podKey()]
 	if ok {
 		entry.localPort = oldEntry.localPort
 		return entry, nil
@@ -183,12 +172,12 @@ func retrieveContainerNameAndPortNameFromPod(pod *v1.Pod, port int32) (string, s
 
 // forward the portForwardEntry
 func (p *AutomaticPodForwarder) forward(ctx context.Context, entry *portForwardEntry) error {
-	if prevEntry, ok := p.forwardedPods[entry.podKey()]; ok {
+	if prevEntry, ok := p.forwardedResources[entry.podKey()]; ok {
 		// Check if this is a new generation of pod
 		if entry.resourceVersion > prevEntry.resourceVersion {
 			p.Terminate(prevEntry)
 		}
 	}
-	p.forwardedPods[entry.podKey()] = entry
+	p.forwardedResources[entry.podKey()] = entry
 	return p.forwardEntry(ctx, entry)
 }
