@@ -33,8 +33,8 @@ import (
 // AutomaticPodForwarder is responsible for selecting pods satisfying a certain condition and port-forwarding the exposed
 // container ports within those pods. It also tracks and manages the port-forward connections.
 type AutomaticPodForwarder struct {
-	baseForwarder BaseForwarder
-	podSelector   kubernetes.PodSelector
+	BaseForwarder
+	podSelector kubernetes.PodSelector
 
 	// forwardedPods is a map of portForwardEntry.podKey() (string) -> portForwardEntry
 	forwardedPods map[string]*portForwardEntry
@@ -43,7 +43,7 @@ type AutomaticPodForwarder struct {
 // NewAutomaticPodForwarder returns a struct that tracks and port-forwards pods as they are created and modified
 func NewAutomaticPodForwarder(baseForwarder BaseForwarder, podSelector kubernetes.PodSelector) *AutomaticPodForwarder {
 	return &AutomaticPodForwarder{
-		baseForwarder: baseForwarder,
+		BaseForwarder: baseForwarder,
 		podSelector:   podSelector,
 		forwardedPods: make(map[string]*portForwardEntry),
 	}
@@ -52,13 +52,13 @@ func NewAutomaticPodForwarder(baseForwarder BaseForwarder, podSelector kubernete
 // Stop terminates all kubectl port-forward commands.
 func (p *AutomaticPodForwarder) Stop() {
 	for _, entry := range p.forwardedPods {
-		p.baseForwarder.Terminate(entry)
+		p.Terminate(entry)
 	}
 }
 
 func (p *AutomaticPodForwarder) Start(ctx context.Context) error {
 	aggregate := make(chan watch.Event)
-	stopWatchers, err := kubernetes.AggregatePodWatcher(p.baseForwarder.namespaces, aggregate)
+	stopWatchers, err := kubernetes.AggregatePodWatcher(p.namespaces, aggregate)
 	if err != nil {
 		stopWatchers()
 		return errors.Wrap(err, "initializing pod watcher")
@@ -121,28 +121,12 @@ func (p *AutomaticPodForwarder) portForwardPod(ctx context.Context, pod *v1.Pod)
 				return errors.Wrap(err, "getting automatic pod forwarding entry")
 			}
 			if entry.resource.Port != entry.localPort {
-				color.Yellow.Fprintf(p.baseForwarder.output, "Forwarding container %s to local port %d.\n", c.Name, entry.localPort)
+				color.Yellow.Fprintf(p.output, "Forwarding container %s to local port %d.\n", c.Name, entry.localPort)
 			}
 			if err := p.forward(ctx, entry); err != nil {
 				return errors.Wrap(err, "failed to forward port")
 			}
 		}
-	}
-	return nil
-}
-
-// forward the portForwardEntry
-func (p *AutomaticPodForwarder) forward(ctx context.Context, entry *portForwardEntry) error {
-	if prevEntry, ok := p.forwardedPods[entry.podKey()]; ok {
-		// Check if this is a new generation of pod
-		if entry.resourceVersion > prevEntry.resourceVersion {
-			p.baseForwarder.Terminate(prevEntry)
-		}
-	}
-	p.forwardedPods[entry.podKey()] = entry
-	color.Default.Fprintln(p.baseForwarder.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource.Type, entry.resource.Name, entry.resource.Port, entry.localPort))
-	if err := p.baseForwarder.Forward(ctx, entry); err != nil {
-		return errors.Wrap(err, "port forwarding failed")
 	}
 	return nil
 }
@@ -173,7 +157,7 @@ func (p *AutomaticPodForwarder) getAutomaticPodForwardingEntry(pod *v1.Pod, reso
 	}
 
 	// retrieve an open port on the host
-	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.baseForwarder.forwardedPorts))
+	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.forwardedPorts))
 
 	return entry, nil
 }
@@ -195,4 +179,16 @@ func retrieveContainerNameAndPortNameFromPod(pod *v1.Pod, port int32) (string, s
 		}
 	}
 	return "", "", fmt.Errorf("pod %s does not expose port %d", pod.Name, port)
+}
+
+// forward the portForwardEntry
+func (p *AutomaticPodForwarder) forward(ctx context.Context, entry *portForwardEntry) error {
+	if prevEntry, ok := p.forwardedPods[entry.podKey()]; ok {
+		// Check if this is a new generation of pod
+		if entry.resourceVersion > prevEntry.resourceVersion {
+			p.Terminate(prevEntry)
+		}
+	}
+	p.forwardedPods[entry.podKey()] = entry
+	return p.forwardEntry(ctx, entry)
 }

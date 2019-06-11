@@ -29,11 +29,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type kubectlForwarder struct{}
+type KubectlForwarder struct{}
 
 // Forward port-forwards a pod using kubectl port-forward
 // It returns an error only if the process fails or was terminated by a signal other than SIGTERM
-func (*kubectlForwarder) Forward(parentCtx context.Context, pfe *portForwardEntry) error {
+func (*KubectlForwarder) Forward(parentCtx context.Context, pfe *portForwardEntry) error {
 	logrus.Debugf("Port forwarding %v", pfe)
 
 	ctx, cancel := context.WithCancel(parentCtx)
@@ -62,10 +62,15 @@ func portForwardSuccessful(port int32) error {
 }
 
 // Terminate terminates an existing kubectl port-forward command using SIGTERM
-func (*kubectlForwarder) Terminate(p *portForwardEntry) {
+func (*KubectlForwarder) Terminate(p *portForwardEntry) {
 	logrus.Debugf("Terminating port-forward %v", p)
 
 	if p.cancel != nil {
 		p.cancel()
 	}
+}
+
+// Stop does nothing for kubectl
+func (*KubectlForwarder) Stop() {
+	return
 }

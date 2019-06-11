@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -432,11 +433,16 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 			forwardingPollTime = time.Second
 			t.Override(&retrieveAvailablePort, mockRetrieveAvailablePort(taken, test.availablePorts))
 
-			p := NewAutomaticPodForwarder(ioutil.Discard, kubernetes.NewImageList(), []string{""})
+			baseForwarder := BaseForwarder{
+				output:         ioutil.Discard,
+				namespaces:     []string{""},
+				forwardedPorts: &sync.Map{},
+			}
+			p := NewAutomaticPodForwarder(baseForwarder, kubernetes.NewImageList())
 			if test.forwarder == nil {
 				test.forwarder = newTestForwarder(nil, true)
 			}
-			p.Forwarder = test.forwarder
+			p.baseForwarder.Forwarder = test.forwarder
 
 			for _, pod := range test.pods {
 				err := p.portForwardPod(context.Background(), pod)

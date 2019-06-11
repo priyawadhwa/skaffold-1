@@ -29,6 +29,10 @@ type testForwarder struct {
 	forwardErr error
 }
 
+func (f *testForwarder) Start(ctx context.Context) error {
+	return nil
+}
+
 func (f *testForwarder) Forward(ctx context.Context, pfe *portForwardEntry) error {
 	key := pfe.key()
 	if f.automaticPortForwarding {
