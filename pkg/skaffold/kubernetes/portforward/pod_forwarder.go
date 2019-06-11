@@ -19,9 +19,7 @@ package portforward
 import (
 	"context"
 	"fmt"
-	"io"
 	"strconv"
-	"sync"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
@@ -35,41 +33,32 @@ import (
 // AutomaticPodForwarder is responsible for selecting pods satisfying a certain condition and port-forwarding the exposed
 // container ports within those pods. It also tracks and manages the port-forward connections.
 type AutomaticPodForwarder struct {
-	*kubectlForwarder
-
-	output      io.Writer
-	podSelector kubernetes.PodSelector
-	namespaces  []string
+	baseForwarder BaseForwarder
+	podSelector   kubernetes.PodSelector
 
 	// forwardedPods is a map of portForwardEntry.podKey() (string) -> portForwardEntry
 	forwardedPods map[string]*portForwardEntry
-
-	// forwardedPorts serves as a synchronized set of ports we've forwarded.
-	forwardedPorts *sync.Map
 }
 
 // NewAutomaticPodForwarder returns a struct that tracks and port-forwards pods as they are created and modified
-func NewAutomaticPodForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, forwardedPorts *sync.Map) *AutomaticPodForwarder {
+func NewAutomaticPodForwarder(baseForwarder BaseForwarder, podSelector kubernetes.PodSelector) *AutomaticPodForwarder {
 	return &AutomaticPodForwarder{
-		kubectlForwarder: &kubectlForwarder{},
-		output:           out,
-		podSelector:      podSelector,
-		namespaces:       namespaces,
-		forwardedPods:    make(map[string]*portForwardEntry),
-		forwardedPorts:   forwardedPorts,
+		baseForwarder: baseForwarder,
+		podSelector:   podSelector,
+		forwardedPods: make(map[string]*portForwardEntry),
 	}
 }
 
 // Stop terminates all kubectl port-forward commands.
 func (p *AutomaticPodForwarder) Stop() {
 	for _, entry := range p.forwardedPods {
-		p.Terminate(entry)
+		p.baseForwarder.Terminate(entry)
 	}
 }
 
 func (p *AutomaticPodForwarder) Start(ctx context.Context) error {
 	aggregate := make(chan watch.Event)
-	stopWatchers, err := kubernetes.AggregatePodWatcher(p.namespaces, aggregate)
+	stopWatchers, err := kubernetes.AggregatePodWatcher(p.baseForwarder.namespaces, aggregate)
 	if err != nil {
 		stopWatchers()
 		return errors.Wrap(err, "initializing pod watcher")
@@ -132,7 +121,7 @@ func (p *AutomaticPodForwarder) portForwardPod(ctx context.Context, pod *v1.Pod)
 				return errors.Wrap(err, "getting automatic pod forwarding entry")
 			}
 			if entry.resource.Port != entry.localPort {
-				color.Yellow.Fprintf(p.output, "Forwarding container %s to local port %d.\n", c.Name, entry.localPort)
+				color.Yellow.Fprintf(p.baseForwarder.output, "Forwarding container %s to local port %d.\n", c.Name, entry.localPort)
 			}
 			if err := p.forward(ctx, entry); err != nil {
 				return errors.Wrap(err, "failed to forward port")
@@ -147,12 +136,12 @@ func (p *AutomaticPodForwarder) forward(ctx context.Context, entry *portForwardE
 	if prevEntry, ok := p.forwardedPods[entry.podKey()]; ok {
 		// Check if this is a new generation of pod
 		if entry.resourceVersion > prevEntry.resourceVersion {
-			p.Terminate(prevEntry)
+			p.baseForwarder.Terminate(prevEntry)
 		}
 	}
 	p.forwardedPods[entry.podKey()] = entry
-	color.Default.Fprintln(p.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource.Type, entry.resource.Name, entry.resource.Port, entry.localPort))
-	if err := p.Forward(ctx, entry); err != nil {
+	color.Default.Fprintln(p.baseForwarder.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource.Type, entry.resource.Name, entry.resource.Port, entry.localPort))
+	if err := p.baseForwarder.Forward(ctx, entry); err != nil {
 		return errors.Wrap(err, "port forwarding failed")
 	}
 	return nil
@@ -184,7 +173,7 @@ func (p *AutomaticPodForwarder) getAutomaticPodForwardingEntry(pod *v1.Pod, reso
 	}
 
 	// retrieve an open port on the host
-	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.forwardedPorts))
+	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.baseForwarder.forwardedPorts))
 
 	return entry, nil
 }

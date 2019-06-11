@@ -19,12 +19,9 @@ package portforward
 import (
 	"context"
 	"fmt"
-	"io"
-	"sync"
 	"time"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/sirupsen/logrus"
@@ -39,18 +36,11 @@ var (
 // PortForwarder is responsible for selecting pods satisfying a certain condition and port-forwarding the exposed
 // container ports within those pods. It also tracks and manages the port-forward connections.
 type PortForwarder struct {
-	*kubectlForwarder
-
-	output      io.Writer
-	podSelector kubernetes.PodSelector
-	namespaces  []string
-	label       string
+	baseForwarder BaseForwarder
+	label         string
 
 	// forwardedResources is a map of portForwardEntry.key() (string) -> portForwardEntry
 	forwardedResources map[string]*portForwardEntry
-
-	// forwardedPorts serves as a synchronized set of ports we've forwarded.
-	forwardedPorts *sync.Map
 }
 
 var (
@@ -59,14 +49,10 @@ var (
 )
 
 // NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
-func NewPortForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, label string, forwardedPorts *sync.Map) *PortForwarder {
+func NewPortForwarder(baseForwarder BaseForwarder, label string) *PortForwarder {
 	return &PortForwarder{
-		kubectlForwarder:   &kubectlForwarder{},
-		output:             out,
-		podSelector:        podSelector,
-		namespaces:         namespaces,
+		baseForwarder:      baseForwarder,
 		forwardedResources: make(map[string]*portForwardEntry),
-		forwardedPorts:     forwardedPorts,
 		label:              label,
 	}
 }
@@ -74,7 +60,7 @@ func NewPortForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespa
 // Stop terminates all kubectl port-forward commands.
 func (p *PortForwarder) Stop() {
 	for _, entry := range p.forwardedResources {
-		p.Terminate(entry)
+		p.baseForwarder.Terminate(entry)
 	}
 }
 
@@ -123,16 +109,16 @@ func (p *PortForwarder) getCurrentEntry(resource latest.PortForwardResource) *po
 	}
 
 	// retrieve an open port on the host
-	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.forwardedPorts))
+	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.baseForwarder.forwardedPorts))
 	return entry
 }
 
 // forward the portForwardEntry
 func (p *PortForwarder) forward(ctx context.Context, entry *portForwardEntry) error {
-	color.Default.Fprintln(p.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource.Type, entry.resource.Name, entry.resource.Port, entry.localPort))
+	color.Default.Fprintln(p.baseForwarder.output, fmt.Sprintf("Port Forwarding %s/%s %d -> %d", entry.resource.Type, entry.resource.Name, entry.resource.Port, entry.localPort))
 	p.forwardedResources[entry.key()] = entry
 	err := wait.PollImmediate(time.Second, forwardingPollTime, func() (bool, error) {
-		if err := p.Forward(ctx, entry); err != nil {
+		if err := p.baseForwarder.Forward(ctx, entry); err != nil {
 			return false, nil
 		}
 		return true, nil
