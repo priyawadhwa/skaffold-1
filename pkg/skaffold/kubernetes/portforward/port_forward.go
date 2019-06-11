@@ -59,14 +59,14 @@ var (
 )
 
 // NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
-func NewPortForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, label string) *PortForwarder {
+func NewPortForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, label string, forwardedPorts *sync.Map) *PortForwarder {
 	return &PortForwarder{
 		kubectlForwarder:   &kubectlForwarder{},
 		output:             out,
 		podSelector:        podSelector,
 		namespaces:         namespaces,
 		forwardedResources: make(map[string]*portForwardEntry),
-		forwardedPorts:     &sync.Map{},
+		forwardedPorts:     forwardedPorts,
 		label:              label,
 	}
 }

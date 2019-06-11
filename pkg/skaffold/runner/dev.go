@@ -19,11 +19,12 @@ package runner
 import (
 	"context"
 	"io"
+	"sync"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes/portforward"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync"
+	pkgsync "github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/watch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -43,9 +44,6 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 		defer f.Stop()
 	}
 
-	portForwarder := portforward.NewPortForwarder(out, r.imageList, r.runCtx.Namespaces, r.defaultLabeller.K8sMangedByLabel())
-	defer portForwarder.Stop()
-
 	// Create watcher and register artifacts to build current state of files.
 	changed := changes{}
 	onChange := func() error {
@@ -54,7 +52,7 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 		logger.Mute()
 
 		for _, a := range changed.dirtyArtifacts {
-			s, err := sync.NewItem(a.artifact, a.events, r.builds, r.runCtx.InsecureRegistries)
+			s, err := pkgsync.NewItem(a.artifact, a.events, r.builds, r.runCtx.InsecureRegistries)
 			if err != nil {
 				return errors.Wrap(err, "sync")
 			}
@@ -154,14 +152,15 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 }
 
 func (r *SkaffoldRunner) retrievePortForwarders(ctx context.Context, out io.Writer) []portforward.Forwarder {
+	forwardedPorts := &sync.Map{}
 	var forwarders []portforward.Forwarder
 	if r.runCtx.Opts.PortForward {
-		pf := portforward.NewPortForwarder(out, r.imageList, r.runCtx.Namespaces, r.defaultLabeller.K8sMangedByLabel())
+		pf := portforward.NewPortForwarder(out, r.imageList, r.runCtx.Namespaces, r.defaultLabeller.K8sMangedByLabel(), forwardedPorts)
 		forwarders = append(forwarders, pf)
 	}
-	if r.runCtx.Opts.AutomaticPodForwarding {
-		pf := portforward.NewAutomaticPodForwarder(out, r.imageList, r.runCtx.Namespaces)
-		forwarders = append(forwarders, pf)
-	}
+	// if r.runCtx.Opts.AutomaticPodForwarding {
+	pf := portforward.NewAutomaticPodForwarder(out, r.imageList, r.runCtx.Namespaces, forwardedPorts)
+	forwarders = append(forwarders, pf)
+	// }
 	return forwarders
 }

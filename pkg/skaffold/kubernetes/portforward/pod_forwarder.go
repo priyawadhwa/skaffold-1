@@ -49,14 +49,14 @@ type AutomaticPodForwarder struct {
 }
 
 // NewAutomaticPodForwarder returns a struct that tracks and port-forwards pods as they are created and modified
-func NewAutomaticPodForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string) *AutomaticPodForwarder {
+func NewAutomaticPodForwarder(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, forwardedPorts *sync.Map) *AutomaticPodForwarder {
 	return &AutomaticPodForwarder{
 		kubectlForwarder: &kubectlForwarder{},
 		output:           out,
 		podSelector:      podSelector,
 		namespaces:       namespaces,
 		forwardedPods:    make(map[string]*portForwardEntry),
-		forwardedPorts:   &sync.Map{},
+		forwardedPorts:   forwardedPorts,
 	}
 }
 
