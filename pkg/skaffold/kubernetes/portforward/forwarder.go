@@ -43,8 +43,8 @@ type Forwarder interface {
 func GetForwarders(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, label string, automaticPodForwarding bool) []Forwarder {
 	baseForwarder := NewBaseForwarder(out, namespaces)
 	var f []Forwarder
-	pf := NewResourceForwarder(baseForwarder, label)
-	f = append(f, pf)
+	rf := NewResourceForwarder(baseForwarder, label)
+	f = append(f, rf)
 
 	if automaticPodForwarding {
 		apf := NewAutomaticPodForwarder(baseForwarder, podSelector)
@@ -86,7 +86,7 @@ func (b *BaseForwarder) forwardPortForwardEntry(ctx context.Context, entry *port
 		}
 		return true, nil
 	})
-}         
+}
 
 // Stop terminates all kubectl port-forward commands.
 func (b *BaseForwarder) Stop() {

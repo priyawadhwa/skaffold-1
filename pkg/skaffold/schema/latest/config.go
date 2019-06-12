@@ -52,9 +52,6 @@ type Pipeline struct {
 
 	// Deploy describes how images are deployed.
 	Deploy DeployConfig `yaml:"deploy,omitempty"`
-
-	// PortForward allows users to define additional resources to port forward after deployment.
-	PortForward []PortForwardResource `yaml:"portForward,omitempty"`
 }
 
 // PortForwardResource describes a resource to port forward.

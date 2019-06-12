@@ -125,7 +125,7 @@ func TestStart(t *testing.T) {
 			rf.Start(context.Background())
 			// poll for 10 seconds for the resources to be forwarded
 			err := wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
-				return reflect.DeepEqual(test.expected, fakeForwarder.forwardedEntries), nil
+				return len(test.expected) == len(fakeForwarder.forwardedEntries), nil
 			})
 			if err != nil {
 				t.Fatalf("expected entries didn't match actual entries. Expected: \n %v Actual: \n %v", test.expected, fakeForwarder.forwardedEntries)

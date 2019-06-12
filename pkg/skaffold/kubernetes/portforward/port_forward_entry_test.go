@@ -61,11 +61,15 @@ func TestPortForwardEntryKey(t *testing.T) {
 			if acutalKey != test.expected {
 				t.Fatalf("port forward entry key is incorrect: \n actual: %s \n expected: %s", acutalKey, test.expected)
 			}
+
+			if test.pfe.String() != test.expected {
+				t.Fatalf("port forward entry string is incorrect: \n actual: %s \n expected: %s", acutalKey, test.expected)
+			}
 		})
 	}
 }
 
-func TestPortForwardEntryPodKey(t *testing.T) {
+func TestAutomaticPodForwardingKey(t *testing.T) {
 	tests := []struct {
 		description string
 		pfe         *portForwardEntry
