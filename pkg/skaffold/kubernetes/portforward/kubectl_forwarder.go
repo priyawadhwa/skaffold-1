@@ -29,6 +29,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type PortForwardEntryForwarder interface {
+	Forward(parentCtx context.Context, pfe *portForwardEntry) error
+	Terminate(p *portForwardEntry)
+}
+
 type KubectlForwarder struct{}
 
 // Forward port-forwards a pod using kubectl port-forward
@@ -68,9 +73,4 @@ func (*KubectlForwarder) Terminate(p *portForwardEntry) {
 	if p.cancel != nil {
 		p.cancel()
 	}
-}
-
-// Stop does nothing for kubectl
-func (*KubectlForwarder) Stop() {
-	return
 }

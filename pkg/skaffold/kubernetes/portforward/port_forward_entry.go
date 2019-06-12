@@ -24,28 +24,28 @@ import (
 )
 
 type portForwardEntry struct {
-	resourceVersion int
-	resource        latest.PortForwardResource
-	podName         string
-	containerName   string
-	portName        string
-	localPort       int32
+	resourceVersion        int
+	resource               latest.PortForwardResource
+	podName                string
+	containerName          string
+	portName               string
+	localPort              int32
+	automaticPodForwarding bool
 
 	cancel context.CancelFunc
 }
 
-// Key is an identifier for the lock on a port during the skaffold dev cycle.
+// key is an identifier for the lock on a port during the skaffold dev cycle.
+// if automaticPodForwarding is set, we return a key that doesn't include podName, since we want the key
+// to be the same whenever pods restart
 func (p *portForwardEntry) key() string {
+	if p.automaticPodForwarding {
+		return fmt.Sprintf("%s-%s-%s-%d", p.containerName, p.resource.Namespace, p.portName, p.resource.Port)
+	}
 	return fmt.Sprintf("%s-%s-%s-%d", p.resource.Type, p.resource.Name, p.resource.Namespace, p.resource.Port)
-}
-
-// Key is an identifier for the lock on a port during the skaffold dev cycle.
-func (p *portForwardEntry) podKey() string {
-	return fmt.Sprintf("%s-%s-%s-%d", p.containerName, p.resource.Namespace, p.portName, p.resource.Port)
 }
 
 // String is a utility function that returns the port forward entry as a user-readable string
 func (p *portForwardEntry) String() string {
-	fmt.Println(*p)
 	return fmt.Sprintf("%s-%s-%s-%d", p.resource.Type, p.resource.Name, p.resource.Namespace, p.resource.Port)
 }

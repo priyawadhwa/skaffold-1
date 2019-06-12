@@ -82,6 +82,7 @@ func TestPortForwardEntryPodKey(t *testing.T) {
 					Namespace: "default",
 					Port:      8080,
 				},
+				automaticPodForwarding: true,
 			},
 			expected: "containerName-default-portName-8080",
 		},
@@ -89,7 +90,7 @@ func TestPortForwardEntryPodKey(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			acutalKey := test.pfe.podKey()
+			acutalKey := test.pfe.key()
 
 			if acutalKey != test.expected {
 				t.Fatalf("port forward entry key is incorrect: \n actual: %s \n expected: %s", acutalKey, test.expected)

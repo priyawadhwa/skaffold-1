@@ -18,10 +18,10 @@ package portforward
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/pkg/errors"
@@ -99,47 +99,47 @@ func (p *AutomaticPodForwarder) portForwardPod(ctx context.Context, pod *v1.Pod)
 		for _, port := range c.Ports {
 			// get current entry for this container
 			resource := latest.PortForwardResource{
-				Type:      "pod",
+				Type:      constants.PodResourceType,
 				Name:      pod.Name,
 				Namespace: pod.Namespace,
 				Port:      port.ContainerPort,
 			}
 
-			entry, err := p.getAutomaticPodForwardingEntry(pod, resource)
+			entry, err := p.getAutomaticPodForwardingEntry(pod.ResourceVersion, c.Name, port.Name, resource)
 			if err != nil {
 				return errors.Wrap(err, "getting automatic pod forwarding entry")
 			}
 			if entry.resource.Port != entry.localPort {
 				color.Yellow.Fprintf(p.output, "Forwarding container %s to local port %d.\n", c.Name, entry.localPort)
 			}
-			if err := p.forward(ctx, entry); err != nil {
-				return errors.Wrap(err, "failed to forward port")
+			if prevEntry, ok := p.forwardedResources[entry.key()]; ok {
+				// Check if this is a new generation of pod
+				if entry.resourceVersion > prevEntry.resourceVersion {
+					p.Terminate(prevEntry)
+				}
 			}
+			return p.forwardPortForwardEntry(ctx, entry)
 		}
 	}
 	return nil
 }
 
-func (p *AutomaticPodForwarder) getAutomaticPodForwardingEntry(pod *v1.Pod, resource latest.PortForwardResource) (*portForwardEntry, error) {
-	entry := &portForwardEntry{
-		resource: resource,
-	}
-	resourceVersion, err := strconv.Atoi(pod.ResourceVersion)
+func (p *AutomaticPodForwarder) getAutomaticPodForwardingEntry(resourceVersion, containerName, portName string, resource latest.PortForwardResource) (*portForwardEntry, error) {
+	rv, err := strconv.Atoi(resourceVersion)
 	if err != nil {
 		return nil, errors.Wrap(err, "converting resource version to integer")
 	}
-	entry.resourceVersion = resourceVersion
-	entry.podName = pod.Name
-	// determine the container name and port name for this entry
-	containerName, portName, err := retrieveContainerNameAndPortNameFromPod(pod, resource.Port)
-	if err != nil {
-		return nil, errors.Wrapf(err, "retrieving container and port name for %s/%s", resource.Type, resource.Name)
+	entry := &portForwardEntry{
+		resource:               resource,
+		resourceVersion:        rv,
+		podName:                resource.Name,
+		containerName:          containerName,
+		portName:               portName,
+		automaticPodForwarding: true,
 	}
-	entry.containerName = containerName
-	entry.portName = portName
 
 	// If we have, return the current entry
-	oldEntry, ok := p.forwardedResources[entry.podKey()]
+	oldEntry, ok := p.forwardedResources[entry.key()]
 	if ok {
 		entry.localPort = oldEntry.localPort
 		return entry, nil
@@ -149,35 +149,4 @@ func (p *AutomaticPodForwarder) getAutomaticPodForwardingEntry(pod *v1.Pod, reso
 	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.forwardedPorts))
 
 	return entry, nil
-}
-
-// retrieveContainerNameAndPortNameFromPod returns the container name and port name for a given port and pod
-func retrieveContainerNameAndPortNameFromPod(pod *v1.Pod, port int32) (string, string, error) {
-	for _, c := range pod.Spec.InitContainers {
-		for _, p := range c.Ports {
-			if p.ContainerPort == port {
-				return c.Name, p.Name, nil
-			}
-		}
-	}
-	for _, c := range pod.Spec.Containers {
-		for _, p := range c.Ports {
-			if p.ContainerPort == port {
-				return c.Name, p.Name, nil
-			}
-		}
-	}
-	return "", "", fmt.Errorf("pod %s does not expose port %d", pod.Name, port)
-}
-
-// forward the portForwardEntry
-func (p *AutomaticPodForwarder) forward(ctx context.Context, entry *portForwardEntry) error {
-	if prevEntry, ok := p.forwardedResources[entry.podKey()]; ok {
-		// Check if this is a new generation of pod
-		if entry.resourceVersion > prevEntry.resourceVersion {
-			p.Terminate(prevEntry)
-		}
-	}
-	p.forwardedResources[entry.podKey()] = entry
-	return p.forwardEntry(ctx, entry)
 }

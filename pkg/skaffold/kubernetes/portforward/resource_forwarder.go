@@ -25,9 +25,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// PortForwarder is responsible for selecting pods satisfying a certain condition and port-forwarding the exposed
+// ResourceForwarder is responsible for selecting pods satisfying a certain condition and port-forwarding the exposed
 // container ports within those pods. It also tracks and manages the port-forward connections.
-type PortForwarder struct {
+type ResourceForwarder struct {
 	BaseForwarder
 	label string
 }
@@ -37,9 +37,9 @@ var (
 	retrieveAvailablePort = util.GetAvailablePort
 )
 
-// NewPortForwarder returns a struct that tracks and port-forwards pods as they are created and modified
-func NewPortForwarder(baseForwarder BaseForwarder, label string) *PortForwarder {
-	return &PortForwarder{
+// NewResourceForwarder returns a struct that tracks and port-forwards pods as they are created and modified
+func NewResourceForwarder(baseForwarder BaseForwarder, label string) *ResourceForwarder {
+	return &ResourceForwarder{
 		BaseForwarder: baseForwarder,
 		label:         label,
 	}
@@ -47,7 +47,7 @@ func NewPortForwarder(baseForwarder BaseForwarder, label string) *PortForwarder 
 
 // Start begins a pod watcher that port forwards any pods involving containers with exposed ports.
 // TODO(r2d4): merge this event loop with pod watcher from log writer
-func (p *PortForwarder) Start(ctx context.Context) error {
+func (p *ResourceForwarder) Start(ctx context.Context) error {
 	serviceResources, err := RetrieveServicesResources(p.label)
 	if err != nil {
 		return errors.Wrap(err, "retrieving services for automatic port forwarding")
@@ -58,7 +58,7 @@ func (p *PortForwarder) Start(ctx context.Context) error {
 
 // We will port forward everything from here
 // We want to wait on the pod to be created and then port forward
-func (p *PortForwarder) portForwardResources(ctx context.Context, resources []latest.PortForwardResource) {
+func (p *ResourceForwarder) portForwardResources(ctx context.Context, resources []latest.PortForwardResource) {
 	for _, r := range resources {
 		r := r
 		go func() {
@@ -69,16 +69,14 @@ func (p *PortForwarder) portForwardResources(ctx context.Context, resources []la
 	}
 }
 
-func (p *PortForwarder) portForwardResource(ctx context.Context, resource latest.PortForwardResource) error {
+func (p *ResourceForwarder) portForwardResource(ctx context.Context, resource latest.PortForwardResource) error {
 	// Get port forward entry for this resource
 	entry := p.getCurrentEntry(resource)
-	// Store new resource
-	p.forwardedResources[entry.key()] = entry
 	// Forward the entry
-	return p.forwardEntry(ctx, entry)
+	return p.forwardPortForwardEntry(ctx, entry)
 }
 
-func (p *PortForwarder) getCurrentEntry(resource latest.PortForwardResource) *portForwardEntry {
+func (p *ResourceForwarder) getCurrentEntry(resource latest.PortForwardResource) *portForwardEntry {
 	// determine if we have seen this before
 	entry := &portForwardEntry{
 		resource: resource,

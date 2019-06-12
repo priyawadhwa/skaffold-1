@@ -22,23 +22,14 @@ import (
 )
 
 type testForwarder struct {
-	forwardedEntries        map[string]*portForwardEntry
-	forwardedPorts          map[int32]bool
-	automaticPortForwarding bool
+	forwardedEntries map[string]*portForwardEntry
+	forwardedPorts   map[int32]bool
 
 	forwardErr error
 }
 
-func (f *testForwarder) Start(ctx context.Context) error {
-	return nil
-}
-
 func (f *testForwarder) Forward(ctx context.Context, pfe *portForwardEntry) error {
-	key := pfe.key()
-	if f.automaticPortForwarding {
-		key = pfe.podKey()
-	}
-	f.forwardedEntries[key] = pfe
+	f.forwardedEntries[pfe.key()] = pfe
 	f.forwardedPorts[pfe.localPort] = true
 	return f.forwardErr
 }
@@ -46,6 +37,14 @@ func (f *testForwarder) Forward(ctx context.Context, pfe *portForwardEntry) erro
 func (f *testForwarder) Terminate(pfe *portForwardEntry) {
 	delete(f.forwardedEntries, pfe.key())
 	delete(f.forwardedPorts, pfe.resource.Port)
+}
+
+func newTestForwarder(forwardErr error) *testForwarder {
+	return &testForwarder{
+		forwardedEntries: map[string]*portForwardEntry{},
+		forwardedPorts:   map[int32]bool{},
+		forwardErr:       forwardErr,
+	}
 }
 
 func mockRetrieveAvailablePort(taken map[int]struct{}, availablePorts []int) func(int, *sync.Map) int {
@@ -59,14 +58,5 @@ func mockRetrieveAvailablePort(taken map[int]struct{}, availablePorts []int) fun
 			return p
 		}
 		return -1
-	}
-}
-
-func newTestForwarder(forwardErr error, automaticPortForwarding bool) *testForwarder {
-	return &testForwarder{
-		forwardedEntries:        map[string]*portForwardEntry{},
-		forwardedPorts:          map[int32]bool{},
-		forwardErr:              forwardErr,
-		automaticPortForwarding: automaticPortForwarding,
 	}
 }

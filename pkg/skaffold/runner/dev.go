@@ -39,7 +39,9 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 	defer logger.Stop()
 
 	forwarders := portforward.GetForwarders(out, r.imageList, r.runCtx.Namespaces, r.defaultLabeller.K8sMangedByLabel(), r.runCtx.Opts.AutomaticPodForwarding)
-	defer forwarders.Stop()
+	for _, f := range forwarders {
+		defer f.Stop()
+	}
 
 	// Create watcher and register artifacts to build current state of files.
 	changed := changes{}
@@ -140,8 +142,10 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 	}
 	// Start port forwarding
 	if r.runCtx.Opts.PortForward {
-		if err := forwarders.Start(ctx); err != nil {
-			return errors.Wrap(err, "starting port-forwarder")
+		for _, f := range forwarders {
+			if err := f.Start(ctx); err != nil {
+				return errors.Wrap(err, "starting port-forwarder")
+			}
 		}
 	}
 

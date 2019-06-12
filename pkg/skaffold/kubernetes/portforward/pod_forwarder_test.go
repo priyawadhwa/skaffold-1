@@ -59,8 +59,9 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 						Namespace: "namespace",
 						Port:      8080,
 					},
-					portName:  "portname",
-					localPort: 8080,
+					automaticPodForwarding: true,
+					portName:               "portname",
+					localPort:              8080,
 				},
 			},
 			pods: []*v1.Pod{
@@ -101,9 +102,10 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 						Namespace: "namespace",
 						Port:      8080,
 					},
-					containerName: "containername",
-					portName:      "portname",
-					localPort:     9000,
+					automaticPodForwarding: true,
+					containerName:          "containername",
+					portName:               "portname",
+					localPort:              9000,
 				},
 			},
 			availablePorts: []int{9000},
@@ -164,7 +166,7 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 			expectedPorts: map[int32]bool{
 				8080: true,
 			},
-			forwarder:      newTestForwarder(fmt.Errorf(""), true),
+			forwarder:      newTestForwarder(fmt.Errorf("")),
 			shouldErr:      true,
 			availablePorts: []int{8080},
 			expectedEntries: map[string]*portForwardEntry{
@@ -179,7 +181,8 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 						Namespace: "namespace",
 						Port:      8080,
 					},
-					localPort: 8080,
+					automaticPodForwarding: true,
+					localPort:              8080,
 				},
 			},
 			pods: []*v1.Pod{
@@ -223,8 +226,9 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 						Namespace: "namespace",
 						Port:      8080,
 					},
-					portName:  "portname",
-					localPort: 8080,
+					portName:               "portname",
+					automaticPodForwarding: true,
+					localPort:              8080,
 				},
 				"containername2-namespace2-portname2-50051": {
 					resourceVersion: 1,
@@ -236,8 +240,9 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 						Namespace: "namespace2",
 						Port:      50051,
 					},
-					portName:  "portname2",
-					localPort: 50051,
+					portName:               "portname2",
+					automaticPodForwarding: true,
+					localPort:              50051,
 				},
 			},
 			pods: []*v1.Pod{
@@ -302,7 +307,8 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 						Namespace: "namespace",
 						Port:      8080,
 					},
-					localPort: 8080,
+					automaticPodForwarding: true,
+					localPort:              8080,
 				},
 				"containername2-namespace2-portname2-8080": {
 					resourceVersion: 1,
@@ -315,7 +321,8 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 						Namespace: "namespace2",
 						Port:      8080,
 					},
-					localPort: 9000,
+					automaticPodForwarding: true,
+					localPort:              9000,
 				},
 			},
 			pods: []*v1.Pod{
@@ -379,7 +386,8 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 						Namespace: "namespace",
 						Port:      8080,
 					},
-					localPort: 8080,
+					automaticPodForwarding: true,
+					localPort:              8080,
 				},
 			},
 			pods: []*v1.Pod{
@@ -434,15 +442,16 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 			t.Override(&retrieveAvailablePort, mockRetrieveAvailablePort(taken, test.availablePorts))
 
 			baseForwarder := BaseForwarder{
-				output:         ioutil.Discard,
-				namespaces:     []string{""},
-				forwardedPorts: &sync.Map{},
+				output:             ioutil.Discard,
+				namespaces:         []string{""},
+				forwardedPorts:     &sync.Map{},
+				forwardedResources: make(map[string]*portForwardEntry),
 			}
 			p := NewAutomaticPodForwarder(baseForwarder, kubernetes.NewImageList())
 			if test.forwarder == nil {
-				test.forwarder = newTestForwarder(nil, true)
+				test.forwarder = newTestForwarder(nil)
 			}
-			p.baseForwarder.Forwarder = test.forwarder
+			p.PortForwardEntryForwarder = test.forwarder
 
 			for _, pod := range test.pods {
 				err := p.portForwardPod(context.Background(), pod)
@@ -457,68 +466,5 @@ func TestAutomaticPortForwardPod(t *testing.T) {
 				t.Errorf("Forwarded entries differs from expected entries. Expected: %s, Actual: %s", test.expectedEntries, test.forwarder.forwardedEntries)
 			}
 		})
-	}
-}
-
-func TestRetrieveContainerNameAndPortNameFromPod(t *testing.T) {
-	pod := &v1.Pod{
-		Spec: v1.PodSpec{
-			InitContainers: []v1.Container{
-				{
-					Name:  "container1",
-					Ports: []v1.ContainerPort{retrievePort(1), retrievePort(2)},
-				},
-			},
-			Containers: []v1.Container{
-				{
-					Name:  "container2",
-					Ports: []v1.ContainerPort{retrievePort(3), retrievePort(4)},
-				},
-			},
-		},
-	}
-
-	tests := []struct {
-		description           string
-		expectedContainerName string
-		expectedPortName      string
-		port                  int32
-		shouldErr             bool
-	}{
-		{
-			description:           "port matches init container",
-			port:                  2,
-			expectedContainerName: "container1",
-			expectedPortName:      "port2",
-		}, {
-			description:           "port matches container",
-			port:                  3,
-			expectedContainerName: "container2",
-			expectedPortName:      "port3",
-		}, {
-			description: "port matches no container",
-			port:        500,
-			shouldErr:   true,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.description, func(t *testing.T) {
-			actualContainerName, actualPortName, err := retrieveContainerNameAndPortNameFromPod(pod, test.port)
-			testutil.CheckError(t, test.shouldErr, err)
-			if actualContainerName != test.expectedContainerName {
-				t.Fatalf("actual container name doesn't match expected container name. \n Expected: %s \n Acutal: %s", test.expectedContainerName, actualContainerName)
-			}
-			if actualPortName != test.expectedPortName {
-				t.Fatalf("actual port name doesn't match expected port name. \n Expected: %s \n Actual: %s", test.expectedPortName, actualPortName)
-			}
-		})
-	}
-}
-
-func retrievePort(i int32) v1.ContainerPort {
-	return v1.ContainerPort{
-		Name:          fmt.Sprintf("port%d", i),
-		ContainerPort: i,
 	}
 }
