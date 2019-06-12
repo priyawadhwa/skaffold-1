@@ -93,7 +93,7 @@ type BaseForwarder struct {
 	// forwardedPorts serves as a synchronized set of ports we've forwarded.
 	forwardedPorts *sync.Map
 
-	// forwardedResources is a map of portForwardEntry.key() (string) -> portForwardEntry
+	// forwardedResources is a map of portForwardEntry key (string) -> portForwardEntry
 	forwardedResources map[string]*portForwardEntry
 }
 

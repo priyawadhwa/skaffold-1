@@ -30,9 +30,6 @@ import (
 type PortForwarder struct {
 	BaseForwarder
 	label string
-
-	// forwardedResources is a map of portForwardEntry.key() (string) -> portForwardEntry
-	forwardedResources map[string]*portForwardEntry
 }
 
 var (
