@@ -41,14 +41,7 @@ type Forwarder interface {
 
 // GetForwarders returns a list of forwarders
 func GetForwarders(out io.Writer, podSelector kubernetes.PodSelector, namespaces []string, label string, automaticPodForwarding bool) []Forwarder {
-	baseForwarder := BaseForwarder{
-		output:                    out,
-		namespaces:                namespaces,
-		forwardedPorts:            &sync.Map{},
-		forwardedResources:        make(map[string]*portForwardEntry),
-		PortForwardEntryForwarder: &KubectlForwarder{},
-	}
-
+	baseForwarder := NewBaseForwarder(out, namespaces)
 	var f []Forwarder
 	pf := NewResourceForwarder(baseForwarder, label)
 	f = append(f, pf)
@@ -72,6 +65,16 @@ type BaseForwarder struct {
 
 	// forwardedResources is a map of portForwardEntry key (string) -> portForwardEntry
 	forwardedResources map[string]*portForwardEntry
+}
+
+func NewBaseForwarder(out io.Writer, namespaces []string) BaseForwarder {
+	return BaseForwarder{
+		output:                    out,
+		namespaces:                namespaces,
+		forwardedPorts:            &sync.Map{},
+		forwardedResources:        make(map[string]*portForwardEntry),
+		PortForwardEntryForwarder: &KubectlForwarder{},
+	}
 }
 
 func (b *BaseForwarder) forwardPortForwardEntry(ctx context.Context, entry *portForwardEntry) error {

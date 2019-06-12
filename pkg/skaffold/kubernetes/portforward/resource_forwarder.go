@@ -35,6 +35,7 @@ type ResourceForwarder struct {
 var (
 	// For testing
 	retrieveAvailablePort = util.GetAvailablePort
+	retrieveServices      = RetrieveServicesResources
 )
 
 // NewResourceForwarder returns a struct that tracks and port-forwards pods as they are created and modified
@@ -48,7 +49,7 @@ func NewResourceForwarder(baseForwarder BaseForwarder, label string) *ResourceFo
 // Start begins a pod watcher that port forwards any pods involving containers with exposed ports.
 // TODO(r2d4): merge this event loop with pod watcher from log writer
 func (p *ResourceForwarder) Start(ctx context.Context) error {
-	serviceResources, err := RetrieveServicesResources(p.label)
+	serviceResources, err := retrieveServices(p.label)
 	if err != nil {
 		return errors.Wrap(err, "retrieving services for automatic port forwarding")
 	}

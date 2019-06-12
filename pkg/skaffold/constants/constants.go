@@ -65,7 +65,8 @@ const (
 	DefaultRPCPort     = 50051
 	DefaultRPCHTTPPort = 50052
 
-	PodResourceType = "pod"
+	PodResourceType     = "pod"
+	ServiceResourceType = "service"
 )
 
 var (
