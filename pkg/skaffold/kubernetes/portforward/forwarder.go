@@ -86,7 +86,7 @@ func (b *BaseForwarder) forwardPortForwardEntry(ctx context.Context, entry *port
 		}
 		return true, nil
 	})
-}
+}         
 
 // Stop terminates all kubectl port-forward commands.
 func (b *BaseForwarder) Stop() {
