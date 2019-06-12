@@ -23,7 +23,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes/portforward"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
-	pkgsync "github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/sync"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/watch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -41,8 +41,8 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 	var forwarders []portforward.Forwarder
 	if r.runCtx.Opts.PortForward {
 		forwarders = portforward.GetForwarders(out, r.imageList, r.runCtx.Namespaces, r.defaultLabeller.K8sMangedByLabel(), r.runCtx.Opts.AutomaticPodForwarding)
-	} 
- 
+	}
+
 	for _, f := range forwarders {
 		defer f.Stop()
 	}
@@ -55,7 +55,7 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 		logger.Mute()
 
 		for _, a := range changed.dirtyArtifacts {
-			s, err := pkgsync.NewItem(a.artifact, a.events, r.builds, r.runCtx.InsecureRegistries)
+			s, err := sync.NewItem(a.artifact, a.events, r.builds, r.runCtx.InsecureRegistries)
 			if err != nil {
 				return errors.Wrap(err, "sync")
 			}
@@ -145,11 +145,11 @@ func (r *SkaffoldRunner) Dev(ctx context.Context, out io.Writer, artifacts []*la
 		}
 	}
 	// Start port forwarding
-		for _, f := range forwarders {
-			if err := f.Start(ctx); err != nil {
-				return errors.Wrap(err, "starting port-forwarder")
-			}
+	for _, f := range forwarders {
+		if err := f.Start(ctx); err != nil {
+			return errors.Wrap(err, "starting port-forwarder")
 		}
-   
+	}
+
 	return r.Watcher.Run(ctx, out, onChange)
 }
