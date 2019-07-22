@@ -4,8 +4,22 @@ build:
   artifacts:
     - image: gcr.io/k8s-skaffold/leeroy-web
       context: ./leeroy-web/
+      # docker:
+      #   noCache: true
+      custom:
+        buildCommand: ../build.sh
+        dependencies:
+          paths:
+            - .
     - image: gcr.io/k8s-skaffold/leeroy-app
       context: ./leeroy-app/
+      # docker:
+      #    noCache: true
+      custom:
+        buildCommand: ../build.sh
+        dependencies:
+          paths:
+            - .
 deploy:
   kubectl:
     manifests:
