@@ -5,12 +5,12 @@ images=$(echo $IMAGES | tr " " "\n")
 
 for image in $images
 do
-    pack build $image
+    pack build $image --buildpack heroku/go --publish
 
-    if $PUSH_IMAGE
-    then
-        docker push $image
-    fi
+    # if $PUSH_IMAGE
+    # then
+    #     docker push $image
+    # fi
 
 done
 
