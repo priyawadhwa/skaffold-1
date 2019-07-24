@@ -351,6 +351,11 @@ type DeployType struct {
 
 	// KustomizeDeploy *beta* uses the `kustomize` CLI to "patch" a deployment for a target environment.
 	KustomizeDeploy *KustomizeDeploy `yaml:"kustomize,omitempty" yamltags:"oneOf=deploy"`
+
+	DockerComposeDeploy *DockerComposeDeploy `yaml:"dockerCompose,omitempty" yamltags:"oneOf=deploy"`
+}
+
+type DockerComposeDeploy struct {
 }
 
 // KubectlDeploy *beta* uses a client side `kubectl apply` to deploy manifests.

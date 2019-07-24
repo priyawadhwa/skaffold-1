@@ -78,6 +78,7 @@ type SkaffoldRunner struct {
 	builds               []build.Artifact
 	hasBuilt             bool
 	hasDeployed          bool
+	dockerCompose        bool
 	imageList            *kubernetes.ImageList
 }
 
@@ -182,9 +183,10 @@ func getDeployer(runCtx *runcontext.RunContext) (deploy.Deployer, error) {
 
 	case runCtx.Cfg.Deploy.KustomizeDeploy != nil:
 		return deploy.NewKustomizeDeployer(runCtx), nil
-
-	default:
+	case runCtx.Cfg.Deploy.DockerComposeDeploy != nil:
 		return deploy.NewDockerComposeDeployer(runCtx), nil
+	default:
+		return nil, errors.New("invalid deployer")
 	}
 }
 
@@ -224,6 +226,9 @@ func (r *SkaffoldRunner) Deploy(ctx context.Context, out io.Writer, artifacts []
 	r.hasDeployed = true
 	if err != nil {
 		return err
+	}
+	if r.runCtx.Cfg.Deploy.DockerComposeDeploy != nil {
+		return nil
 	}
 	return r.performStatusCheck(ctx, out)
 }

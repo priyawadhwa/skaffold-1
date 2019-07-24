@@ -200,7 +200,7 @@ var FlagRegistry = []Flag{
 		Name:          "no-prune",
 		Usage:         "Skip removing images and containers built by Skaffold",
 		Value:         &opts.NoPrune,
-		DefValue:      false,
+		DefValue:      true,
 		FlagAddMethod: "BoolVar",
 		DefinedOn:     []string{"dev", "run", "debug"},
 	},
