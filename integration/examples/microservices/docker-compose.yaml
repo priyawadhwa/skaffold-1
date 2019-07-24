@@ -1,0 +1,12 @@
+version: '3'
+services:
+  leeroyWeb:
+    build: ./leeroy-web/
+    image: "gcr.io/k8s-skaffold/leeroy-web"
+    ports:
+     - 8080:9000
+  leeroyApp:
+    build: ./leeroy-app/
+    image: "gcr.io/k8s-skaffold/leeroy-app"
+    ports:
+     - 50051:50053

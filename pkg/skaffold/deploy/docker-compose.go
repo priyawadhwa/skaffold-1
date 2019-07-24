@@ -83,8 +83,8 @@ func (k *DockerComposeDeployer) Deploy(parentCtx context.Context, out io.Writer,
 
 	cmd := exec.CommandContext(ctx, "docker-compose", "-f", "-", "up", "--no-build", "-d")
 	cmd.Stdin = bytes.NewBuffer(ml[0])
-	if output, err := util.RunCmdOut(cmd); err != nil {
-		return errors.Wrapf(err, "running docker-compose up: %v \n %s", err, string(output))
+	if _, err := util.RunCmdOut(cmd); err != nil {
+		return errors.Wrapf(err, "running docker-compose up: %v", err)
 	}
 
 	cmd = exec.CommandContext(ctx, "docker-compose", "logs", "-f")

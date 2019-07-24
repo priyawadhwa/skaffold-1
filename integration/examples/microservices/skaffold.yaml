@@ -4,22 +4,12 @@ build:
   artifacts:
     - image: gcr.io/k8s-skaffold/leeroy-web
       context: ./leeroy-web/
-      # docker:
-      #   noCache: true
-      custom:
-        buildCommand: ../build.sh
-        dependencies:
-          paths:
-            - .
+      docker:
+        noCache: true
     - image: gcr.io/k8s-skaffold/leeroy-app
       context: ./leeroy-app/
-      # docker:
-      #    noCache: true
-      custom:
-        buildCommand: ../build.sh
-        dependencies:
-          paths:
-            - .
+      docker:
+         noCache: true
 deploy:
   kubectl:
     manifests:
@@ -30,3 +20,24 @@ portForward:
     resourceName: leeroy-web
     port: 8080
     localPort: 9000
+profiles:
+- name: buildpacks
+  build:
+    artifacts:
+    - image: gcr.io/k8s-skaffold/leeroy-web
+      context: ./leeroy-web/
+      custom:
+        buildCommand: ../build.sh
+        dependencies:
+          paths:
+            - .
+    - image: gcr.io/k8s-skaffold/leeroy-app
+      context: ./leeroy-app/
+      custom:
+        buildCommand: ../build.sh
+        dependencies:
+          paths:
+            - .
+- name: compose
+  deploy: 
+    dockerCompose: {}
