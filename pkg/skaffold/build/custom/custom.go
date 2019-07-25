@@ -17,14 +17,17 @@ limitations under the License.
 package custom
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
@@ -58,7 +61,23 @@ func (b *ArtifactBuilder) Build(ctx context.Context, out io.Writer, a *latest.Ar
 	if err != nil {
 		return errors.Wrap(err, "retrieving cmd")
 	}
-	return cmd.Run()
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	scanner := bufio.NewScanner(stdout)
+	scanner.Split(bufio.ScanLines)
+
+	if err := cmd.Start(); err != nil {
+		return errors.Wrap(err, "starting cmd")
+	}
+
+	for scanner.Scan() {
+		m := scanner.Text()
+		l := log.New(os.Stdout, time.Now().Format("15:04:05.000 "), 0)
+		l.Print(m)
+	}
+	return cmd.Wait()
 }
 
 func (b *ArtifactBuilder) retrieveCmd(ctx context.Context, a *latest.Artifact, tag string) (*exec.Cmd, error) {
@@ -75,8 +94,9 @@ func (b *ArtifactBuilder) retrieveCmd(ctx context.Context, a *latest.Artifact, t
 		return nil, errors.Wrap(err, "getting context for artifact")
 	}
 	cmd.Dir = dir
-	cmd.Stdout = os.Stdout
+	// cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
 	return cmd, nil
 }
 
