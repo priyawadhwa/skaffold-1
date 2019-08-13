@@ -86,10 +86,10 @@ type PortForwardResource struct {
 	Namespace string `yaml:"namespace,omitempty"`
 
 	// Port is the resource port that will be forwarded.
-	Port int32 `yaml:"port,omitempty"`
+	Port int `yaml:"port,omitempty"`
 
 	// LocalPort is the local port to forward to. If the port is unavailable, Skaffold will choose a random open port to forward to. *Optional*.
-	LocalPort int32 `yaml:"localPort,omitempty"`
+	LocalPort int `yaml:"localPort,omitempty"`
 }
 
 // BuildConfig contains all the configuration for the build steps.
@@ -295,11 +295,11 @@ type ClusterDetails struct {
 // DockerConfig contains information about the docker `config.json` to mount.
 type DockerConfig struct {
 	// Path is the path to the docker `config.json`.
-	Path string `yaml:"path,omitempty" yamltags:"oneOf=dockerSecret"`
+	Path string `yaml:"path,omitempty"`
 
 	// SecretName is the Kubernetes secret that contains the `config.json` Docker configuration.
 	// Note that the expected secret type is not 'kubernetes.io/dockerconfigjson' but 'Opaque'.
-	SecretName string `yaml:"secretName,omitempty" yamltags:"oneOf=dockerSecret"`
+	SecretName string `yaml:"secretName,omitempty"`
 }
 
 // ResourceRequirements describes the resource requirements for the kaniko pod.
@@ -336,7 +336,9 @@ type TestCase struct {
 
 // DeployConfig contains all the configuration needed by the deploy steps.
 type DeployConfig struct {
-	DeployType `yaml:",inline"`
+	// StatusCheckDeadlineSeconds *beta* is the deadline for deployments to stabilize in seconds.
+	StatusCheckDeadlineSeconds int `yaml:"statusCheckDeadlineSeconds,omitempty"`
+	DeployType                 `yaml:",inline"`
 }
 
 // DeployType contains the specific implementation and parameters needed
@@ -510,6 +512,8 @@ type HelmFQNConfig struct {
 
 // HelmConventionConfig is the image config in the syntax of image.repository and image.tag.
 type HelmConventionConfig struct {
+	// ExplicitRegistry separates `image.registry` to the image config syntax. Useful for some charts e.g. `postgresql`.
+	ExplicitRegistry bool `yaml:"explicitRegistry,omitempty"`
 }
 
 // Artifact are the items that need to be built, along with the context in which
@@ -529,8 +533,6 @@ type Artifact struct {
 
 	// ArtifactType describes how to build an artifact.
 	ArtifactType `yaml:",inline"`
-
-	WorkspaceHash string `yaml:"-,omitempty"`
 }
 
 // Sync *alpha* specifies what files to sync into the container.
@@ -538,6 +540,11 @@ type Artifact struct {
 type Sync struct {
 	// Manual lists manual sync rules indicating the source and destination.
 	Manual []*SyncRule `yaml:"manual,omitempty" yamltags:"oneOf=sync"`
+
+	// Infer lists file patterns which may be synced into the container.
+	// The container destination is inferred by the builder.
+	// Currently only available for docker artifacts.
+	Infer []string `yaml:"infer,omitempty" yamltags:"oneOf=sync"`
 }
 
 // SyncRule specifies which local files to sync to remote folders.
@@ -698,6 +705,9 @@ type KanikoArtifact struct {
 	// Cache configures Kaniko caching. If a cache is specified, Kaniko will
 	// use a remote cache which will speed up builds.
 	Cache *KanikoCache `yaml:"cache,omitempty"`
+
+	// Reproducible is used to strip timestamps out of the built image.
+	Reproducible bool `yaml:"reproducible,omitempty"`
 }
 
 // DockerArtifact *beta* describes an artifact built from a Dockerfile,
@@ -745,10 +755,10 @@ type BazelArtifact struct {
 // [Jib plugin for Maven](https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin).
 type JibMavenArtifact struct {
 	// Module selects which Maven module to build, for a multi module project.
-	Module string `yaml:"module"`
+	Module string `yaml:"module,omitempty"`
 
 	// Profile selects which Maven profile to activate.
-	Profile string `yaml:"profile"`
+	Profile string `yaml:"profile,omitempty"`
 
 	// Flags are additional build flags passed to Maven.
 	// For example: `["-x", "-DskipTests"]`.
@@ -759,7 +769,7 @@ type JibMavenArtifact struct {
 // [Jib plugin for Gradle](https://github.com/GoogleContainerTools/jib/tree/master/jib-gradle-plugin).
 type JibGradleArtifact struct {
 	// Project selects which Gradle project to build.
-	Project string `yaml:"project"`
+	Project string `yaml:"project,omitempty"`
 
 	// Flags are additional build flags passed to Gradle.
 	// For example: `["--no-build-cache"]`.

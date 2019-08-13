@@ -19,6 +19,7 @@ package portforward
 import (
 	"context"
 	"strconv"
+	"sync"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
@@ -108,8 +109,8 @@ func (p *WatchingPodForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) 
 				Type:      constants.Pod,
 				Name:      pod.Name,
 				Namespace: pod.Namespace,
-				Port:      port.ContainerPort,
-				LocalPort: port.ContainerPort,
+				Port:      int(port.ContainerPort),
+				LocalPort: int(port.ContainerPort),
 			}
 
 			entry, err := p.podForwardingEntry(pod.ResourceVersion, c.Name, port.Name, resource)
@@ -121,14 +122,12 @@ func (p *WatchingPodForwarder) portForwardPod(ctx context.Context, pod *v1.Pod) 
 			}
 			if prevEntry, ok := p.forwardedResources.Load(entry.key()); ok {
 				// Check if this is a new generation of pod
-				prevEntry := prevEntry.(*portForwardEntry)
 				if entry.resourceVersion > prevEntry.resourceVersion {
 					p.Terminate(prevEntry)
 				}
 			}
-			if err := p.forwardPortForwardEntry(ctx, entry); err != nil {
-				return err
-			}
+			p.forwardPortForwardEntry(ctx, entry)
+
 		}
 	}
 	return nil
@@ -146,19 +145,19 @@ func (p *WatchingPodForwarder) podForwardingEntry(resourceVersion, containerName
 		containerName:          containerName,
 		portName:               portName,
 		automaticPodForwarding: true,
+		terminationLock:        &sync.Mutex{},
 	}
 
 	// If we have, return the current entry
 	oldEntry, ok := p.forwardedResources.Load(entry.key())
 
 	if ok {
-		oldEntry := oldEntry.(*portForwardEntry)
 		entry.localPort = oldEntry.localPort
 		return entry, nil
 	}
 
 	// retrieve an open port on the host
-	entry.localPort = int32(retrieveAvailablePort(int(resource.Port), p.forwardedPorts))
+	entry.localPort = retrieveAvailablePort(resource.Port, p.forwardedPorts)
 
 	return entry, nil
 }

@@ -23,20 +23,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/kubectl"
-	kubernetesutil "github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
-	runcontext "github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/context"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubectl"
+	kubernetesutil "github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 )
 
 var (
-	// TODO: Move this to a flag or global config.
-	// Default deadline set to 10 minutes. This is default value for progressDeadlineInSeconds
-	// See: https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/api/apps/v1/types.go#L305
-	defaultStatusCheckDeadlineInSeconds int32 = 600
+	defaultStatusCheckDeadline = time.Duration(10) * time.Minute
+
 	// Poll period for checking set to 100 milliseconds
 	defaultPollPeriodInMilliseconds = 100
 
@@ -45,12 +44,13 @@ var (
 )
 
 func StatusCheck(ctx context.Context, defaultLabeller *DefaultLabeller, runCtx *runcontext.RunContext) error {
-
 	client, err := kubernetesutil.GetClientset()
 	if err != nil {
 		return err
 	}
-	dMap, err := getDeployments(client, runCtx.Opts.Namespace, defaultLabeller)
+	deadline := getDeadline(runCtx.Cfg.Deploy.StatusCheckDeadlineSeconds)
+
+	dMap, err := getDeployments(client, runCtx.Opts.Namespace, defaultLabeller, deadline)
 	if err != nil {
 		return errors.Wrap(err, "could not fetch deployments")
 	}
@@ -58,13 +58,9 @@ func StatusCheck(ctx context.Context, defaultLabeller *DefaultLabeller, runCtx *
 	wg := sync.WaitGroup{}
 	// Its safe to use sync.Map without locks here as each subroutine adds a different key to the map.
 	syncMap := &sync.Map{}
-	kubeCtl := &kubectl.CLI{
-		Namespace:   runCtx.Opts.Namespace,
-		KubeContext: runCtx.KubeContext,
-	}
+	kubeCtl := kubectl.NewFromRunContext(runCtx)
 
-	for dName, deadline := range dMap {
-		deadlineDuration := time.Duration(deadline) * time.Second
+	for dName, deadlineDuration := range dMap {
 		wg.Add(1)
 		go func(dName string, deadlineDuration time.Duration) {
 			defer wg.Done()
@@ -77,8 +73,7 @@ func StatusCheck(ctx context.Context, defaultLabeller *DefaultLabeller, runCtx *
 	return getSkaffoldDeployStatus(syncMap)
 }
 
-func getDeployments(client kubernetes.Interface, ns string, l *DefaultLabeller) (map[string]int32, error) {
-
+func getDeployments(client kubernetes.Interface, ns string, l *DefaultLabeller, deadlineDuration time.Duration) (map[string]time.Duration, error) {
 	deps, err := client.AppsV1().Deployments(ns).List(metav1.ListOptions{
 		LabelSelector: l.K8sManagedByLabelKeyValueString(),
 	})
@@ -86,15 +81,14 @@ func getDeployments(client kubernetes.Interface, ns string, l *DefaultLabeller) 
 		return nil, errors.Wrap(err, "could not fetch deployments")
 	}
 
-	depMap := map[string]int32{}
+	depMap := map[string]time.Duration{}
 
 	for _, d := range deps.Items {
-		var deadline int32
-		if d.Spec.ProgressDeadlineSeconds == nil {
-			logrus.Debugf("no progressDeadlineSeconds config found for deployment %s. Setting deadline to %d seconds", d.Name, defaultStatusCheckDeadlineInSeconds)
-			deadline = defaultStatusCheckDeadlineInSeconds
+		var deadline time.Duration
+		if d.Spec.ProgressDeadlineSeconds == nil || *d.Spec.ProgressDeadlineSeconds > int32(deadlineDuration.Seconds()) {
+			deadline = deadlineDuration
 		} else {
-			deadline = *d.Spec.ProgressDeadlineSeconds
+			deadline = time.Duration(*d.Spec.ProgressDeadlineSeconds) * time.Second
 		}
 		depMap[d.Name] = deadline
 	}
@@ -143,7 +137,13 @@ func getSkaffoldDeployStatus(m *sync.Map) error {
 }
 
 func getRollOutStatus(ctx context.Context, k *kubectl.CLI, dName string) (string, error) {
-	b, err := k.RunOut(ctx, nil, "rollout", []string{"status", "deployment", dName},
-		"--watch=false")
+	b, err := k.RunOut(ctx, "rollout", "status", "deployment", dName, "--watch=false")
 	return string(b), err
+}
+
+func getDeadline(d int) time.Duration {
+	if d > 0 {
+		return time.Duration(d) * time.Second
+	}
+	return defaultStatusCheckDeadline
 }

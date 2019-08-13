@@ -22,7 +22,6 @@ import (
 	"io"
 	"sort"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/cache"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build/cluster/sources"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/docker"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
@@ -35,7 +34,7 @@ import (
 
 func (b *Builder) runKanikoBuild(ctx context.Context, out io.Writer, artifact *latest.Artifact, tag string) (string, error) {
 	// Prepare context
-	s := sources.Retrieve(b.ClusterDetails, artifact.KanikoArtifact)
+	s := sources.Retrieve(b.kubectlcli, b.ClusterDetails, artifact.KanikoArtifact)
 	dependencies, err := b.DependenciesForArtifact(ctx, artifact)
 	if err != nil {
 		return "", errors.Wrapf(err, "getting dependencies for %s", artifact.ImageName)
@@ -49,11 +48,6 @@ func (b *Builder) runKanikoBuild(ctx context.Context, out io.Writer, artifact *l
 	args, err := args(artifact.KanikoArtifact, context, tag)
 	if err != nil {
 		return "", errors.Wrap(err, "building args list")
-	}
-
-	if artifact.WorkspaceHash != "" {
-		hashTag := cache.HashTag(artifact)
-		args = append(args, []string{"--destination", hashTag}...)
 	}
 
 	// Create pod
@@ -139,6 +133,10 @@ func args(artifact *latest.KanikoArtifact, context, tag string) ([]string, error
 		if artifact.Cache.HostPath != "" {
 			args = append(args, "--cache-dir", artifact.Cache.HostPath)
 		}
+	}
+
+	if artifact.Reproducible {
+		args = append(args, "--reproducible")
 	}
 
 	return args, nil

@@ -28,7 +28,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/kubectl"
-	runcontext "github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/context"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
 )
@@ -45,8 +45,6 @@ type DockerComposeDeployer struct {
 func NewDockerComposeDeployer(runCtx *runcontext.RunContext) *DockerComposeDeployer {
 	return &DockerComposeDeployer{
 		kubectl: kubectl.CLI{
-			Namespace:   runCtx.Opts.Namespace,
-			KubeContext: runCtx.KubeContext,
 			ForceDeploy: runCtx.Opts.ForceDeploy(),
 		},
 		defaultRepo:        runCtx.DefaultRepo,

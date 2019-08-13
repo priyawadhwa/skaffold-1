@@ -622,6 +622,16 @@
     "DeployConfig": {
       "anyOf": [
         {
+          "properties": {
+            "statusCheckDeadlineSeconds": {
+              "type": "integer",
+              "description": "*beta* deadline for deployments to stabilize in seconds.",
+              "x-intellij-html-description": "<em>beta</em> deadline for deployments to stabilize in seconds."
+            }
+          },
+          "preferredOrder": [
+            "statusCheckDeadlineSeconds"
+          ],
           "additionalProperties": false
         },
         {
@@ -630,9 +640,15 @@
               "$ref": "#/definitions/HelmDeploy",
               "description": "*beta* uses the `helm` CLI to apply the charts to the cluster.",
               "x-intellij-html-description": "<em>beta</em> uses the <code>helm</code> CLI to apply the charts to the cluster."
+            },
+            "statusCheckDeadlineSeconds": {
+              "type": "integer",
+              "description": "*beta* deadline for deployments to stabilize in seconds.",
+              "x-intellij-html-description": "<em>beta</em> deadline for deployments to stabilize in seconds."
             }
           },
           "preferredOrder": [
+            "statusCheckDeadlineSeconds",
             "helm"
           ],
           "additionalProperties": false
@@ -643,9 +659,15 @@
               "$ref": "#/definitions/KubectlDeploy",
               "description": "*beta* uses a client side `kubectl apply` to deploy manifests. You'll need a `kubectl` CLI version installed that's compatible with your cluster.",
               "x-intellij-html-description": "<em>beta</em> uses a client side <code>kubectl apply</code> to deploy manifests. You'll need a <code>kubectl</code> CLI version installed that's compatible with your cluster."
+            },
+            "statusCheckDeadlineSeconds": {
+              "type": "integer",
+              "description": "*beta* deadline for deployments to stabilize in seconds.",
+              "x-intellij-html-description": "<em>beta</em> deadline for deployments to stabilize in seconds."
             }
           },
           "preferredOrder": [
+            "statusCheckDeadlineSeconds",
             "kubectl"
           ],
           "additionalProperties": false
@@ -656,9 +678,15 @@
               "$ref": "#/definitions/KustomizeDeploy",
               "description": "*beta* uses the `kustomize` CLI to \"patch\" a deployment for a target environment.",
               "x-intellij-html-description": "<em>beta</em> uses the <code>kustomize</code> CLI to &quot;patch&quot; a deployment for a target environment."
+            },
+            "statusCheckDeadlineSeconds": {
+              "type": "integer",
+              "description": "*beta* deadline for deployments to stabilize in seconds.",
+              "x-intellij-html-description": "<em>beta</em> deadline for deployments to stabilize in seconds."
             }
           },
           "preferredOrder": [
+            "statusCheckDeadlineSeconds",
             "kustomize"
           ],
           "additionalProperties": false
@@ -868,6 +896,18 @@
       "x-intellij-html-description": "<em>beta</em> describes how to do a remote build on <a href=\"https://cloud.google.com/cloud-build/docs/\">Google Cloud Build</a>. Docker and Jib artifacts can be built on Cloud Build. The <code>projectId</code> needs to be provided and the currently logged in user should be given permissions to trigger new builds."
     },
     "HelmConventionConfig": {
+      "properties": {
+        "explicitRegistry": {
+          "type": "boolean",
+          "description": "separates `image.registry` to the image config syntax. Useful for some charts e.g. `postgresql`.",
+          "x-intellij-html-description": "separates <code>image.registry</code> to the image config syntax. Useful for some charts e.g. <code>postgresql</code>.",
+          "default": "false"
+        }
+      },
+      "preferredOrder": [
+        "explicitRegistry"
+      ],
+      "additionalProperties": false,
       "description": "image config in the syntax of image.repository and image.tag.",
       "x-intellij-html-description": "image config in the syntax of image.repository and image.tag."
     },
@@ -1283,6 +1323,12 @@
           "description": "Docker image used by the Kaniko pod. Defaults to the latest released version of `gcr.io/kaniko-project/executor`.",
           "x-intellij-html-description": "Docker image used by the Kaniko pod. Defaults to the latest released version of <code>gcr.io/kaniko-project/executor</code>."
         },
+        "reproducible": {
+          "type": "boolean",
+          "description": "used to strip timestamps out of the built image.",
+          "x-intellij-html-description": "used to strip timestamps out of the built image.",
+          "default": "false"
+        },
         "target": {
           "type": "string",
           "description": "Dockerfile target name to build.",
@@ -1296,7 +1342,8 @@
         "buildArgs",
         "buildContext",
         "image",
-        "cache"
+        "cache",
+        "reproducible"
       ],
       "additionalProperties": false,
       "description": "*alpha* describes an artifact built from a Dockerfile, with kaniko.",
@@ -1737,6 +1784,15 @@
     },
     "Sync": {
       "properties": {
+        "infer": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "file patterns which may be synced into the container. The container destination is inferred by the builder. Currently only available for docker artifacts.",
+          "x-intellij-html-description": "file patterns which may be synced into the container. The container destination is inferred by the builder. Currently only available for docker artifacts.",
+          "default": "[]"
+        },
         "manual": {
           "items": {
             "$ref": "#/definitions/SyncRule"
@@ -1747,7 +1803,8 @@
         }
       },
       "preferredOrder": [
-        "manual"
+        "manual",
+        "infer"
       ],
       "additionalProperties": false,
       "description": "*alpha* specifies what files to sync into the container. This is a list of sync rules indicating the intent to sync for source files.",

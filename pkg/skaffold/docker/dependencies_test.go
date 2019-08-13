@@ -223,7 +223,7 @@ func (f *fakeImageFetcher) fetch(image string, _ map[string]bool) (*v1.ConfigFil
 }
 
 func TestGetDependencies(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		description string
 		dockerfile  string
 		workspace   string
@@ -357,7 +357,7 @@ func TestGetDependencies(t *testing.T) {
 			description: "dockerignore with context in parent directory",
 			dockerfile:  copyDirectory,
 			workspace:   "docker/..",
-			ignore:      "bar\ndocker/*\n*.go",
+			ignore:      "bar\ndocker\n*.go",
 			expected:    []string{".dot", "Dockerfile", "file", "test.conf"},
 		},
 		{
@@ -484,6 +484,20 @@ func TestGetDependencies(t *testing.T) {
 			buildArgs:   map[string]*string{"FOO": util.StringPtr("{{")},
 			shouldErr:   true,
 		},
+		{
+			description: "ignore with whitelisting",
+			dockerfile:  copyAll,
+			workspace:   ".",
+			ignore:      "**\n!docker/**",
+			expected:    []string{"Dockerfile", filepath.Join("docker", "bar"), filepath.Join("docker", "nginx.conf")},
+		},
+		{
+			description: "ignore with whitelisting files",
+			dockerfile:  copyAll,
+			workspace:   ".",
+			ignore:      "**\n!server.go",
+			expected:    []string{"Dockerfile", "server.go"},
+		},
 	}
 
 	for _, test := range tests {
@@ -504,7 +518,7 @@ func TestGetDependencies(t *testing.T) {
 			}
 
 			workspace := tmpDir.Path(test.workspace)
-			deps, err := GetDependencies(context.Background(), workspace, "Dockerfile", test.buildArgs, map[string]bool{})
+			deps, err := GetDependencies(context.Background(), workspace, "Dockerfile", test.buildArgs, nil)
 
 			t.CheckError(test.shouldErr, err)
 			t.CheckDeepEqual(test.expected, deps)

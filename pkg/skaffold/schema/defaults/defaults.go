@@ -19,12 +19,13 @@ package defaults
 import (
 	"fmt"
 
+	"github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	kubectx "github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes/context"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
-	homedir "github.com/mitchellh/go-homedir"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 // Set makes sure default values are set on a SkaffoldConfig.
@@ -206,18 +207,18 @@ func setDefaultClusterDockerConfigSecret(cluster *latest.ClusterDetails) error {
 		return nil
 	}
 
-	if cluster.DockerConfig.Path != "" {
-		absPath, err := homedir.Expand(cluster.DockerConfig.Path)
-		if err != nil {
-			return fmt.Errorf("unable to expand dockerConfig.path %s", cluster.DockerConfig.Path)
-		}
+	cluster.DockerConfig.SecretName = valueOrDefault(cluster.DockerConfig.SecretName, constants.DefaultKanikoDockerConfigSecretName)
 
-		cluster.DockerConfig.Path = absPath
+	if cluster.DockerConfig.Path == "" {
 		return nil
 	}
 
-	cluster.DockerConfig.SecretName = valueOrDefault(cluster.DockerConfig.SecretName, constants.DefaultKanikoDockerConfigSecretName)
+	absPath, err := homedir.Expand(cluster.DockerConfig.Path)
+	if err != nil {
+		return fmt.Errorf("unable to expand dockerConfig.path %s", cluster.DockerConfig.Path)
+	}
 
+	cluster.DockerConfig.Path = absPath
 	return nil
 }
 

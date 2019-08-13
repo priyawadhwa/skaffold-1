@@ -22,13 +22,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
-	runcontext "github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/context"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/server"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/rjeczalik/notify"
 	"github.com/sirupsen/logrus"
 )
@@ -48,17 +48,22 @@ func NewTrigger(runctx *runcontext.RunContext) (Trigger, error) {
 			Interval: time.Duration(runctx.Opts.WatchPollInterval) * time.Millisecond,
 		}, nil
 	case "notify":
-		return &fsNotifyTrigger{
-			Interval: time.Duration(runctx.Opts.WatchPollInterval) * time.Millisecond,
-		}, nil
+		return newFSNotifyTrigger(runctx), nil
 	case "manual":
 		return &manualTrigger{}, nil
-	case "api":
-		return &apiTrigger{
-			Trigger: server.Trigger,
-		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported trigger: %s", runctx.Opts.Trigger)
+	}
+}
+
+func newFSNotifyTrigger(runctx *runcontext.RunContext) *fsNotifyTrigger {
+	workspaces := map[string]struct{}{}
+	for _, a := range runctx.Cfg.Build.Artifacts {
+		workspaces[a.Workspace] = struct{}{}
+	}
+	return &fsNotifyTrigger{
+		Interval:   time.Duration(runctx.Opts.WatchPollInterval) * time.Millisecond,
+		workspaces: workspaces,
 	}
 }
 
@@ -139,7 +144,8 @@ func (t *manualTrigger) Start(ctx context.Context) (<-chan bool, error) {
 
 // notifyTrigger watches for changes with fsnotify
 type fsNotifyTrigger struct {
-	Interval time.Duration
+	Interval   time.Duration
+	workspaces map[string]struct{}
 }
 
 // Debounce tells the watcher to not debounce rapid sequence of changes.
@@ -159,6 +165,13 @@ func (t *fsNotifyTrigger) Start(ctx context.Context) (<-chan bool, error) {
 	// Watch current directory recursively
 	if err := notify.Watch("./...", c, notify.All); err != nil {
 		return nil, err
+	}
+
+	// Watch all workspaces recursively
+	for w := range t.workspaces {
+		if err := notify.Watch(filepath.Join(w, "..."), c, notify.All); err != nil {
+			return nil, err
+		}
 	}
 
 	// Since the file watcher runs in a separate go routine
@@ -188,37 +201,6 @@ func (t *fsNotifyTrigger) Start(ctx context.Context) (<-chan bool, error) {
 	}()
 
 	return trigger, nil
-}
-
-type apiTrigger struct {
-	Trigger chan bool
-}
-
-// Start receives triggers from gRPC/HTTP and triggers a rebuild.
-func (t *apiTrigger) Start(ctx context.Context) (<-chan bool, error) {
-	trigger := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case <-t.Trigger:
-				logrus.Debugln("build request received")
-				trigger <- true
-			case <-ctx.Done():
-				break
-			}
-		}
-	}()
-
-	return trigger, nil
-}
-
-func (t *apiTrigger) Debounce() bool {
-	return false
-}
-
-func (t *apiTrigger) LogWatchToUser(out io.Writer) {
-	color.Yellow.Fprintln(out, "Watching on designated port for build requests...")
 }
 
 // StartTrigger attempts to start a trigger.

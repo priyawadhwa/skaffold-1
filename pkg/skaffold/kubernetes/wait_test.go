@@ -22,10 +22,8 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/skaffold/testutil"
-
-	"k8s.io/apimachinery/pkg/watch"
-
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 )
 
@@ -50,7 +48,7 @@ func TestWaitForPodSucceeded(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.description, func(t *testing.T) {
+		testutil.Run(t, test.description, func(t *testutil.T) {
 			pod := &v1.Pod{}
 			client := fakekubeclientset.NewSimpleClientset(pod)
 
@@ -60,7 +58,7 @@ func TestWaitForPodSucceeded(t *testing.T) {
 
 			errChan := make(chan error)
 			go func() {
-				errChan <- WaitForPodSucceeded(context.TODO(), fakePods, "", 5*time.Second)
+				errChan <- WaitForPodSucceeded(context.TODO(), fakePods, "", 50*time.Millisecond)
 			}()
 
 			for _, phase := range test.phases {
@@ -72,17 +70,16 @@ func TestWaitForPodSucceeded(t *testing.T) {
 						Phase: phase,
 					},
 				})
-				time.Sleep(time.Second)
+				time.Sleep(10 * time.Millisecond)
 			}
 			err := <-errChan
-			testutil.CheckError(t, test.shouldErr, err)
+
+			t.CheckError(test.shouldErr, err)
 		})
 	}
-
 }
 
 func TestIsPodSucceeded(t *testing.T) {
-
 	tests := []struct {
 		description string
 		podName     string
@@ -118,7 +115,7 @@ func TestIsPodSucceeded(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.description, func(t *testing.T) {
+		testutil.Run(t, test.description, func(t *testutil.T) {
 			pod := &v1.Pod{
 				Status: v1.PodStatus{
 					Phase: test.phase,
@@ -128,8 +125,10 @@ func TestIsPodSucceeded(t *testing.T) {
 				Type:   "dummyEvent",
 				Object: pod,
 			}
+
 			actual, err := isPodSucceeded(test.podName)(dummyEvent)
-			testutil.CheckErrorAndDeepEqual(t, test.shouldErr, err, actual, test.expected)
+
+			t.CheckErrorAndDeepEqual(test.shouldErr, err, actual, test.expected)
 		})
 	}
 }
