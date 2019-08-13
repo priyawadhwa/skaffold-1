@@ -211,6 +211,9 @@ func getDeployer(runCtx *runcontext.RunContext) (deploy.Deployer, error) {
 	case runCtx.Cfg.Deploy.KustomizeDeploy != nil:
 		return deploy.NewKustomizeDeployer(runCtx), nil
 
+	case runCtx.Cfg.Deploy.DockerComposeDeploy != nil:
+		return deploy.NewDockerComposeDeployer(runCtx), nil
+
 	default:
 		return nil, fmt.Errorf("unknown deployer for config %+v", runCtx.Cfg.Deploy)
 	}
