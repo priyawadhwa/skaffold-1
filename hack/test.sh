@@ -28,27 +28,4 @@ if [[ $GO_TEST_EXIT_CODE -ne 0 ]]; then
     exit $GO_TEST_EXIT_CODE
 fi
 
-echo "Running validation scripts..."
-scripts=(
-    "hack/boilerplate.sh"
-    "hack/gofmt.sh"
-    "hack/linter.sh"
-    "hack/check-samples.sh"
-    "hack/check-docs.sh"
-    "hack/test-generated-proto.sh"
-)
-fail=0
-for s in "${scripts[@]}"; do
-    echo "RUN ${s}"
-    set +e
-    ./$s
-    result=$?
-    set -e
-    if [[ $result -eq 0 ]]; then
-        echo -e "${GREEN}PASSED${RESET} ${s}"
-    else
-        echo -e "${RED}FAILED${RESET} ${s}"
-        fail=1
-    fi
-done
-exit $fail
+hack/checks.sh

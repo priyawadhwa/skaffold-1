@@ -229,6 +229,23 @@ var FlagRegistry = []Flag{
 		FlagAddMethod: "BoolVar",
 		DefinedOn:     []string{"dev", "debug", "deploy", "run"},
 	},
+	{
+		Name:          "config",
+		Shorthand:     "c",
+		Usage:         "File for global configurations (defaults to $HOME/.skaffold/config)",
+		Value:         &opts.GlobalConfig,
+		DefValue:      "",
+		FlagAddMethod: "StringVar",
+		DefinedOn:     []string{"run", "dev", "debug", "build", "deploy", "delete", "diagnose"},
+	},
+	{
+		Name:          "kube-context",
+		Usage:         "Deploy to this kubernetes context",
+		Value:         &opts.KubeContext,
+		DefValue:      "",
+		FlagAddMethod: "StringVar",
+		DefinedOn:     []string{"build", "debug", "delete", "deploy", "dev", "run"},
+	},
 }
 
 var commandFlags []*pflag.Flag
