@@ -19,6 +19,7 @@ package runner
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -28,6 +29,8 @@ import (
 )
 
 func (r *SkaffoldRunner) Deploy(ctx context.Context, out io.Writer, artifacts []build.Artifact) error {
+	color.Default.Fprintln(out, "Starting deploy...")
+	start := time.Now()
 	if config.IsKindCluster(r.runCtx.KubeContext) {
 		// With `kind`, docker images have to be loaded with the `kind` CLI.
 		if err := r.loadImagesInKindNodes(ctx, out, artifacts); err != nil {
@@ -41,7 +44,9 @@ func (r *SkaffoldRunner) Deploy(ctx context.Context, out io.Writer, artifacts []
 		return err
 	}
 	r.runCtx.UpdateNamespaces(deployResult.Namespaces())
-	return r.performStatusCheck(ctx, out)
+	err := r.performStatusCheck(ctx, out)
+	color.Default.Fprintln(out, "Deploy complete in", time.Since(start))
+	return err
 }
 
 func (r *SkaffoldRunner) performStatusCheck(ctx context.Context, out io.Writer) error {
