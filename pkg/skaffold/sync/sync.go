@@ -19,15 +19,15 @@ package sync
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
-	"os"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/docker"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/filemon"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
@@ -198,6 +198,8 @@ func matchSyncRules(syncRules []*latest.SyncRule, relPath, containerWd string) (
 }
 
 func (k *podSyncer) Sync(ctx context.Context, s *Item) error {
+	start := time.Now()
+
 	if len(s.Copy) > 0 {
 		logrus.Infoln("Copying files:", s.Copy, "to", s.Image)
 
@@ -213,6 +215,7 @@ func (k *podSyncer) Sync(ctx context.Context, s *Item) error {
 			return errors.Wrap(err, "deleting files")
 		}
 	}
+	color.Default.Fprintln(os.Stdout, "Sync complete in", time.Since(start))
 
 	return nil
 }
