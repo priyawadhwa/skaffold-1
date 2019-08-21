@@ -43,7 +43,13 @@ type podSyncer struct {
 	namespaces []string
 }
 
+type containerSyncer struct {
+}
+
 func NewSyncer(runCtx *runcontext.RunContext) Syncer {
+	if runCtx.Cfg.Deploy.DockerComposeDeploy != nil {
+		return &containerSyncer{}
+	}
 	return &podSyncer{
 		kubectl:    kubectlcli.NewFromRunContext(runCtx),
 		namespaces: runCtx.Namespaces,
