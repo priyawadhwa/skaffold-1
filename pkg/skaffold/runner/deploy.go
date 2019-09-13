@@ -29,14 +29,15 @@ import (
 )
 
 func (r *SkaffoldRunner) Deploy(ctx context.Context, out io.Writer, artifacts []build.Artifact) error {
-	color.Default.Fprintln(out, "Starting deploy...")
-	start := time.Now()
 	if config.IsKindCluster(r.runCtx.KubeContext) {
 		// With `kind`, docker images have to be loaded with the `kind` CLI.
 		if err := r.loadImagesInKindNodes(ctx, out, artifacts); err != nil {
 			return errors.Wrapf(err, "loading images into kind nodes")
 		}
 	}
+
+	color.Default.Fprintln(out, "Starting deploy...")
+	start := time.Now()
 
 	deployResult := r.deployer.Deploy(ctx, out, artifacts, r.labellers)
 	r.hasDeployed = true
