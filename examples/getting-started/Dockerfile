@@ -1,8 +1,8 @@
-FROM golang:1.12.6-alpine3.9 as builder
-COPY main.go file ./
+FROM golang:1.12.9-alpine3.10 as builder
+COPY main.go .
 RUN go build -o /app main.go
 
-FROM alpine:3.9
+FROM alpine:3.10
 CMD ["./app"]
 COPY file .
 COPY --from=builder /app .

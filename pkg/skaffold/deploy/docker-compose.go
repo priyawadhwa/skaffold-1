@@ -118,3 +118,7 @@ func (k *DockerComposeDeployer) Cleanup(ctx context.Context, out io.Writer) erro
 	}
 	return nil
 }
+
+func (k *DockerComposeDeployer) Render(_ context.Context, _ io.Writer, _ []build.Artifact, _ string) error {
+	return nil
+}

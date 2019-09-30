@@ -197,21 +197,21 @@ func matchSyncRules(syncRules []*latest.SyncRule, relPath, containerWd string) (
 	return dsts, nil
 }
 
-func (k *podSyncer) Sync(ctx context.Context, s *Item) error {
+func (s *podSyncer) Sync(ctx context.Context, item *Item) error {
 	start := time.Now()
 
-	if len(s.Copy) > 0 {
-		logrus.Infoln("Copying files:", s.Copy, "to", s.Image)
+	if len(item.Copy) > 0 {
+		logrus.Infoln("Copying files:", item.Copy, "to", item.Image)
 
-		if err := Perform(ctx, s.Image, s.Copy, k.copyFileFn, k.namespaces); err != nil {
+		if err := Perform(ctx, item.Image, item.Copy, s.copyFileFn, s.namespaces); err != nil {
 			return errors.Wrap(err, "copying files")
 		}
 	}
 
-	if len(s.Delete) > 0 {
-		logrus.Infoln("Deleting files:", s.Delete, "from", s.Image)
+	if len(item.Delete) > 0 {
+		logrus.Infoln("Deleting files:", item.Delete, "from", item.Image)
 
-		if err := Perform(ctx, s.Image, s.Delete, k.deleteFileFn, k.namespaces); err != nil {
+		if err := Perform(ctx, item.Image, item.Delete, s.deleteFileFn, s.namespaces); err != nil {
 			return errors.Wrap(err, "deleting files")
 		}
 	}
@@ -252,7 +252,7 @@ func Perform(ctx context.Context, image string, files syncMap, cmdFn func(contex
 
 	client, err := kubernetes.Client()
 	if err != nil {
-		return errors.Wrap(err, "getting k8s client")
+		return errors.Wrap(err, "getting kubernetes client")
 	}
 
 	numSynced := 0
@@ -263,9 +263,7 @@ func Perform(ctx context.Context, image string, files syncMap, cmdFn func(contex
 		}
 
 		for _, p := range pods.Items {
-
 			if p.Status.Phase != v1.PodRunning {
-				logrus.Infof("Skipping sync with pod %s because it's not running", p.Name)
 				continue
 			}
 
