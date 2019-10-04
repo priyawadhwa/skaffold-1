@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/build"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/kubectl"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/pkg/errors"
@@ -79,6 +80,8 @@ func (k *DockerComposeDeployer) Deploy(parentCtx context.Context, out io.Writer,
 	ctx, cancel := context.WithCancel(parentCtx)
 	k.cancel = cancel
 
+	event.DeployInProgress()
+
 	cmd := exec.CommandContext(ctx, "docker-compose", "-f", "-", "up", "--no-build", "-d")
 	cmd.Stdin = bytes.NewBuffer(ml[0])
 	if _, err := util.RunCmdOut(cmd); err != nil {
@@ -98,9 +101,10 @@ func (k *DockerComposeDeployer) Deploy(parentCtx context.Context, out io.Writer,
 	}()
 
 	if err := cmd.Start(); err != nil {
-		return NewDeployErrorResult(errors.Wrap(err, "starting docker-compose up"))
+		return NewDeployErrorResult(errors.Wrap(err, "logging docker-compose up"))
 	}
 	go cmd.Wait()
+	event.DeployComplete()
 	return NewDeploySuccessResult(nil)
 }
 
