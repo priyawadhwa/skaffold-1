@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package latest
+package v1beta15
 
 import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/util"
 )
 
-// This config version is not yet released, it is SAFE TO MODIFY the structs in this file.
-const Version string = "skaffold/v1beta16"
+// !!! WARNING !!! This config version is already released, please DO NOT MODIFY the structs in this file.
+const Version string = "skaffold/v1beta15"
 
 // NewSkaffoldConfig creates a SkaffoldConfig
 func NewSkaffoldConfig() util.VersionedConfig {
@@ -287,9 +287,6 @@ type ClusterDetails struct {
 	// Defaults to `kaniko-secret`.
 	PullSecretName string `yaml:"pullSecretName,omitempty"`
 
-	// PullSecretMountPath is the path the pull secret will be mounted at within the running container.
-	PullSecretMountPath string `yaml:"pullSecretMountPath,omitempty"`
-
 	// Namespace is the Kubernetes namespace.
 	// Defaults to current namespace in Kubernetes configuration.
 	Namespace string `yaml:"namespace,omitempty"`
@@ -370,11 +367,6 @@ type DeployType struct {
 
 	// KustomizeDeploy *beta* uses the `kustomize` CLI to "patch" a deployment for a target environment.
 	KustomizeDeploy *KustomizeDeploy `yaml:"kustomize,omitempty" yamltags:"oneOf=deploy"`
-
-	DockerComposeDeploy *DockerComposeDeploy `yaml:"dockerCompose,omitempty" yamltags:"oneOf=deploy"`
-}
-
-type DockerComposeDeploy struct {
 }
 
 // KubectlDeploy *beta* uses a client side `kubectl apply` to deploy manifests.
@@ -733,9 +725,6 @@ type KanikoArtifact struct {
 
 	// Reproducible is used to strip timestamps out of the built image.
 	Reproducible bool `yaml:"reproducible,omitempty"`
-
-	// SkipTLS skips TLS verification when pulling and pushing the image.
-	SkipTLS bool `yaml:"skipTLS,omitempty"`
 }
 
 // DockerArtifact *beta* describes an artifact built from a Dockerfile,
