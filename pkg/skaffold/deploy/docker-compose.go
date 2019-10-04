@@ -120,6 +120,7 @@ func (k *DockerComposeDeployer) Cleanup(ctx context.Context, out io.Writer) erro
 	if output, err := util.RunCmdOut(cmd); err != nil {
 		return errors.Wrapf(err, "running docker-compose down: %v \n %s", err, string(output))
 	}
+	fmt.Println("done runnign dockercompose down")
 	return nil
 }
 
