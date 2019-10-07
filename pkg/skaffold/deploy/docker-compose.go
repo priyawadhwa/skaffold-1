@@ -104,6 +104,7 @@ func (k *DockerComposeDeployer) Deploy(parentCtx context.Context, out io.Writer,
 		return NewDeployErrorResult(errors.Wrap(err, "logging docker-compose up"))
 	}
 	go cmd.Wait()
+	fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~ deploy complete ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	event.DeployComplete()
 	return NewDeploySuccessResult(nil)
 }
@@ -120,7 +121,6 @@ func (k *DockerComposeDeployer) Cleanup(ctx context.Context, out io.Writer) erro
 	if output, err := util.RunCmdOut(cmd); err != nil {
 		return errors.Wrapf(err, "running docker-compose down: %v \n %s", err, string(output))
 	}
-	fmt.Println("done runnign dockercompose down")
 	return nil
 }
 
