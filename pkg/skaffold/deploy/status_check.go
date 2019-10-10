@@ -32,6 +32,7 @@ import (
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/deploy/resource"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	pkgkubernetes "github.com/GoogleContainerTools/skaffold/pkg/skaffold/kubernetes"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 )
@@ -136,6 +137,7 @@ func pollResourceStatus(ctx context.Context, runCtx *runcontext.RunContext, r Re
 
 func getSkaffoldDeployStatus(c *counter) error {
 	if c.failed == 0 {
+		event.StatusCheckEventSucceeded()
 		return nil
 	}
 	return fmt.Errorf("%d/%d deployment(s) failed", c.failed, c.total)

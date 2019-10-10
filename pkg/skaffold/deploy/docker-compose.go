@@ -106,6 +106,7 @@ func (k *DockerComposeDeployer) Deploy(parentCtx context.Context, out io.Writer,
 	go cmd.Wait()
 	fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~ deploy complete ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	event.DeployComplete()
+	event.StatusCheckEventSucceeded()
 	return NewDeploySuccessResult(nil)
 }
 

@@ -101,11 +101,13 @@ func (k *KubectlDeployer) Deploy(ctx context.Context, out io.Writer, builds []bu
 			"This might cause port-forward and deploy health-check to fail."))
 	}
 
+	fmt.Println("~~~~~~~~~~~~~ applying ~~~~~~~~~~~~~~")
 	if err := k.kubectl.Apply(ctx, textio.NewPrefixWriter(out, " - "), manifests); err != nil {
 		event.DeployFailed(err)
 		return NewDeployErrorResult(errors.Wrap(err, "kubectl error"))
 	}
 
+	fmt.Println("~~~~~~~~~~~~~ deploy complete ~~~~~~~~~~~~~~")
 	event.DeployComplete()
 	return NewDeploySuccessResult(namespaces)
 }

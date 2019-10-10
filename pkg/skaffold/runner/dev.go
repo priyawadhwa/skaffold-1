@@ -18,6 +18,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -96,6 +97,9 @@ func (r *SkaffoldRunner) doDev(ctx context.Context, out io.Writer) error {
 		if err := r.forwarderManager.Start(ctx); err != nil {
 			logrus.Warnln("Port forwarding failed:", err)
 		}
+	} else {
+		fmt.Println("skipped deploy, sending deploy complete event")
+		event.DeployComplete()
 	}
 
 	r.logger.Unmute()
