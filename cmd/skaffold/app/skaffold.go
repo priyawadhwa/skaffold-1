@@ -26,6 +26,14 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/GoogleContainerTools/skaffold/cmd/skaffold/app/cmd"
+
+	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
+	"go.opentelemetry.io/otel/api/global"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+)
+
+const (
+	projectEnvVar = "CLOUD_CODE_PROJECT_ID"
 )
 
 func Run(out, stderr io.Writer) error {
@@ -33,6 +41,29 @@ func Run(out, stderr io.Writer) error {
 	defer cancel()
 
 	catchCtrlC(cancel)
+
+	projectID := os.Getenv(projectEnvVar)
+	if projectID != "" {
+		_, flush, err := texporter.InstallNewPipeline(
+			[]texporter.Option{
+				texporter.WithProjectID(projectID),
+			},
+			sdktrace.WithConfig(sdktrace.Config{
+				DefaultSampler: sdktrace.AlwaysSample(),
+			}),
+		)
+		if err != nil {
+			return fmt.Errorf("error installing new pipeline: %v", err)
+		}
+		defer fmt.Println("flushing")
+		defer flush()
+		defer fmt.Println("done flushing")
+
+	}
+
+	t := global.Tracer("skaffold")
+	ctx, span := t.Start(context.Background(), "skaffold")
+	defer span.End()
 
 	c := cmd.NewSkaffoldCommand(out, stderr)
 	if cmdLine := os.Getenv("SKAFFOLD_CMDLINE"); cmdLine != "" && len(os.Args) == 1 {
