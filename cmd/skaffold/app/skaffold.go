@@ -24,6 +24,7 @@ import (
 
 	shell "github.com/kballard/go-shellquote"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/api/trace"
 
 	"github.com/GoogleContainerTools/skaffold/cmd/skaffold/app/cmd"
 
@@ -55,15 +56,13 @@ func Run(out, stderr io.Writer) error {
 		if err != nil {
 			return fmt.Errorf("error installing new pipeline: %v", err)
 		}
-		defer fmt.Println("flushing")
 		defer flush()
-		defer fmt.Println("done flushing")
 
+		t := global.Tracer("skaffold")
+		var span trace.Span
+		ctx, span = t.Start(context.Background(), "skaffold")
+		defer span.End()
 	}
-
-	t := global.Tracer("skaffold")
-	ctx, span := t.Start(context.Background(), "skaffold")
-	defer span.End()
 
 	c := cmd.NewSkaffoldCommand(out, stderr)
 	if cmdLine := os.Getenv("SKAFFOLD_CMDLINE"); cmdLine != "" && len(os.Args) == 1 {
