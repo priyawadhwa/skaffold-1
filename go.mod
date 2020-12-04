@@ -16,6 +16,7 @@ replace (
 require (
 	4d63.com/tz v1.1.0
 	cloud.google.com/go/storage v1.10.0
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v0.13.0
 	github.com/Microsoft/go-winio v0.4.15 // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmatcuk/doublestar v1.2.4
@@ -36,7 +37,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.4.3
-	github.com/google/go-cmp v0.5.2
+	github.com/google/go-cmp v0.5.3
 	github.com/google/go-containerregistry v0.1.4
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/martian v2.1.1-0.20190517191504-25dcb96d9e51+incompatible // indirect
@@ -65,6 +66,9 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/tektoncd/pipeline v0.5.1-0.20190731183258-9d7e37e85bf8
 	github.com/xeipuuv/gojsonschema v1.2.0
+	go.opencensus.io v0.22.5
+	go.opentelemetry.io/otel v0.13.0
+	go.opentelemetry.io/otel/sdk v0.13.0
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/mod v0.3.0
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
