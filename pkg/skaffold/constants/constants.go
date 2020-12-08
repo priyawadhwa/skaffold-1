@@ -46,6 +46,7 @@ const (
 
 	DefaultSkaffoldDir = ".skaffold"
 	DefaultCacheFile   = "cache"
+	DefaultEventsFile  = "events"
 
 	DefaultRPCPort     = 50051
 	DefaultRPCHTTPPort = 50052

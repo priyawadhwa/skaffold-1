@@ -19,11 +19,16 @@ package event
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path"
 	"sync"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
 
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/util"
@@ -651,6 +656,25 @@ func (ev *eventHandler) handleExec(f firedEvent) {
 	}
 
 	ev.logEvent(*logEntry)
+}
+
+func SaveEventsToFile() error {
+	home, err := homedir.Dir()
+	if err != nil {
+		return fmt.Errorf("retrieving home directory: %w", err)
+	}
+	fp := path.Join(home, constants.DefaultSkaffoldDir, constants.DefaultEventsFile)
+	handler.logLock.Lock()
+
+	contents, err := json.Marshal(handler.eventLog)
+	if err != nil {
+		return errors.Wrap(err, "marshalling event log")
+	}
+	if err := ioutil.WriteFile(fp, contents, 0644); err != nil {
+		return errors.Wrap(err, "writing event file")
+	}
+	handler.logLock.Unlock()
+	return nil
 }
 
 // ResetStateOnBuild resets the build, deploy and sync state
