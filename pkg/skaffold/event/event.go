@@ -17,14 +17,17 @@ limitations under the License.
 package event
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"sync"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
+
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
@@ -664,14 +667,22 @@ func SaveEventsToFile() error {
 		return fmt.Errorf("retrieving home directory: %w", err)
 	}
 	fp := path.Join(home, constants.DefaultSkaffoldDir, constants.DefaultEventsFile)
+	os.Remove(fp)
 	handler.logLock.Lock()
-
-	contents, err := json.Marshal(handler.eventLog)
+	f, err := os.OpenFile(fp, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
-		return errors.Wrap(err, "marshalling event log")
+		return errors.Wrapf(err, "opening %s", fp)
 	}
-	if err := ioutil.WriteFile(fp, contents, 0644); err != nil {
-		return errors.Wrap(err, "writing event file")
+	defer f.Close()
+	marshaller := jsonpb.Marshaler{}
+	for _, ev := range handler.eventLog {
+		contents := bytes.NewBuffer([]byte{})
+		if err := marshaller.Marshal(contents, &ev); err != nil {
+			return errors.Wrap(err, "marshalling event log")
+		}
+		if _, err := f.WriteString(contents.String() + "\n"); err != nil {
+			return errors.Wrap(err, "writing event file")
+		}
 	}
 	handler.logLock.Unlock()
 	return nil

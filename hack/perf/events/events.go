@@ -1,12 +1,14 @@
 package events
 
 import (
-	"encoding/json"
+	"bytes"
 	"io/ioutil"
 	"path"
+	"strings"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/proto"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 )
@@ -22,10 +24,19 @@ func Get() ([]proto.LogEntry, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "reading %s", fp)
 	}
+	entries := strings.Split(string(contents), "\n")
 	var logEntries []proto.LogEntry
-
-	if err := json.Unmarshal(contents, &logEntries); err != nil {
-		return nil, errors.Wrap(err, "unmarshalling")
+	unmarshaller := jsonpb.Unmarshaler{}
+	for _, entry := range entries {
+		if entry == "" {
+			continue
+		}
+		var logEntry proto.LogEntry
+		buf := bytes.NewBuffer([]byte(entry))
+		if err := unmarshaller.Unmarshal(buf, &logEntry); err != nil {
+			return nil, errors.Wrap(err, "unmarshalling")
+		}
+		logEntries = append(logEntries, logEntry)
 	}
 	return logEntries, nil
 }
