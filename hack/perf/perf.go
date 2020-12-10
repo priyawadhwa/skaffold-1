@@ -1,12 +1,21 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
-	"github.com/GoogleContainerTools/skaffold/hack/perf/events"
-	"github.com/pkg/errors"
+	"github.com/GoogleContainerTools/skaffold/hack/perf/config"
+	"github.com/GoogleContainerTools/skaffold/hack/perf/metrics"
 )
+
+var (
+	configFile string
+)
+
+func init() {
+	flag.StringVar(&configFile, "file", "config.yaml", "path to config file")
+}
 
 func main() {
 	if err := collectMetrics(); err != nil {
@@ -21,10 +30,12 @@ func main() {
 // Parse out times and send data to cloud monitoring
 
 func collectMetrics() error {
-	events, err := events.Get()
+	cfg, err := config.Get(configFile)
 	if err != nil {
-		return errors.Wrap(err, "getting events")
+		return fmt.Errorf("getting config: %w", err)
 	}
-	fmt.Println(events)
+	for _, app := range cfg.Apps {
+		metrics.InnerLoop(app)
+	}
 	return nil
 }
