@@ -31,7 +31,6 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/color"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/server"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/survey"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/update"
@@ -128,9 +127,6 @@ func NewSkaffoldCommand(out, err io.Writer) *cobra.Command {
 					}
 				}
 			default:
-			}
-			if err := event.SaveEventsToFile(); err != nil {
-				logrus.Warn("unable to save events to file: %v", err)
 			}
 		},
 	}

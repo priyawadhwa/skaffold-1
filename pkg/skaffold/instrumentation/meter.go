@@ -20,6 +20,8 @@ import (
 	"runtime"
 	"time"
 
+	flag "github.com/spf13/pflag"
+
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/runner/runcontext"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/schema/latest"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/version"
@@ -36,24 +38,31 @@ type skaffoldMeter struct {
 	Arch           string
 	PlatformType   string
 	Deployers      []string
-	EnumFlags      map[string]interface{}
+	EnumFlags      map[string]*flag.Flag
 	Builders       map[string]bool
 	SyncType       map[string]bool
-	DevIterations  map[string]int
+	DevIterations  []devIteration
 	StartTime      time.Time
 	ErrorCode      proto.StatusCode
 }
 
+type devIteration struct {
+	intent    string
+	errorCode proto.StatusCode
+}
+
 var (
 	meter = skaffoldMeter{
-		OS:        runtime.GOOS,
-		Arch:      runtime.GOARCH,
-		Builders:  map[string]bool{},
-		SyncType:  map[string]bool{},
-		StartTime: time.Now(),
-		Version:   version.Get().Version,
-		ExitCode:  0,
-		ErrorCode: proto.StatusCode_OK,
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		EnumFlags:     map[string]*flag.Flag{},
+		Builders:      map[string]bool{},
+		SyncType:      map[string]bool{},
+		DevIterations: []devIteration{},
+		StartTime:     time.Now(),
+		Version:       version.Get().Version,
+		ExitCode:      0,
+		ErrorCode:     proto.StatusCode_OK,
 	}
 )
 
@@ -66,5 +75,25 @@ func InitMeter(runCtx *runcontext.RunContext, config *latest.SkaffoldConfig) {
 			meter.SyncType[yamltags.GetYamlTag(artifact.Sync)] = true
 		}
 	}
+	meter.Deployers = yamltags.GetYamlTags(config.Deploy.DeployType)
 	meter.BuildArtifacts = len(config.Pipeline.Build.Artifacts)
+}
+
+func SetErrorCode(errorCode proto.StatusCode) {
+	meter.ErrorCode = errorCode
+}
+
+func AddDevIteration(intent string) {
+	meter.DevIterations = append(meter.DevIterations, devIteration{intent: intent})
+}
+
+func AddDevIterationErr(i int, errorCode proto.StatusCode) {
+	if len(meter.DevIterations) == i {
+		meter.DevIterations = append(meter.DevIterations, devIteration{intent: "error"})
+	}
+	meter.DevIterations[i].errorCode = errorCode
+}
+
+func AddFlag(flag *flag.Flag) {
+	meter.EnumFlags[flag.Name] = flag
 }
