@@ -33,14 +33,14 @@ import (
 
 // Build builds a list of artifacts with Kaniko.
 func (b *Builder) Build(ctx context.Context, out io.Writer, tags tag.ImageTags, artifacts []*latest.Artifact) ([]build.Artifact, error) {
-	teardownPullSecret, err := b.setupPullSecret(out)
+	teardownPullSecret, err := b.setupPullSecret(ctx, out)
 	if err != nil {
 		return nil, fmt.Errorf("setting up pull secret: %w", err)
 	}
 	defer teardownPullSecret()
 
 	if b.DockerConfig != nil {
-		teardownDockerConfigSecret, err := b.setupDockerConfigSecret(out)
+		teardownDockerConfigSecret, err := b.setupDockerConfigSecret(ctx, out)
 		if err != nil {
 			return nil, fmt.Errorf("setting up docker config secret: %w", err)
 		}
@@ -66,7 +66,7 @@ func (b *Builder) runBuildForArtifact(ctx context.Context, out io.Writer, a *lat
 	requiredImages := docker.ResolveDependencyImages(a.Dependencies, b.artifactStore, true)
 	switch {
 	case a.KanikoArtifact != nil:
-		return b.buildWithKaniko(ctx, out, a.Workspace, a.KanikoArtifact, tag, requiredImages)
+		return b.buildWithKaniko(ctx, out, a.Workspace, a.ImageName, a.KanikoArtifact, tag, requiredImages)
 
 	case a.CustomArtifact != nil:
 		return custom.NewArtifactBuilder(nil, b.cfg, true, append(b.retrieveExtraEnv(), util.EnvPtrMapToSlice(requiredImages, "=")...)).Build(ctx, out, a, tag)

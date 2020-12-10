@@ -793,7 +793,28 @@ For Cancelled Error code, use range 800 to 850.
 | DEPLOY_SUCCESS | 202 | Deploy Success |
 | BUILD_PUSH_ACCESS_DENIED | 101 | Build error due to push access denied |
 | BUILD_PROJECT_NOT_FOUND | 102 | Build error due to GCP project not found. |
-| BUILD_DOCKER_DAEMON_NOT_RUNNING | 103 |  |
+| BUILD_DOCKER_DAEMON_NOT_RUNNING | 103 | Docker build error due to docker daemon not running |
+| BUILD_USER_ERROR | 104 | Build error due to user application code, e.g. compilation error, dockerfile error etc |
+| BUILD_DOCKER_UNAVAILABLE | 105 | Build error due to docker not available |
+| BUILD_DOCKER_UNAUTHORIZED | 106 | Docker build error due to user not authorized to perform the action |
+| BUILD_DOCKER_SYSTEM_ERR | 107 | Docker system build error |
+| BUILD_DOCKER_NOT_MODIFIED_ERR | 108 | Docker build error due to Docker build container is already in the desired state |
+| BUILD_DOCKER_NOT_IMPLEMENTED_ERR | 109 | Docker build error indicating a feature not supported |
+| BUILD_DOCKER_DATA_LOSS_ERR | 110 | Docker build error indicates that for given build, data was lost or there is data corruption |
+| BUILD_DOCKER_FORBIDDEN_ERR | 111 | Docker build error indicates user is forbidden to perform the build or step/action. |
+| BUILD_DOCKER_CONFLICT_ERR | 112 | Docker build error due to some internal error and docker container state conflicts with the requested action and can't be performed |
+| BUILD_DOCKER_ERROR_NOT_FOUND | 113 | Docker build error indicates the requested object does not exist |
+| BUILD_DOCKER_INVALID_PARAM_ERR | 114 | Docker build error indication invalid parameter sent to docker command |
+| BUILD_DOCKERFILE_NOT_FOUND | 115 | Docker build failed due to dockerfile not found |
+| BUILD_DOCKER_CACHE_FROM_PULL_ERR | 116 | Docker build failed due `cacheFrom` user config error |
+| BUILD_DOCKER_GET_DIGEST_ERR | 117 | Build error due to digest for built artifact could not be retrieved from docker daemon. |
+| BUILD_REGISTRY_GET_DIGEST_ERR | 118 | Build error due to digest for built artifact could not be retrieved from registry. |
+| BUILD_UNKNOWN_JIB_PLUGIN_TYPE | 119 | Build error indicating unknown Jib plugin type. Should be one of [maven, gradle] |
+| BUILD_JIB_GRADLE_DEP_ERR | 120 | Build error determining dependency for jib gradle project. |
+| BUILD_JIB_MAVEN_DEP_ERR | 121 | Build error determining dependency for jib gradle project. |
+| INIT_DOCKER_NETWORK_LISTING_CONTAINERS | 122 | Docker build error when listing containers. |
+| INIT_DOCKER_NETWORK_INVALID_CONTAINER_NAME | 123 | Docker build error indicating an invalid container name (or id). |
+| INIT_DOCKER_NETWORK_CONTAINER_DOES_NOT_EXIST | 124 | Docker build error indicating the container referenced does not exists in the docker context used. |
 | STATUSCHECK_IMAGE_PULL_ERR | 300 | Container image pull error |
 | STATUSCHECK_CONTAINER_CREATING | 301 | Container creating error |
 | STATUSCHECK_RUN_CONTAINER_ERR | 302 | Container run error |
@@ -825,6 +846,7 @@ For Cancelled Error code, use range 800 to 850.
 | DEVINIT_UNKNOWN | 507 | Dev Init failed due to unknown reason |
 | CLEANUP_UNKNOWN | 508 | Cleanup failed due to unknown reason |
 | INIT_UNKNOWN | 510 | Initialization of the Skaffold session failed due to unknown reason(s) |
+| BUILD_DOCKER_UNKNOWN | 511 | Build failed due to docker unknown error |
 | SYNC_INIT_ERROR | 601 | File Sync Initialize failure |
 | DEVINIT_REGISTER_BUILD_DEPS | 701 | Failed to configure watcher for build dependencies in dev loop |
 | DEVINIT_REGISTER_TEST_DEPS | 702 | Failed to configure watcher for test dependencies in dev loop |
@@ -835,6 +857,8 @@ For Cancelled Error code, use range 800 to 850.
 | STATUSCHECK_DEADLINE_EXCEEDED | 801 | Deadline for status check exceeded |
 | BUILD_CANCELLED | 802 | Build Cancelled |
 | DEPLOY_CANCELLED | 803 | Deploy cancelled due to user cancellation or one or more deployers failed. |
+| BUILD_DOCKER_CANCELLED | 804 | Docker build cancelled. |
+| BUILD_DOCKER_DEADLINE | 805 | Build error due to docker deadline was reached before the docker action completed |
 | INIT_CREATE_TAGGER_ERROR | 901 | Skaffold was unable to create the configured tagger |
 | INIT_MINIKUBE_PAUSED_ERROR | 902 | Skaffold was unable to start as Minikube appears to be paused |
 | INIT_MINIKUBE_NOT_RUNNING_ERROR | 903 | Skaffold was unable to start as Minikube appears to be stopped |
@@ -845,6 +869,27 @@ For Cancelled Error code, use range 800 to 850.
 | INIT_CREATE_WATCH_TRIGGER_ERROR | 908 | Skaffold encountered an error when configuring file watching |
 | INIT_CREATE_ARTIFACT_DEP_ERROR | 909 | Skaffold encountered an error when evaluating artifact dependencies |
 | DEPLOY_CLUSTER_CONNECTION_ERR | 1001 | Unable to connect to cluster |
+| DEPLOY_DEBUG_HELPER_RETRIEVE_ERR | 1002 | Could not retrieve debug helpers. |
+| DEPLOY_CLEANUP_ERR | 1003 | Deploy clean up error |
+| DEPLOY_HELM_APPLY_LABELS | 1004 | Unable to apply helm labels. |
+| DEPLOY_HELM_USER_ERR | 1005 | Deploy error due to user deploy config for helm deployer |
+| DEPLOY_NO_MATCHING_BUILD | 1006 | Helm error when no build result is found of value specified in helm `artifactOverrides` |
+| DEPLOY_HELM_VERSION_ERR | 1007 | Unable to get helm client version |
+| DEPLOY_HELM_MIN_VERSION_ERR | 1008 | Helm version not supported. |
+| DEPLOY_KUBECTL_VERSION_ERR | 1109 | Unable to retrieve kubectl version |
+| DEPLOY_KUBECTL_OFFLINE_MODE_ERR | 1010 | User specified offline mode for rendering but remote manifests presents. |
+| DEPLOY_ERR_WAITING_FOR_DELETION | 1011 | Error waiting for previous version deletion before next version is active. |
+| DEPLOY_READ_MANIFEST_ERR | 1012 | Error reading manifests |
+| DEPLOY_READ_REMOTE_MANIFEST_ERR | 1013 | Error reading remote manifests |
+| DEPLOY_LIST_MANIFEST_ERR | 1014 | Errors listing manifests |
+| DEPLOY_KUBECTL_USER_ERR | 1015 | Deploy error due to user deploy config for kubectl deployer |
+| DEPLOY_KUSTOMIZE_USER_ERR | 1016 | Deploy error due to user deploy config for kustomize deployer |
+| DEPLOY_REPLACE_IMAGE_ERR | 1017 | Error replacing a built artifact in the manifests |
+| DEPLOY_TRANSFORM_MANIFEST_ERR | 1018 | Error transforming a manifest during skaffold debug |
+| DEPLOY_SET_LABEL_ERR | 1019 | Error setting user specified additional labels. |
+| DEPLOY_MANIFEST_WRITE_ERR | 1020 | Error writing hydrated kubernetes manifests. |
+| DEPLOY_PARSE_MANIFEST_IMAGES_ERR | 1021 | Error getting images from a kubernetes manifest. |
+| DEPLOY_HELM_CREATE_NS_NOT_AVAILABLE | 1022 | Helm config `createNamespace` not available |
 
 
 
@@ -863,8 +908,21 @@ Enum for Suggestion codes
 | DOCKER_AUTH_CONFIGURE | 104 | Run docker auth configure |
 | CHECK_GCLOUD_PROJECT | 105 | Verify Gcloud Project |
 | CHECK_DOCKER_RUNNING | 106 | Check if docker is running |
+| FIX_USER_BUILD_ERR | 107 | Fix User Build Error |
+| DOCKER_BUILD_RETRY | 108 | Docker build internal error, try again |
+| FIX_CACHE_FROM_ARTIFACT_CONFIG | 109 | Fix `cacheFrom` config for given artifact and try again |
+| FIX_SKAFFOLD_CONFIG_DOCKERFILE | 110 | Fix `dockerfile` config for a given artifact and try again. |
+| FIX_JIB_PLUGIN_CONFIGURATION | 111 | Use a supported Jib plugin type |
+| FIX_DOCKER_NETWORK_CONTAINER_NAME | 112 | Docker build network invalid docker container name (or id). |
+| CHECK_DOCKER_NETWORK_CONTAINER_RUNNING | 113 | Docker build network container not existing in the current context. |
 | CHECK_CLUSTER_CONNECTION | 201 | Check cluster connection |
 | CHECK_MINIKUBE_STATUS | 202 | Check minikube status |
+| INSTALL_HELM | 203 | Install helm tool |
+| UPGRADE_HELM | 204 | Upgrade helm tool |
+| FIX_SKAFFOLD_CONFIG_HELM_ARTIFACT_OVERRIDES | 205 | Fix helm `releases.artifactOverrides` config to match with `build.artiofacts` |
+| UPGRADE_HELM32 | 206 | Upgrade helm version to v3.2.0 and higher. |
+| FIX_SKAFFOLD_CONFIG_HELM_CREATE_NAMESPACE | 207 | Set `releases.createNamespace` to false. |
+| INSTALL_KUBECTL | 220 | Install kubectl tool |
 | CHECK_CONTAINER_LOGS | 301 | Container run error |
 | CHECK_READINESS_PROBE | 302 | Pod Health check error |
 | CHECK_CONTAINER_IMAGE | 303 | Check Container image |
@@ -880,6 +938,7 @@ Enum for Suggestion codes
 | START_MINIKUBE | 501 | Minikube is stopped: use `minikube start` |
 | UNPAUSE_MINIKUBE | 502 | Minikube is paused: use `minikube unpause` |
 | RUN_DOCKER_PULL | 551 | Run Docker pull for the image with v1 manifest and try again. |
+| SET_RENDER_FLAG_OFFLINE_FALSE | 600 | Rerun with correct offline flag value. |
 | OPEN_ISSUE | 900 | Open an issue so this situation can be diagnosed |
 
 

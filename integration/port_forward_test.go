@@ -100,6 +100,9 @@ func TestRunPortForwardByPortName(t *testing.T) {
 func TestDevPortForwardDeletePod(t *testing.T) {
 	MarkIntegrationTest(t, CanRunWithoutGcp)
 
+	// pre-build images to avoid tripping the 1-minute timeout in getLocalPortFromPortForwardEvent()
+	skaffold.Build().InDir("examples/microservices").RunOrFail(t)
+
 	ns, _ := SetupNamespace(t)
 
 	rpcAddr := randomPort()

@@ -14,28 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package util
+package kustomize
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
+	sErrors "github.com/GoogleContainerTools/skaffold/pkg/skaffold/errors"
+	"github.com/GoogleContainerTools/skaffold/proto"
 )
 
-// DetectWSL checks for Windows Subsystem for Linux
-func DetectWSL() (bool, error) {
-	if _, err := os.Stat("/proc/version"); err == nil {
-		b, err := ioutil.ReadFile("/proc/version")
-		if err != nil {
-			return false, fmt.Errorf("read /proc/version: %w", err)
-		}
-
-		// Microsoft changed the case between WSL1 and WSL2
-		str := strings.ToLower(string(b))
-		if strings.Contains(str, "microsoft") {
-			return true, nil
-		}
-	}
-	return false, nil
+func userErr(err error) error {
+	return sErrors.NewError(err,
+		proto.ActionableErr{
+			Message: err.Error(),
+			ErrCode: proto.StatusCode_DEPLOY_KUSTOMIZE_USER_ERR,
+		})
 }

@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/config"
+	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/instrumentation"
 	"github.com/GoogleContainerTools/skaffold/proto"
 )
 
@@ -72,9 +73,15 @@ func ActionableErr(phase Phase, err error) *proto.ActionableErr {
 }
 
 func ShowAIError(err error) error {
+	if IsSkaffoldErr(err) {
+		instrumentation.SetErrorCode(err.(Error).StatusCode())
+		return err
+	}
+
 	var knownProblems = append(knownBuildProblems, knownDeployProblems...)
 	for _, v := range append(knownProblems, knownInitProblems...) {
 		if v.regexp.MatchString(err.Error()) {
+			instrumentation.SetErrorCode(v.errCode)
 			if suggestions := v.suggestion(skaffoldOpts); suggestions != nil {
 				description := fmt.Sprintf("%s\n", err)
 				if v.description != nil {
@@ -100,6 +107,9 @@ func IsOldImageManifestProblem(err error) (string, bool) {
 }
 
 func getErrorCodeFromError(phase Phase, err error) (proto.StatusCode, []*proto.Suggestion) {
+	if t, ok := err.(Error); ok {
+		return t.StatusCode(), t.Suggestions()
+	}
 	if problems, ok := allErrors[phase]; ok {
 		for _, v := range problems {
 			if v.regexp.MatchString(err.Error()) {
@@ -117,6 +127,9 @@ func concatSuggestions(suggestions []*proto.Suggestion) string {
 			s.WriteString(" or ")
 		}
 		s.WriteString(suggestion.Action)
+	}
+	if s.String() == "" {
+		return ""
 	}
 	s.WriteString(".")
 	return s.String()

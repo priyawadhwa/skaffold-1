@@ -215,7 +215,11 @@ func getDeployer(cfg kubectl.Config, labels map[string]string) (deploy.Deployer,
 	var deployers deploy.DeployerMux
 
 	if d.HelmDeploy != nil {
-		deployers = append(deployers, helm.NewDeployer(cfg, labels))
+		h, err := helm.NewDeployer(cfg, labels)
+		if err != nil {
+			return nil, err
+		}
+		deployers = append(deployers, h)
 	}
 
 	if d.KptDeploy != nil {
@@ -262,7 +266,7 @@ func getTagger(runCtx *runcontext.RunContext) (tag.Tagger, error) {
 		return &tag.ChecksumTagger{}, nil
 
 	case t.GitTagger != nil:
-		return tag.NewGitCommit(t.GitTagger.Prefix, t.GitTagger.Variant)
+		return tag.NewGitCommit(t.GitTagger.Prefix, t.GitTagger.Variant, t.GitTagger.IgnoreChanges)
 
 	case t.DateTimeTagger != nil:
 		return tag.NewDateTimeTagger(t.DateTimeTagger.Format, t.DateTimeTagger.TimeZone), nil
@@ -300,7 +304,7 @@ func CreateComponents(t *latest.CustomTemplateTagger) (map[string]tag.Tagger, er
 			components[name] = &tag.ChecksumTagger{}
 
 		case c.GitTagger != nil:
-			components[name], _ = tag.NewGitCommit(c.GitTagger.Prefix, c.GitTagger.Variant)
+			components[name], _ = tag.NewGitCommit(c.GitTagger.Prefix, c.GitTagger.Variant, c.GitTagger.IgnoreChanges)
 
 		case c.DateTimeTagger != nil:
 			components[name] = tag.NewDateTimeTagger(c.DateTimeTagger.Format, c.DateTimeTagger.TimeZone)
