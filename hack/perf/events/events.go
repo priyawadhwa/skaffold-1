@@ -9,8 +9,8 @@ import (
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/proto"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/util/homedir"
 )
 
 // Get returns a list of entries
