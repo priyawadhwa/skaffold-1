@@ -1,7 +1,7 @@
 applications:
-- name: nodejs/docker
-  context: nodejs-docker
+- name: hello-world
+  context: /Users/priyawadhwa/skaffold/examples/getting-started
   dev:
     command: echo "hey" > smth
   labels:
-    app:  nodejs/docker
+    app:  hello-world

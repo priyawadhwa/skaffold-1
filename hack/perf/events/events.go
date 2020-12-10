@@ -3,27 +3,15 @@ package events
 import (
 	"bytes"
 	"io/ioutil"
-	"path"
 	"strings"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/proto"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/util/homedir"
 )
 
 // Get returns a list of entries
-func Get() ([]proto.LogEntry, error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return nil, errors.Wrap(err, "getting home dir")
-	}
-	fp := path.Join(home, constants.DefaultSkaffoldDir, constants.DefaultEventsFile)
-	contents, err := ioutil.ReadFile(fp)
-	if err != nil {
-		return nil, errors.Wrapf(err, "reading %s", fp)
-	}
+func Get(contents []byte) ([]proto.LogEntry, error) {
 	entries := strings.Split(string(contents), "\n")
 	var logEntries []proto.LogEntry
 	unmarshaller := jsonpb.Unmarshaler{}
@@ -39,4 +27,12 @@ func Get() ([]proto.LogEntry, error) {
 		logEntries = append(logEntries, logEntry)
 	}
 	return logEntries, nil
+}
+
+func GetFromFile(fp string) ([]proto.LogEntry, error) {
+	contents, err := ioutil.ReadFile(fp)
+	if err != nil {
+		return nil, errors.Wrapf(err, "reading %s", fp)
+	}
+	return Get(contents)
 }
