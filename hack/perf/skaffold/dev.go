@@ -8,17 +8,15 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 	"time"
 
 	"github.com/GoogleContainerTools/skaffold/hack/perf/config"
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
+	"github.com/GoogleContainerTools/skaffold/hack/perf/events"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/util"
 	"github.com/GoogleContainerTools/skaffold/proto"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/mitchellh/go-homedir"
 	"github.com/otiai10/copy"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -35,7 +33,7 @@ func Dev(ctx context.Context, app config.Application) error {
 	}
 	defer os.Remove(app.Context)
 
-	eventsFile, err := EventsFile()
+	eventsFile, err := events.File()
 	if err != nil {
 		return fmt.Errorf("events file: %w", err)
 	}
@@ -151,12 +149,4 @@ func waitForDevLoopComplete(ctx context.Context, iteration, port int) error {
 		devLoopIterations++
 	}
 	return nil
-}
-
-func EventsFile() (string, error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return "", fmt.Errorf("homedir: %w", err)
-	}
-	return path.Join(home, constants.DefaultSkaffoldDir, constants.DefaultEventsFile), nil
 }

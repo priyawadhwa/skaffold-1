@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/skaffold/hack/perf/config"
+	"github.com/GoogleContainerTools/skaffold/hack/perf/metrics"
 	"github.com/GoogleContainerTools/skaffold/hack/perf/skaffold"
 )
 
@@ -37,6 +38,10 @@ func collectMetrics(ctx context.Context) error {
 	}
 	for _, app := range cfg.Apps {
 		if err := skaffold.Dev(ctx, app); err != nil {
+			fmt.Printf("%v\n", err)
+			continue
+		}
+		if err := metrics.InnerLoopMetrics(app); err != nil {
 			fmt.Printf("%v\n", err)
 		}
 	}

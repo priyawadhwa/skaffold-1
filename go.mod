@@ -69,6 +69,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/tektoncd/pipeline v0.5.1-0.20190731183258-9d7e37e85bf8
 	github.com/xeipuuv/gojsonschema v1.2.0
+	go.opencensus.io v0.22.5
 	golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9
 	golang.org/x/mod v0.3.0
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
