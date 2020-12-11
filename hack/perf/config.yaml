@@ -2,6 +2,6 @@ applications:
 - name: hello-world
   context: /Users/priyawadhwa/skaffold/examples/getting-started
   dev:
-    command: echo "hey" > smth
+    command: cp testdata/dev_main.go main.go
   labels:
     app:  hello-world

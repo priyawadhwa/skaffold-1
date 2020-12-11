@@ -4,8 +4,6 @@ build:
   artifacts:
   - image: skaffold-example
     context: .
-    docker:
-      network: "container:alpine"
   local:
     push: false
 deploy:
