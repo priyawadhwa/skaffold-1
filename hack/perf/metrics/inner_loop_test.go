@@ -52,7 +52,7 @@ func getLogEntries() []proto.LogEntry {
 		},
 		{
 			Timestamp: &timestamp.Timestamp{Seconds: now - 70},
-			Event:     &proto.Event{EventType: &proto.Event_StatusCheckEvent{StatusCheckEvent: &proto.StatusCheckEvent{Status: event.InProgress}}},
+			Event:     &proto.Event{EventType: &proto.Event_StatusCheckEvent{StatusCheckEvent: &proto.StatusCheckEvent{Status: event.Started}}},
 		}, {
 			Timestamp: &timestamp.Timestamp{Seconds: now - 65},
 			Event:     &proto.Event{EventType: &proto.Event_StatusCheckEvent{StatusCheckEvent: &proto.StatusCheckEvent{Status: event.Succeeded}}},
@@ -95,7 +95,7 @@ func getLogEntries() []proto.LogEntry {
 		},
 		{
 			Timestamp: &timestamp.Timestamp{Seconds: now - 20},
-			Event:     &proto.Event{EventType: &proto.Event_StatusCheckEvent{StatusCheckEvent: &proto.StatusCheckEvent{Status: event.InProgress}}},
+			Event:     &proto.Event{EventType: &proto.Event_StatusCheckEvent{StatusCheckEvent: &proto.StatusCheckEvent{Status: event.Started}}},
 		}, {
 			Timestamp: &timestamp.Timestamp{Seconds: now - 20},
 			Event:     &proto.Event{EventType: &proto.Event_StatusCheckEvent{StatusCheckEvent: &proto.StatusCheckEvent{Status: event.Succeeded}}},

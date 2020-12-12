@@ -41,7 +41,6 @@ func InnerLoopMetrics(app config.Application) error {
 }
 
 func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetrics {
-	fmt.Println("Log entries: ", logEntries)
 	var ilms []innerLoopMetrics
 
 	var current innerLoopMetrics
