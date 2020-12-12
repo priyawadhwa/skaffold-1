@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"path"
 	"strings"
 
-	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/constants"
 	"github.com/GoogleContainerTools/skaffold/proto"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+)
+
+var (
+	eventsFile string
 )
 
 // Get returns a list of entries
@@ -42,10 +44,18 @@ func GetFromFile(fp string) ([]proto.LogEntry, error) {
 }
 
 func File() (string, error) {
+	if eventsFile != "" {
+		return eventsFile, nil
+	}
 	home, err := homedir.Dir()
 	if err != nil {
 		return "", fmt.Errorf("homedir: %w", err)
 	}
-	ef := path.Join(home, constants.DefaultSkaffoldDir, constants.DefaultEventsFile)
-	return ef, nil
+	f, err := ioutil.TempFile(home, "events")
+	if err != nil {
+		return "", fmt.Errorf("temp file: %w", err)
+	}
+	defer f.Close()
+	eventsFile = f.Name()
+	return f.Name(), nil
 }

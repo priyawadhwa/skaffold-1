@@ -66,10 +66,10 @@ func Dev(ctx context.Context, app config.Application) error {
 	if err := cmd.Process.Signal(os.Interrupt); err != nil {
 		return fmt.Errorf("killing skaffold: %w", err)
 	}
-
+	time.Sleep(10 * time.Second)
 	return wait.Poll(time.Second, 2*time.Minute, func() (bool, error) {
-		_, err := os.Stat(eventsFile)
-		return err == nil, nil
+		contents, err := ioutil.ReadFile(eventsFile)
+		return err == nil && len(contents) > 0, nil
 	})
 }
 

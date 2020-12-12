@@ -41,6 +41,7 @@ func InnerLoopMetrics(app config.Application) error {
 }
 
 func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetrics {
+	fmt.Println("Log entries: ", logEntries)
 	var ilms []innerLoopMetrics
 
 	var current innerLoopMetrics
@@ -59,7 +60,7 @@ func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetrics {
 		case *proto.Event_BuildEvent:
 			status := le.GetEvent().GetBuildEvent().GetStatus()
 			unixTimestamp := time.Unix(le.GetTimestamp().AsTime().Unix(), 0)
-			fmt.Println(status, unixTimestamp)
+			fmt.Println("build:", status, unixTimestamp)
 			if status == event.InProgress && buildStartTime.IsZero() {
 				buildStartTime = unixTimestamp
 			} else if status == event.Complete {
@@ -77,7 +78,7 @@ func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetrics {
 		case *proto.Event_StatusCheckEvent:
 			status := le.GetEvent().GetStatusCheckEvent().GetStatus()
 			unixTimestamp := time.Unix(le.GetTimestamp().AsTime().Unix(), 0)
-			if status == event.InProgress {
+			if status == event.Started {
 				statusCheckStartTime = unixTimestamp
 			} else if status == event.Succeeded {
 				current.statusCheckTime = unixTimestamp.Sub(statusCheckStartTime).Seconds()
