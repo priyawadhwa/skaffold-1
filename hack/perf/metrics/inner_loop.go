@@ -25,7 +25,7 @@ func InnerLoopMetrics(ctx context.Context, app config.Application) error {
 	}
 	innerLoopMetrics := splitEntriesByDevLoop(logEntries)
 	logrus.Infof("Inner loop metrics for this run: %v", innerLoopMetrics)
-	return exportInnerLoopMetrics(ctx, innerLoopMetrics[1])
+	return exportInnerLoopMetrics(ctx, app, innerLoopMetrics[1])
 }
 
 func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetric {

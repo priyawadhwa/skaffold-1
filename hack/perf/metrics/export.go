@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"contrib.go.opencensus.io/exporter/stackdriver"
+	"github.com/GoogleContainerTools/skaffold/hack/perf/config"
+	"github.com/sirupsen/logrus"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
@@ -21,11 +23,9 @@ var (
 	statusCheckLatencyS = stats.Float64("repl/statusCheckTime", "status check time in seconds", "s")
 	// this should equal build + deploy + status check time
 	totalInnerLoopS = stats.Float64("repl/innerLoopTime", "inner loop time in seconds", "s")
-	labels          string
-	tmpFile         string
 )
 
-func exportInnerLoopMetrics(ctx context.Context, ilm innerLoopMetric) error {
+func exportInnerLoopMetrics(ctx context.Context, app config.Application, ilm innerLoopMetric) error {
 	if err := registerViews(); err != nil {
 		return fmt.Errorf("registering views: %w", err)
 	}
@@ -33,7 +33,8 @@ func exportInnerLoopMetrics(ctx context.Context, ilm innerLoopMetric) error {
 		ProjectID: projectID(),
 		// ReportingInterval sets the frequency of reporting metrics
 		// to stackdriver backend.
-		ReportingInterval: 1 * time.Second,
+		ReportingInterval:       1 * time.Second,
+		DefaultMonitoringLabels: monitoringLables(app),
 	})
 	if err != nil {
 		return fmt.Errorf("stackdriver new exporter: %w", err)
@@ -55,11 +56,20 @@ func exportInnerLoopMetrics(ctx context.Context, ilm innerLoopMetric) error {
 	sd.StopMetricsExporter()
 	trace.UnregisterExporter(sd)
 
+	logrus.Info("Successfully exported to Stackdriver...")
 	return nil
 }
 
 func projectID() string {
 	return "priya-wadhwa"
+}
+
+func monitoringLables(app config.Application) *stackdriver.Labels {
+	labels := &stackdriver.Labels{}
+	for key, value := range app.Labels {
+		labels.Set(key, value, "")
+	}
+	return labels
 }
 
 // Register the view. It is imperative that this step exists,
