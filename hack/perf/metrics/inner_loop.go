@@ -36,7 +36,7 @@ func InnerLoopMetrics(app config.Application) error {
 	if err != nil {
 		return fmt.Errorf("getting events from file: %w", err)
 	}
-	fmt.Println(logEntries)
+	fmt.Println(splitEntriesByDevLoop(logEntries))
 	return nil
 }
 
@@ -59,6 +59,7 @@ func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetrics {
 		case *proto.Event_BuildEvent:
 			status := le.GetEvent().GetBuildEvent().GetStatus()
 			unixTimestamp := time.Unix(le.GetTimestamp().AsTime().Unix(), 0)
+			fmt.Println(status, unixTimestamp)
 			if status == event.InProgress && buildStartTime.IsZero() {
 				buildStartTime = unixTimestamp
 			} else if status == event.Complete {

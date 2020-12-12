@@ -40,7 +40,7 @@ func Dev(ctx context.Context, app config.Application) error {
 	port := util.GetAvailablePort(util.Loopback, 8080, &util.PortSet{})
 
 	buf := bytes.NewBuffer([]byte{})
-	cmd := exec.CommandContext(ctx, "skaffold", "dev", "--enable-rpc", fmt.Sprintf("--rpc-port=%v", port), fmt.Sprintf("--event-log-file=%s", eventsFile))
+	cmd := exec.CommandContext(ctx, "skaffold", "dev", "--enable-rpc", fmt.Sprintf("--rpc-port=%v", port), fmt.Sprintf("--event-log-file=%s", eventsFile), "--cache-artifacts=false")
 	cmd.Dir = app.Context
 	cmd.Stdout = buf
 	cmd.Stderr = buf
@@ -62,8 +62,15 @@ func Dev(ctx context.Context, app config.Application) error {
 	if err := waitForDevLoopComplete(ctx, 1, port); err != nil {
 		return fmt.Errorf("waiting for dev loop complete: %w: %s", err, buf.String())
 	}
-	logrus.Infof("successfully ran inner dev loop...")
-	return nil
+	logrus.Infof("successfully ran inner dev loop, killing skaffold...")
+	if err := cmd.Process.Signal(os.Interrupt); err != nil {
+		return fmt.Errorf("killing skaffold: %w", err)
+	}
+
+	return wait.Poll(time.Second, 2*time.Minute, func() (bool, error) {
+		_, err := os.Stat(eventsFile)
+		return err == nil, nil
+	})
 }
 
 func copyAppToTmpDir(app *config.Application) error {

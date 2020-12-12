@@ -46,5 +46,6 @@ func File() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("homedir: %w", err)
 	}
-	return path.Join(home, constants.DefaultSkaffoldDir, constants.DefaultEventsFile), nil
+	ef := path.Join(home, constants.DefaultSkaffoldDir, constants.DefaultEventsFile)
+	return ef, nil
 }
