@@ -11,7 +11,7 @@ import (
 )
 
 func TestSplitEntriesByDevLoop(t *testing.T) {
-	expectedILMS := []innerLoopMetrics{
+	expectedILMS := []innerLoopMetric{
 		{
 			buildTime:       20,
 			deployTime:      10,

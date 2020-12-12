@@ -31,7 +31,7 @@ func Dev(ctx context.Context, app config.Application) error {
 	if err := copyAppToTmpDir(&app); err != nil {
 		return fmt.Errorf("copying app to temp dir: %w", err)
 	}
-	defer os.Remove(app.Context)
+	defer os.RemoveAll(app.Context)
 
 	eventsFile, err := events.File()
 	if err != nil {

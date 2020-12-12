@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -8,26 +9,12 @@ import (
 	"github.com/GoogleContainerTools/skaffold/hack/perf/events"
 	"github.com/GoogleContainerTools/skaffold/pkg/skaffold/event"
 	"github.com/GoogleContainerTools/skaffold/proto"
-	"go.opencensus.io/stats"
-)
-
-const (
-	customMetricName = "custom.googleapis.com/skaffold/dev"
-)
-
-var (
-	buildLatencyS       = stats.Float64("repl/buildTime", "build time in seconds", "s")
-	deployLatencyS      = stats.Float64("repl/deployTime", "deploy time in seconds", "s")
-	statusCheckLatencyS = stats.Float64("repl/statusCheckTime", "status check time in seconds", "s")
-	// this should equal build + deploy + status check time
-	totalInnerLoopS = stats.Float64("repl/innerLoopTime", "inner loop time in seconds", "s")
-	labels          string
-	tmpFile         string
+	"github.com/sirupsen/logrus"
 )
 
 // InnerLoopMetrics collects metrics for the inner loop and exports them
 // to Cloud Monitoring
-func InnerLoopMetrics(app config.Application) error {
+func InnerLoopMetrics(ctx context.Context, app config.Application) error {
 	ef, err := events.File()
 	if err != nil {
 		return fmt.Errorf("events file: %w", err)
@@ -36,19 +23,20 @@ func InnerLoopMetrics(app config.Application) error {
 	if err != nil {
 		return fmt.Errorf("getting events from file: %w", err)
 	}
-	fmt.Println(splitEntriesByDevLoop(logEntries))
-	return nil
+	innerLoopMetrics := splitEntriesByDevLoop(logEntries)
+	logrus.Infof("Inner loop metrics for this run: %v", innerLoopMetrics)
+	return exportInnerLoopMetrics(ctx, innerLoopMetrics[1])
 }
 
-func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetrics {
-	var ilms []innerLoopMetrics
+func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetric {
+	var ilms []innerLoopMetric
 
-	var current innerLoopMetrics
+	var current innerLoopMetric
 	var buildStartTime, deployStartTime, statusCheckStartTime time.Time
 	for _, le := range logEntries {
 		switch le.Event.GetEventType().(type) {
 		case *proto.Event_MetaEvent:
-			fmt.Println("do smth here eventually")
+			fmt.Println("metadata event logic not yet implemented")
 		case *proto.Event_DevLoopEvent:
 			// we have reached the end of a dev loop
 			status := le.GetEvent().GetDevLoopEvent().GetStatus()
@@ -59,7 +47,6 @@ func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetrics {
 		case *proto.Event_BuildEvent:
 			status := le.GetEvent().GetBuildEvent().GetStatus()
 			unixTimestamp := time.Unix(le.GetTimestamp().AsTime().Unix(), 0)
-			fmt.Println("build:", status, unixTimestamp)
 			if status == event.InProgress && buildStartTime.IsZero() {
 				buildStartTime = unixTimestamp
 			} else if status == event.Complete {
@@ -87,7 +74,7 @@ func splitEntriesByDevLoop(logEntries []proto.LogEntry) []innerLoopMetrics {
 	return ilms
 }
 
-type innerLoopMetrics struct {
+type innerLoopMetric struct {
 	buildTime       float64
 	deployTime      float64
 	statusCheckTime float64

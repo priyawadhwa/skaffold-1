@@ -41,7 +41,7 @@ func collectMetrics(ctx context.Context) error {
 			fmt.Printf("%v\n", err)
 			continue
 		}
-		if err := metrics.InnerLoopMetrics(app); err != nil {
+		if err := metrics.InnerLoopMetrics(ctx, app); err != nil {
 			fmt.Printf("%v\n", err)
 		}
 	}
