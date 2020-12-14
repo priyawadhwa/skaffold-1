@@ -1,13 +1,13 @@
 applications:
-- name: hello-world
-  context: /Users/priyawadhwa/skaffold/examples/getting-started
+- name: go-guestbook
+  context: testdata/go-guestbook
   dev:
-    command: cp testdata/dev_main.go main.go
+    command: cp testdata/backend/main.go src/backend/main.go
   labels:
-    app:  hello-world
-- name: microservices
-  context: /Users/priyawadhwa/skaffold/examples/microservices
+    app: go-guestbook
+- name: nodejs-guestbook
+  context: testdata/nodejs-guestbook
   dev:
-    command: cp testdata/leeroy-web/web.go leeroy-web/web.go
+    command: cp testdata/backend/app.js src/backend/app.js
   labels:
-    app:  microservices
+    app: nodejs-guestbook
