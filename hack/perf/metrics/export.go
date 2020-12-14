@@ -3,6 +3,7 @@ package metrics
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"contrib.go.opencensus.io/exporter/stackdriver"
@@ -25,10 +26,14 @@ var (
 	totalInnerLoopS = stats.Float64("repl/innerLoopTime", "inner loop time in seconds", "s")
 )
 
-func exportInnerLoopMetrics(ctx context.Context, app config.Application, ilm innerLoopMetric) error {
+func init() {
 	if err := registerViews(); err != nil {
-		return fmt.Errorf("registering views: %w", err)
+		fmt.Println("registering views: %w", err)
+		os.Exit(1)
 	}
+}
+
+func exportInnerLoopMetrics(ctx context.Context, app config.Application, ilm innerLoopMetric) error {
 	sd, err := stackdriver.NewExporter(stackdriver.Options{
 		ProjectID: projectID(),
 		// ReportingInterval sets the frequency of reporting metrics

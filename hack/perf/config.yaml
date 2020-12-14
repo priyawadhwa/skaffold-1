@@ -1,13 +1,13 @@
 applications:
-# - name: hello-world
-#   context: /Users/priyawadhwa/skaffold/examples/getting-started
-#   dev:
-#     command: cp testdata/dev_main.go main.go
-#   labels:
-#     app:  hello-world
+- name: hello-world
+  context: /Users/priyawadhwa/skaffold/examples/getting-started
+  dev:
+    command: cp testdata/dev_main.go main.go
+  labels:
+    app:  hello-world
 - name: microservices
   context: /Users/priyawadhwa/skaffold/examples/microservices
   dev:
     command: cp testdata/leeroy-web/web.go leeroy-web/web.go
   labels:
-    app:  hello-world
+    app:  microservices

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/GoogleContainerTools/skaffold/proto"
@@ -41,6 +42,11 @@ func GetFromFile(fp string) ([]proto.LogEntry, error) {
 		return nil, errors.Wrapf(err, "reading %s", fp)
 	}
 	return Get(contents)
+}
+
+func Cleanup() {
+	defer os.Remove(eventsFile)
+	eventsFile = ""
 }
 
 func File() (string, error) {
