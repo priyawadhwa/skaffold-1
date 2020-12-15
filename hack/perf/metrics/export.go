@@ -24,6 +24,7 @@ var (
 	statusCheckLatencyS = stats.Float64("repl/statusCheckTime", "status check time in seconds", "s")
 	// this should equal build + deploy + status check time
 	totalInnerLoopS = stats.Float64("repl/innerLoopTime", "inner loop time in seconds", "s")
+	projectID       string
 )
 
 func init() {
@@ -31,11 +32,16 @@ func init() {
 		fmt.Println("registering views: %w", err)
 		os.Exit(1)
 	}
+	projectID = os.Getenv("CLOUD_CODE_PROJECT_ID")
+	if projectID == "" {
+		fmt.Println("please set project ID via CLOUD_CODE_PROJECT_ID")
+		os.Exit(1)
+	}
 }
 
 func exportInnerLoopMetrics(ctx context.Context, app config.Application, ilm innerLoopMetric) error {
 	sd, err := stackdriver.NewExporter(stackdriver.Options{
-		ProjectID: projectID(),
+		ProjectID: projectID,
 		// ReportingInterval sets the frequency of reporting metrics
 		// to stackdriver backend.
 		ReportingInterval:       1 * time.Second,
@@ -63,10 +69,6 @@ func exportInnerLoopMetrics(ctx context.Context, app config.Application, ilm inn
 
 	logrus.Info("Successfully exported to Stackdriver...")
 	return nil
-}
-
-func projectID() string {
-	return "priya-wadhwa"
 }
 
 func monitoringLables(app config.Application) *stackdriver.Labels {
